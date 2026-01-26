@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RMH | Rank Maid Marketing Hub - Master V27</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        body { background-color: #f0f2f5; color: #1e293b; font-family: 'Inter', system-ui, sans-serif; }
+        
+        /* Navigation */
+        .nav-item { transition: all 0.2s ease-in-out; cursor: pointer; border-left: 3px solid transparent; }
+        .nav-item:hover { background-color: #1f2937; color: white; }
+        .nav-item.active { background-color: #ea580c; color: white; border-left: 3px solid #fb923c; }
+        
+        /* UI Components */
+        .glass-panel { background: white; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); border-radius: 12px; }
+        .status-dot { height: 8px; width: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+        .status-active { background-color: #10b981; } .status-paused { background-color: #94a3b8; } .status-learning { background-color: #f59e0b; }
+
+        /* Knowledge Base Specifics */
+        .kb-card { transition: all 0.3s ease; border-top: 4px solid transparent; cursor: pointer; }
+        .kb-card:hover { transform: translateY(-2px); box-shadow: 0 10px 20px -5px rgba(0,0,0,0.1); }
+        .kb-card.expanded { border-color: #ea580c; }
+        
+        /* Typography */
+        .prose h4 { font-weight: 800; color: #1e293b; margin-top: 1rem; margin-bottom: 0.5rem; font-size: 0.95rem; }
+        .prose p { font-size: 0.875rem; color: #475569; line-height: 1.6; margin-bottom: 0.75rem; }
+        .prose ul { list-style: disc; padding-left: 1.25rem; font-size: 0.875rem; color: #475569; margin-bottom: 1rem; }
+        .prose li { margin-bottom: 0.25rem; }
+        .tag { font-size: 10px; font-weight: 800; text-transform: uppercase; padding: 2px 8px; border-radius: 99px; letter-spacing: 0.05em; }
+        
+        /* Tabs */
+        .tab-btn { padding: 12px 24px; font-weight: 600; border-bottom: 2px solid transparent; color: #64748b; transition: all 0.3s; font-size: 0.9rem; }
+        .tab-btn.active { color: #ea580c; border-bottom-color: #ea580c; background-color: #fff7ed; border-radius: 8px 8px 0 0; }
+        .tab-btn:hover { color: #ea580c; }
+
+        /* Tables */
+        .data-table th { @apply px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider bg-gray-50; }
+        .data-table td { @apply px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-b border-gray-100; }
+        .data-table tr:hover { @apply bg-orange-50/50; }
+
+        /* Creative Gallery Grid */
+        .creative-card { position: relative; overflow: hidden; border-radius: 8px; transition: transform 0.2s; }
+        .creative-card:hover { transform: scale(1.02); }
+        .creative-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,0.9), transparent); padding: 12px; }
+
+        /* Modal & Scrollbar */
+        .modal-overlay { background-color: rgba(15, 23, 42, 0.8); backdrop-filter: blur(8px); }
+        .modal-content { animation: slideUp 0.3s ease-out; }
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden text-sm">
+
+    <aside class="w-64 bg-slate-900 text-slate-400 flex flex-col shadow-2xl z-20 flex-shrink-0">
+        <div class="h-16 flex items-center px-6 bg-slate-950 border-b border-slate-800">
+            <i class="fa-solid fa-layer-group text-orange-600 text-xl mr-3"></i>
+            <div>
+                <h1 class="font-black text-white text-xl tracking-tight">RMH</h1>
+                <p class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Master V27.0</p>
+            </div>
+        </div>
+
+        <nav class="flex-1 overflow-y-auto py-4 space-y-1">
+            <div class="px-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Core Operations</div>
+            <div class="px-3 mb-2">
+                <div onclick="App.router('global')" id="nav-global" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-r-md active">
+                    <i class="fa-solid fa-earth-americas w-5 text-center mr-3"></i> Global Command
+                </div>
+                <div onclick="App.router('goals')" id="nav-goals" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-r-md">
+                    <i class="fa-solid fa-bullseye w-5 text-center mr-3"></i> Goals & Alignment
+                </div>
+                <div onclick="App.router('knowledge')" id="nav-knowledge" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-r-md">
+                    <i class="fa-solid fa-book-open w-5 text-center mr-3"></i> Information Center
+                </div>
+            </div>
+
+            <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Paid Channels</div>
+            <div class="px-3 space-y-1">
+                <div onclick="App.router('facebook')" id="nav-facebook" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+                    <i class="fa-brands fa-facebook w-5 text-center mr-3"></i> Facebook Ads
+                </div>
+                <div onclick="App.router('google')" id="nav-google" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+                    <i class="fa-brands fa-google w-5 text-center mr-3"></i> Google Ads
+                </div>
+                <div onclick="App.router('reddit')" id="nav-reddit" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+                    <i class="fa-brands fa-reddit w-5 text-center mr-3"></i> Reddit Ads
+                </div>
+                <div onclick="App.router('quora')" id="nav-quora" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+                    <i class="fa-brands fa-quora w-5 text-center mr-3"></i> Quora Ads
+                </div>
+                <div onclick="App.router('taboola')" id="nav-taboola" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+                    <i class="fa-solid fa-bullhorn w-5 text-center mr-3"></i> Taboola
+                </div>
+                <div onclick="App.router('adroll')" id="nav-adroll" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+                    <i class="fa-solid fa-rectangle-ad w-5 text-center mr-3"></i> AdRoll
+                </div>
+            </div>
+
+            <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Outreach</div>
+            <div class="px-3 space-y-1">
+                <div onclick="App.router('linkedin')" id="nav-linkedin" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+                    <i class="fa-brands fa-linkedin w-5 text-center mr-3"></i> LinkedIn
+                </div>
+                <div onclick="App.router('email')" id="nav-email" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+                    <i class="fa-solid fa-envelope w-5 text-center mr-3"></i> Email Database
+                </div>
+                <div onclick="App.router('propstream')" id="nav-propstream" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+                    <i class="fa-solid fa-house-signal w-5 text-center mr-3"></i> PropStream
+                </div>
+                <div onclick="App.router('craigslist')" id="nav-craigslist" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+                    <i class="fa-solid fa-list w-5 text-center mr-3"></i> Craigslist
+                </div>
+                <div onclick="App.router('biggerpockets')" id="nav-biggerpockets" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+                    <i class="fa-brands fa-get-pocket w-5 text-center mr-3"></i> BiggerPockets
+                </div>
+            </div>
+        </nav>
+        
+        <div class="p-4 bg-slate-950 border-t border-slate-800 flex items-center gap-3">
+            <div class="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-white text-xs font-bold">JD</div>
+            <div>
+                <p class="text-xs text-white font-bold">Ops Lead</p>
+                <p class="text-[10px] text-green-400">● Live Mode</p>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col relative h-full bg-[#F3F4F6]">
+        <header class="h-16 bg-white border-b border-gray-200 flex justify-between items-center px-8 z-10 shadow-sm">
+            <div>
+                <h2 id="page-title" class="text-xl font-bold text-gray-800">Global Command</h2>
+                <p id="page-subtitle" class="text-xs text-gray-500 font-medium">Enterprise View</p>
+            </div>
+            <div class="flex items-center gap-4">
+                <div class="text-right hidden md:block">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Live Sync</p>
+                    <p class="text-xs font-mono text-emerald-600 font-bold">UPDATED: JUST NOW</p>
+                </div>
+                <button onclick="App.simulateUpdate()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg shadow-lg shadow-orange-100 transition-all text-xs font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-rotate"></i> Refresh Data
+                </button>
+            </div>
+        </header>
+
+        <div id="content-area" class="flex-1 overflow-y-auto p-8 fade-in"></div>
+    </main>
+
+    <div id="taskModal" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl modal-content overflow-hidden border border-gray-200">
+            <div class="bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-700">
+                <div>
+                    <h3 class="text-xl font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-brain text-orange-500"></i> Strategic Analysis
+                    </h3>
+                    <p class="text-slate-400 text-xs mt-1">RMH Intelligence Engine v2.5</p>
+                </div>
+                <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="text-gray-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-0" id="modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        // 1. DATA STORE
+        const DB = {
+            // PAID CHANNELS
+            facebook: { 
+                id: 'facebook', name: 'Facebook Ads', type: 'paid', color: '#1877F2', goals: {targetCPA: 175, targetROAS: 4.0}, 
+                metrics: { spend: {current:4200, prev:3800}, leads: {current:120, prev:95}, bookings: {current:18, prev:12}, revenue: {current:25000, prev:18000} }, 
+                campaigns: [{id:'C1',name:'Prospecting_Broad_V3',status:'active',spend:2800,clicks:2100,leads:85,bookings:12,revenue:18000}, {id:'C2',name:'Retargeting_Web',status:'active',spend:900,clicks:450,leads:30,bookings:6,revenue:7000}], 
+                optimizations: [
+                    { id: 101, title: 'Scale "Prospecting_Broad" Budget', type: 'Scale Opportunity', confidence: 94, impact: 'High', rootCause: 'Campaign has sustained ROAS > 6.0x for 14 days.', projection: { leads: '+12 Leads/mo', revenue: '+$4,500 Revenue', cpa: 'Maintain <$45' }, instruction: '1. Navigate to <strong>Ads Manager > Campaigns</strong>.\n2. Select <strong>Prospecting_Broad_V3</strong>.\n3. Increase Daily Budget from <strong>$100 to $120</strong> (+20%).' },
+                    { id: 102, title: 'Retargeting Creative Fatigue', type: 'Creative Alert', confidence: 88, impact: 'Medium', rootCause: 'Frequency > 4.5 and CTR dropped to 0.6%.', projection: { leads: 'Stabilize', revenue: 'Prevent Churn', cpa: 'Lower by 10%' }, instruction: '1. Go to <strong>Retargeting Ad Set</strong>.\n2. Turn off "Image_Ad_04".\n3. Activate "Video_Testimonial_02".' }
+                ],
+                history: {roas:[2.1, 2.4, 3.8, 3.2, 4.0, 5.8, 6.2]} 
+            },
+            google: { id: 'google', name: 'Google Ads', type: 'paid', color: '#EA4335', goals: {targetCPA: 175, targetROAS: 3.5}, metrics: { spend: {current:3100, prev:3000}, leads: {current:45, prev:50}, bookings: {current:8, prev:10}, revenue: {current:12000, prev:15000} }, campaigns: [{id:'G1',name:'Brand_Search',status:'active',spend:2100,clicks:1200,leads:35,bookings:6,revenue:10000}], optimizations: [{id: 201, title: 'Negative Keyword Addition', type: 'Budget Protection', confidence: 98, impact: 'High', rootCause: 'Detected $240 spend on low-intent search terms.', projection: { leads: 'N/A', revenue: 'Save $800/mo', cpa: 'Reduce by 15%' }, instruction: '1. Go to <strong>Keywords > Search Terms</strong>.\n2. Exclude "rent", "job".'}], history: {roas:[4.1, 4.2, 3.8, 3.5, 3.2, 3.0, 3.1]} },
+            
+            // Placeholders
+            reddit: { id: 'reddit', name: 'Reddit Ads', type: 'paid', metrics: { spend: {current:0}, leads: {current:0}, bookings: {current:0}, revenue: {current:0} }, campaigns: [], optimizations: [], history: {roas:[]} },
+            quora: { id: 'quora', name: 'Quora Ads', type: 'paid', metrics: { spend: {current:0}, leads: {current:0}, bookings: {current:0}, revenue: {current:0} }, campaigns: [], optimizations: [], history: {roas:[]} },
+            taboola: { id: 'taboola', name: 'Taboola', type: 'paid', metrics: { spend: {current:0}, leads: {current:0}, bookings: {current:0}, revenue: {current:0} }, campaigns: [], optimizations: [], history: {roas:[]} },
+            adroll: { id: 'adroll', name: 'AdRoll', type: 'paid', metrics: { spend: {current:0}, leads: {current:0}, bookings: {current:0}, revenue: {current:0} }, campaigns: [], optimizations: [], history: {roas:[]} },
+            linkedin: { id: 'linkedin', name: 'LinkedIn', type: 'organic', metrics: { spend: {current:0}, leads: {current:0}, bookings: {current:0}, revenue: {current:0} }, campaigns: [], optimizations: [], history: {roas:[]} },
+            email: { id: 'email', name: 'Email DB', type: 'organic', metrics: { spend: {current:0}, leads: {current:0}, bookings: {current:0}, revenue: {current:0} }, campaigns: [], optimizations: [], history: {roas:[]} },
+            propstream: { id: 'propstream', name: 'PropStream', type: 'organic', metrics: { spend: {current:0}, leads: {current:0}, bookings: {current:0}, revenue: {current:0} }, campaigns: [], optimizations: [], history: {roas:[]} },
+            craigslist: { id: 'craigslist', name: 'Craigslist', type: 'organic', metrics: { spend: {current:0}, leads: {current:0}, bookings: {current:0}, revenue: {current:0} }, campaigns: [], optimizations: [], history: {roas:[]} },
+            biggerpockets: { id: 'biggerpockets', name: 'BiggerPockets', type: 'organic', metrics: { spend: {current:0}, leads: {current:0}, bookings: {current:0}, revenue: {current:0} }, campaigns: [], optimizations: [], history: {roas:[]} },
+
+            // GOALS
+            goals: {
+                vision: "To be the dominant SEO & Lead Generation partner for Real Estate Investors, filling sales calendars with high-intent appointments.",
+                targets: { appointments: { target: 45, current: 41 }, caq: { target: 175, current: 168 } },
+                scorecard: [
+                    { role: 'VA / Operator', metric: 'Data Accuracy', target: '100% Match', consequence: 'Daily Audit' },
+                    { role: 'Sales Rep', metric: 'Appts Attended', target: '45 / Week', consequence: 'Retraining' },
+                    { role: 'Media Buyer', metric: 'CAQ (Cost/Appt)', target: '< $175', consequence: 'Budget Freeze' }
+                ]
+            },
+
+            // EXPANDED KNOWLEDGE CORE
+            library: {
+                algorithms: [
+                    { 
+                        title: "Facebook Algorithm for REI", 
+                        icon: "fa-brands fa-facebook", 
+                        color: "border-blue-500", 
+                        summary: "Meta's AI optimizes for engagement.", 
+                        details: `
+                            <h4>How the Algorithm Thinks</h4>
+                            <p>Meta's algorithm doesn't care about "Real Estate." It cares about <strong>user intent signals</strong>. It serves ads to people who are mostly likely to take the action you optimized for (Lead Form vs. Conversion).</p>
+                            <h4>The "Learning Phase"</h4>
+                            <p>Every ad set requires <strong>50 conversions per week</strong> to exit the Learning Phase. If you edit the budget by >20% or change the creative, the algorithm resets.</p>
+                            <h4>Strategy: Broad Targeting</h4>
+                            <p>Stop using interests like "Zillow" or "Investing." Use <strong>Broad Targeting</strong> (Age/Location only). Let your ad copy ("Need to sell fast?") filter the audience for you. The algorithm is smarter than your manual targeting.</p>
+                        `
+                    },
+                    { 
+                        title: "Google Ads Quality Score", 
+                        icon: "fa-brands fa-google", 
+                        color: "border-red-500", 
+                        summary: "Relevance = Lower Cost.", 
+                        details: `
+                            <h4>The Formula</h4>
+                            <p><strong>Ad Rank = Bid × Quality Score</strong>. You cannot simply pay more to win; you must be relevant.</p>
+                            <h4>Components of Quality Score</h4>
+                            <ul>
+                                <li><strong>Expected CTR:</strong> Does the ad text make people click?</li>
+                                <li><strong>Ad Relevance:</strong> Does the keyword appear in the ad?</li>
+                                <li><strong>Landing Page Experience:</strong> Is the page fast? Does the H1 header match the ad headline?</li>
+                            </ul>
+                            <h4>The Golden Rule</h4>
+                            <p>Never send traffic to the homepage. Always send to a dedicated landing page that matches the keyword intent.</p>
+                        `
+                    },
+                    { 
+                        title: "SEO: Local Pack & E-E-A-T", 
+                        icon: "fa-solid fa-map-location-dot", 
+                        color: "border-emerald-500", 
+                        summary: "40% of calls come from Map Pack.", 
+                        details: `
+                            <h4>Ranking Factors</h4>
+                            <p>Google Maps ranks businesses based on <strong>Proximity</strong>, <strong>Relevance</strong>, and <strong>Prominence</strong>.</p>
+                            <h4>Execution Strategy</h4>
+                            <ul>
+                                <li><strong>NAP Consistency:</strong> Name, Address, and Phone Number must be 100% identical across your Website, GMB, Yelp, and Facebook. Even "St" vs "Street" matters.</li>
+                                <li><strong>Review Velocity:</strong> Getting 1 review every week is far better than getting 20 reviews in one day and then silence for a month.</li>
+                                <li><strong>Local Pages:</strong> Create unique pages for each service area (e.g., "Sell House Fast Orlando" vs "Sell House Fast Kissimmee"). Do not duplicate content.</li>
+                            </ul>
+                        `
+                    },
+                    { 
+                        title: "Native Ads (Taboola)", 
+                        icon: "fa-solid fa-bullhorn", 
+                        color: "border-indigo-500", 
+                        summary: "High volume, low intent.", 
+                        details: `
+                            <h4>The Mindset</h4>
+                            <p>Users on Taboola are reading news, not searching for a solution. You must <strong>interrupt</strong> their pattern.</p>
+                            <h4>Creative Strategy</h4>
+                            <p>Use "Click-Bait" style headlines that promise education, not a sales pitch. <br><em>Bad:</em> "We Buy Houses." <br><em>Good:</em> "Homeowners in Florida are using this new program to sell without an agent."</p>
+                            <h4>The Funnel</h4>
+                            <p>Send traffic to an <strong>Advertorial</strong> (an article that sells) first, then link to your offer page.</p>
+                        `
+                    }
+                ],
+                sops: [
+                    { 
+                        title: 'Scaling Budget', 
+                        category: 'Optimization', 
+                        steps: ['Check ROAS > 3.0x over last 7 days.', 'Verify Campaign is NOT in "Learning Phase".', 'Increase budget by exactly 20%.', 'Log change in Daily Report.'],
+                        details: "<p><strong>Why 20%?</strong> This is the threshold Meta and Google use. If you increase budget by 21%, the algorithm resets all learning data and starts from scratch. Be precise.</p>"
+                    },
+                    { 
+                        title: 'Fixing High CPA (> $175)', 
+                        category: 'Emergency', 
+                        steps: ['Diagnosis: Creative (CTR < 1%) vs Landing Page (Conv < 10%).', 'If CPA > $250 today, PAUSE immediately.', 'If $175-$250, wait 24hrs.'],
+                        details: "<p><strong>Troubleshooting:</strong> If CTR is low, your ad is boring. If Conversion Rate is low, your offer is weak or the page load speed is too slow. Check GTMetrix.</p>"
+                    },
+                    { 
+                        title: 'PropStream List Pull', 
+                        category: 'Outreach', 
+                        steps: ['Filter: Vacant + High Equity.', 'Layer: Tax Liens/Pre-Foreclosure.', 'Export 5k/week max.'],
+                        details: "<p><strong>Motivation Stacking:</strong> A vacant house is good. A vacant house with a tax lien is great. A vacant house with a tax lien owned by an out-of-state landlord is a jackpot.</p>"
+                    },
+                    { title: 'Creative Testing', category: 'Creative', steps: ['Launch 3 new ads per week', 'Kill losers after 3 days'], details: "<p><strong>The 3-Day Rule:</strong> If an ad hasn't generated a lead in 3 days or 2x CPA spend, kill it. Do not get emotionally attached.</p>" },
+                    { title: 'CRM Management', category: 'Admin', steps: ['Tag all leads', 'Ensure automation fired'], details: "<p><strong>Tagging Schema:</strong> Use tags like 'Lead-PPC', 'Lead-FB', 'Lead-Organic'. This allows us to track ROI per channel later.</p>" }
+                ],
+                scripts: [
+                    { 
+                        title: "Cold Call: Vacant Home", 
+                        context: "Outbound call to a high-equity vacant owner.",
+                        content: "Hi, I'm calling about the property on [Address]. I'm not a realtor, I'm looking to buy a property in that neighborhood. Are you the owner?",
+                        objections: "<strong>'How did you get my number?'</strong><br>I have a research team that looks for properties in this specific zip code because we are actively buying here. I apologize if I intruded, but would you be open to an offer?"
+                    },
+                    { 
+                        title: "SMS: New Web Lead", 
+                        context: "Immediate text after a form fill.",
+                        content: "Hi [Name], this is [Your Name] with [Company]. I saw you were looking for a cash offer on [Address]. Do you have 5 mins to chat?",
+                        objections: "<strong>No reply?</strong><br>Send follow up 10 mins later: 'I just ran the numbers on [Address], it looks like a great fit. Are you free?'"
+                    },
+                    { 
+                        title: "Rebuttal: 'Your Offer is Too Low'", 
+                        context: "Negotiation phase.",
+                        content: "I completely understand. The offer is based on the current condition and the repairs needed to get it market-ready. If I could come up on price, would you be willing to offer terms/financing?",
+                        objections: "<strong>'I have a higher offer.'</strong><br>Is that offer in writing with a proof of funds? Many investors make high verbal offers and then lower them during inspection. My offer is solid."
+                    }
+                ]
+            }
+        };
+
+        // 2. LOGIC
+        const Logic = {
+            getChannelAggregates: (id) => { const ch = DB[id]; if(ch.metrics) return { ...ch.metrics, cpa: ch.metrics.leads.current>0?ch.metrics.spend.current/ch.metrics.leads.current:0, roas: ch.metrics.spend.current>0?ch.metrics.revenue.current/ch.metrics.spend.current:0, roi: ch.metrics.spend.current>0?((ch.metrics.revenue.current-ch.metrics.spend.current)/ch.metrics.spend.current)*100:9999 }; return { spend:{current:0}, leads:{current:0}, revenue:{current:0}, bookings:{current:0}, cpa:0, roas:0, roi:0 }; },
+            getGlobalStats: () => { let g={revenue:0,spend:0,leads:0,bookings:0}; Object.keys(DB).forEach(k=>{ if(DB[k].metrics && DB[k].type){ g.revenue+=DB[k].metrics.revenue.current; g.spend+=DB[k].metrics.spend.current; g.leads+=DB[k].metrics.leads.current; g.bookings+=DB[k].metrics.bookings.current; }}); g.cpa=g.bookings>0?g.spend/g.bookings:0; g.avgDeal=g.bookings>0?(g.revenue/(g.bookings*0.2)):0; return g; }
+        };
+
+        // 3. UI RENDERER
+        const UI = {
+            usd: (n) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n),
+            num: (n) => new Intl.NumberFormat('en-US').format(n),
+            
+            openGeniusModal: (channelId, optIndex) => {
+                const ch = DB[channelId]; const opt = ch.optimizations[optIndex];
+                document.getElementById('taskModal').classList.remove('hidden');
+                document.getElementById('modal-body').innerHTML = `<div class="grid grid-cols-3 divide-x divide-gray-100"><div class="col-span-2 p-8"><div class="flex items-center gap-3 mb-6"><span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">${opt.type}</span><span class="flex items-center gap-1 text-xs font-bold text-gray-500">Confidence: ${opt.confidence}%</span></div><h4 class="text-2xl font-black text-gray-900 mb-4">${opt.title}</h4><div class="mb-8"><h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Root Cause</h5><p class="text-gray-700 bg-gray-50 p-4 rounded-lg border-l-4 border-slate-300">${opt.rootCause}</p></div><div><h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Tactical Instruction</h5><div class="prose text-sm text-gray-600 leading-loose">${opt.instruction.replace(/\n/g, '<br>')}</div></div></div><div class="col-span-1 bg-slate-50 p-8 flex flex-col justify-between"><div><h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Projected Impact</h5><div class="space-y-4"><div class="bg-white p-4 rounded shadow-sm border border-gray-100"><p class="text-[10px] font-bold uppercase text-gray-400">Leads</p><p class="text-lg font-black text-emerald-600">${opt.projection.leads}</p></div><div class="bg-white p-4 rounded shadow-sm border border-gray-100"><p class="text-[10px] font-bold uppercase text-gray-400">Revenue</p><p class="text-lg font-black text-emerald-600">${opt.projection.revenue}</p></div></div></div><div class="mt-8 space-y-3"><button onclick="document.getElementById('taskModal').classList.add('hidden'); alert('Applied')" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg shadow-lg">Apply Changes</button><button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-white hover:bg-gray-50 text-gray-500 font-bold py-3 rounded-lg border border-gray-200">Snooze</button></div></div></div>`;
+            },
+
+            renderGlobal: () => {
+                const g = Logic.getGlobalStats(); const s = Object.keys(DB).filter(k=>DB[k].type).map(k=>({key:k,...DB[k],stats:Logic.getChannelAggregates(k)})).sort((a,b)=>b.stats.roi-a.stats.roi).slice(0,5);
+                return `<div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">${UI.card('Total Revenue',UI.usd(g.revenue),'text-emerald-600','Gross Revenue')}${UI.card('Total Spend',UI.usd(g.spend),'text-slate-600','Ad Spend')}${UI.card('Blended CAQ',UI.usd(g.cpa),'text-orange-600','Cost per Booking')}${UI.card('Pipeline Volume',UI.num(g.leads),'text-gray-900','Total Leads')}${UI.card('Avg Deal Size',UI.usd(g.avgDeal),'text-blue-600','Est. Value')}</div><div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8"><div class="lg:col-span-2 glass-panel p-6"><h3 class="font-bold text-gray-700 mb-4">Global Revenue Velocity</h3><div class="h-72"><canvas id="mainChart"></canvas></div></div><div class="bg-slate-800 text-white p-6 rounded-xl shadow-lg border-l-4 border-orange-600"><h3 class="font-bold text-slate-400 text-xs uppercase tracking-widest mb-6">AI Feed</h3><div class="space-y-4 text-sm">${UI.feedItem('Facebook','good','Scale Warning: ROI > 400%','Approve')}${UI.feedItem('Google','bad','CAQ spiked to $190','Fix')}</div></div></div><div class="grid grid-cols-1 lg:grid-cols-3 gap-8"><div class="glass-panel p-6"><h3 class="font-bold text-gray-700 mb-4">Revenue Source Mix</h3><div class="h-60 flex justify-center"><canvas id="mixChart"></canvas></div></div><div class="lg:col-span-2 glass-panel overflow-hidden"><table class="w-full text-left text-sm text-gray-600"><thead class="bg-gray-50"><tr><th class="px-6 py-3">Channel</th><th>Rev</th><th>Spend</th><th>ROI</th></tr></thead><tbody>${s.map(c=>`<tr class="hover:bg-orange-50/30 cursor-pointer" onclick="App.router('${c.key}')"><td class="px-6 py-3 font-bold">${c.name}</td><td class="text-emerald-600 font-bold">${UI.usd(c.stats.revenue)}</td><td>${UI.usd(c.stats.spend)}</td><td class="font-bold">${c.stats.roi.toFixed(0)}%</td></tr>`).join('')}</tbody></table></div></div>`;
+            },
+            
+            renderGoals: () => {
+                const g = DB.goals;
+                const volStatus = g.targets.appointments.current >= g.targets.appointments.target ? 'border-emerald-500' : 'border-amber-500';
+                const caqStatus = g.targets.caq.current <= g.targets.caq.target ? 'border-emerald-500' : 'border-red-500';
+                return `<div class="mb-8"><div class="glass-panel p-8 bg-gradient-to-r from-slate-900 via-orange-900 to-slate-900 text-white shadow-2xl relative overflow-hidden"><div class="relative z-10"><span class="bg-orange-500/30 text-orange-200 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-widest border border-orange-500/50">Company Identity</span><h1 class="text-4xl font-black mt-4 mb-2 tracking-tight">SEO for Real Estate Investors</h1><p class="text-lg text-orange-100 font-light max-w-3xl leading-relaxed">"${g.vision}"</p></div></div></div><div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8"><div class="glass-panel p-8 border-l-8 ${volStatus} flex items-center justify-between"><div><p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Weekly North Star</p><h2 class="text-5xl font-black text-gray-800">${g.targets.appointments.current}</h2><p class="text-sm font-medium text-gray-500 mt-2">Target: <span class="text-gray-900 font-bold">${g.targets.appointments.target} Appts</span></p></div></div><div class="glass-panel p-8 border-l-8 ${caqStatus} flex items-center justify-between"><div><p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Financial Guardrail (CAQ)</p><h2 class="text-5xl font-black text-emerald-600">$${g.targets.caq.current}</h2><p class="text-sm font-medium text-gray-500 mt-2">Must be under: <span class="text-gray-900 font-bold">$${g.targets.caq.target}</span></p></div></div></div><div class="glass-panel p-8"><h3 class="font-bold text-gray-800 mb-6 flex items-center gap-2"><i class="fa-solid fa-scale-balanced text-orange-600"></i> Performance Scorecard</h3><table class="w-full text-left text-sm"><thead class="bg-gray-50"><tr><th class="p-4">Role</th><th class="p-4">Metric</th><th class="p-4">Target</th><th class="p-4">Consequence</th></tr></thead><tbody>${g.scorecard.map(s=>`<tr><td class="p-4 font-bold">${s.role}</td><td class="p-4">${s.metric}</td><td class="p-4 text-emerald-600 font-bold">${s.target}</td><td class="p-4 text-xs text-red-500">${s.consequence}</td></tr>`).join('')}</tbody></table></div>`;
+            },
+            
+            // --- NEW EXPANDED KNOWLEDGE CENTER ---
+            renderKnowledge: () => { 
+                const lib = DB.library;
+                const tab = window.currentTab || 'algo';
+                
+                const tabs = `
+                    <div class="flex gap-4 border-b border-gray-200 mb-8">
+                        <button onclick="window.currentTab='algo'; App.router('knowledge')" class="tab-btn ${tab==='algo'?'active':''}">Algorithms</button>
+                        <button onclick="window.currentTab='sops'; App.router('knowledge')" class="tab-btn ${tab==='sops'?'active':''}">SOP Library</button>
+                        <button onclick="window.currentTab='scripts'; App.router('knowledge')" class="tab-btn ${tab==='scripts'?'active':''}">Script Vault</button>
+                    </div>`;
+
+                let content = '';
+                if(tab === 'algo') {
+                    content = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">${lib.algorithms.map((a, i)=>`
+                        <div class="glass-panel p-6 border-t-4 ${a.color} kb-card" onclick="document.getElementById('algo-details-${i}').classList.toggle('hidden'); this.classList.toggle('expanded')">
+                            <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-4"><i class="${a.icon} text-2xl text-gray-600"></i><div><h4 class="font-bold text-gray-900 text-lg m-0">${a.title}</h4><p class="text-xs text-gray-500">${a.summary}</p></div></div>
+                            <div id="algo-details-${i}" class="hidden prose text-sm text-gray-600 border-t border-gray-100 pt-4 mt-2 bg-gray-50 p-4 rounded-lg">${a.details}</div>
+                            <p class="text-center text-xs text-orange-600 font-bold mt-2">Click to Expand</p>
+                        </div>`).join('')}</div>`;
+                } else if (tab === 'sops') {
+                    content = `<div class="space-y-4"><div class="grid grid-cols-1 gap-4">${lib.sops.map((s,i)=>`
+                        <div class="glass-panel p-0 kb-card overflow-hidden">
+                            <div class="p-6 cursor-pointer bg-white hover:bg-gray-50 transition-colors flex justify-between items-center" onclick="document.getElementById('sop-${i}').classList.toggle('hidden')">
+                                <div class="flex items-center gap-4"><div class="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-sm">${i+1}</div><div><h4 class="font-bold text-gray-800 text-base">${s.title}</h4><span class="tag bg-gray-100 text-gray-500 mt-1 inline-block">${s.category}</span></div></div><i class="fa-solid fa-chevron-down text-gray-400"></i>
+                            </div>
+                            <div id="sop-${i}" class="hidden border-t border-gray-100 bg-gray-50/50 p-6">
+                                <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Execution Steps</h5>
+                                <ol class="list-decimal list-inside space-y-3 text-sm text-gray-700 mb-4">${s.steps.map(step=>`<li class="pl-2 leading-relaxed">${step}</li>`).join('')}</ol>
+                                <div class="bg-blue-50 p-4 rounded border border-blue-100 text-sm text-blue-800">${s.details}</div>
+                            </div>
+                        </div>`).join('')}</div></div>`;
+                } else if (tab === 'scripts') {
+                    content = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">${lib.scripts.map((s, i) => `
+                        <div class="glass-panel p-0 overflow-hidden">
+                            <div class="bg-slate-50 p-4 border-b border-gray-200"><h4 class="font-bold text-slate-800 flex items-center gap-2"><i class="fa-solid fa-comment-dots text-orange-500"></i> ${s.title}</h4><p class="text-xs text-gray-500 italic">${s.context}</p></div>
+                            <div class="p-6">
+                                <p class="font-mono text-sm text-slate-700 bg-orange-50/50 p-4 rounded border border-orange-100 leading-relaxed mb-4">"${s.content}"</p>
+                                <button onclick="document.getElementById('obj-${i}').classList.toggle('hidden')" class="text-xs font-bold text-gray-500 hover:text-orange-600 flex items-center gap-1"><i class="fa-solid fa-shield-halved"></i> View Objection Handler</button>
+                                <div id="obj-${i}" class="hidden mt-3 p-3 bg-red-50 text-red-800 text-xs rounded border border-red-100">${s.objections}</div>
+                            </div>
+                        </div>`).join('')}</div>`;
+                }
+
+                return `<div class="mb-8"><h2 class="text-3xl font-black text-gray-900">Knowledge Hub</h2><p class="text-gray-500">Operational Intelligence</p></div>${tabs}${content}`;
+            },
+            
+            renderChannel: (id) => {
+                const ch = DB[id]; const m = ch.metrics; const d=(c,p)=>`<span class="${((c-p)/p)>=0?'text-emerald-500':'text-red-500'} text-[10px] font-bold ml-2">${((c-p)/p*100).toFixed(1)}%</span>`;
+                const cpb = m.bookings.current>0?m.spend.current/m.bookings.current:0;
+                
+                return `
+                    <div class="flex justify-between items-center mb-6"><div><h2 class="text-2xl font-black text-gray-800">${ch.name}</h2><p class="text-xs text-gray-500">Channel Intelligence</p></div><div class="text-xs font-bold text-gray-600 bg-white px-3 py-1.5 rounded border">Last 30 Days</div></div>
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">${UI.card('Ad Spend',UI.usd(m.spend.current),d(m.spend.current,m.spend.prev))}${UI.card('Leads',m.leads.current,d(m.leads.current,m.leads.prev))}${UI.card('Booked Appts',m.bookings.current,d(m.bookings.current,m.bookings.prev),'border-b-4 border-orange-600')}${UI.card('Cost Per Book',UI.usd(cpb),cpb<175?'<span class="text-emerald-500 text-[10px]">Good</span>':'<span class="text-red-500 text-[10px]">High</span>')}${UI.card('Revenue',UI.usd(m.revenue.current),d(m.revenue.current,m.revenue.prev))}</div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8"><div class="lg:col-span-2 glass-panel p-6"><h3 class="font-bold text-gray-700 mb-4">Efficiency Trend</h3><div class="h-64"><canvas id="channelChart"></canvas></div></div><div class="glass-panel p-0 overflow-hidden flex flex-col border-t-4 border-orange-600 bg-white"><div class="p-4 bg-slate-50 border-b border-gray-100 flex justify-between items-center"><h3 class="font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-robot text-orange-600"></i> Genius AI</h3><span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full">${ch.optimizations?ch.optimizations.length:0} Ideas</span></div><div class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">${ch.optimizations && ch.optimizations.length > 0 ? ch.optimizations.map((opt, idx) => `<div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm genius-card relative overflow-hidden"><div class="flex justify-between items-start mb-2"><span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded">${opt.type}</span><span class="text-[10px] font-bold text-slate-400">${opt.confidence}% Conf.</span></div><h4 class="text-sm font-bold text-gray-800 mb-1 leading-snug">${opt.title}</h4><button onclick="UI.openGeniusModal('${id}', ${idx})" class="w-full bg-slate-900 hover:bg-orange-600 text-white text-xs font-bold py-2.5 rounded mt-3">Analyze</button></div>`).join('') : '<div class="text-center py-10 text-gray-400 text-xs">System Optimized</div>'}</div></div></div>
+                    <div class="glass-panel overflow-hidden"><div class="px-6 py-4 border-b border-gray-200 bg-white"><h3 class="font-bold text-gray-700">Campaign Manager</h3></div><table class="w-full data-table"><thead class="bg-gray-50"><tr><th>Status</th><th>Name</th><th>Spend</th><th>Leads</th><th>Bookings</th><th>Revenue</th></tr></thead><tbody>${ch.campaigns.map(c=>`<tr><td><span class="status-dot status-active"></span>ACTIVE</td><td class="font-bold">${c.name}</td><td>${UI.usd(c.spend)}</td><td>${c.leads}</td><td class="font-bold text-orange-600">${c.bookings}</td><td class="text-emerald-600 font-bold">${UI.usd(c.revenue)}</td></tr>`).join('')}</tbody></table></div>`;
+            },
+
+            card: (t, v, d, e='') => `<div class="glass-panel p-5 ${e}"><p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">${t}</p><div class="flex items-baseline gap-2 mt-1"><h3 class="text-2xl font-black text-slate-800">${v}</h3></div><div class="mt-1">${d}</div></div>`,
+            feedItem: (s, t, m, a) => `<div class="border-b border-gray-700/50 pb-3 last:border-0 group"><div class="flex justify-between items-center mb-1"><span class="text-xs font-bold text-gray-300 flex items-center"><span class="w-2 h-2 rounded-full ${t==='good'?'bg-emerald-500':'bg-red-500'} inline-block mr-2"></span>${s}</span><button class="text-[9px] bg-orange-600 text-white px-2 rounded opacity-80 hover:opacity-100">${a}</button></div><p class="text-xs text-slate-400 pl-4">${m}</p></div>`
+        };
+
+        const App = {
+            chartInstance: null, mixInstance: null,
+            init: () => { App.router('global'); },
+            router: (route) => {
+                document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+                const nav = document.getElementById(`nav-${route}`); if(nav) nav.classList.add('active');
+                const container = document.getElementById('content-area');
+                
+                if(route === 'global') { container.innerHTML = UI.renderGlobal(); setTimeout(()=>{ new Chart(document.getElementById('mainChart'),{type:'line',data:{labels:['M','T','W','T','F','S','S'],datasets:[{data:[65,59,80,81,56,95,110],borderColor:'#ea580c',backgroundColor:'#ea580c10',fill:true}]},options:{maintainAspectRatio:false,plugins:{legend:false},scales:{y:{display:false},x:{display:false}}}}); new Chart(document.getElementById('mixChart'),{type:'doughnut',data:{labels:['Paid','Organic'],datasets:[{data:[300,150],backgroundColor:['#ea580c','#10b981'],borderWidth:0}]},options:{cutout:'75%',plugins:{legend:{position:'bottom'}}}}); },50); }
+                else if(route === 'goals') container.innerHTML = UI.renderGoals();
+                else if(route === 'knowledge') container.innerHTML = UI.renderKnowledge();
+                else { const data=DB[route]; if(data){ container.innerHTML=UI.renderChannel(route); if(data.history) setTimeout(()=>{ new Chart(document.getElementById('channelChart'),{type:'line',data:{labels:['M','T','W','T','F','S','S'],datasets:[{data:data.history.roas,borderColor:'#ea580c',backgroundColor:'#ea580c10',fill:true}]},options:{maintainAspectRatio:false,plugins:{legend:false},scales:{y:{display:false},x:{display:false}}}}); },50); } else container.innerHTML='<div class="p-10 text-center">No Data</div>'; }
+            },
+            simulateUpdate: () => { const btn=document.querySelector('.fa-rotate'); btn.classList.add('fa-spin'); setTimeout(()=>{ btn.classList.remove('fa-spin'); alert('Data Refreshed'); },1000); }
+        };
+
+        window.addEventListener('DOMContentLoaded', App.init);
+    </script>
+</body>
+</html>
+
