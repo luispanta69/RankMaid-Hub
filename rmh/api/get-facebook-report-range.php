@@ -14,7 +14,7 @@ if (!$start || !$end) {
 
 $stmt = $pdo->prepare("
     SELECT raw_row
-    FROM facebook_ads_data
+    FROM facebook_ads
     WHERE report_date BETWEEN ? AND ?
     ORDER BY report_date ASC
 ");

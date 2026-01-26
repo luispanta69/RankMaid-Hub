@@ -9,7 +9,7 @@ require_once "db.php";
 
 $stmt = $pdo->query("
   SELECT report_date
-  FROM facebook_ads_data
+  FROM facebook_ads
   ORDER BY report_date ASC
 ");
 

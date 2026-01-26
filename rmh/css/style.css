@@ -30,3 +30,4 @@ body { background-color: #f0f2f5; color: #1e293b; font-family: 'Inter', system-u
 .modal-content { animation: slideUp 0.3s ease-out; }
 @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 ::-webkit-scrollbar { width: 6px; } ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+

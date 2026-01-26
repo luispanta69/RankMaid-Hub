@@ -27,14 +27,14 @@ try {
 
     // 1. Load existing dates
     $existingDates = [];
-    $stmt = $pdo->query("SELECT report_date FROM facebook_ads_data");
+    $stmt = $pdo->query("SELECT report_date FROM facebook_ads");
     foreach ($stmt->fetchAll(PDO::FETCH_COLUMN) as $d) {
         $existingDates[$d] = true;
     }
 
     // 2. Insert rows (deduped)
     $insertStmt = $pdo->prepare("
-    INSERT INTO facebook_ads_data (report_date, raw_row)
+    INSERT INTO facebook_ads (report_date, raw_row)
     VALUES (:report_date, :raw_row)
     ON DUPLICATE KEY UPDATE
       raw_row = VALUES(raw_row)

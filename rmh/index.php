@@ -32,7 +32,7 @@ $db_connected = isset($pdo);
             </div>
         </div>
 
-        <nav class="flex-1 overflow-y-auto py-4 space-y-1">
+        <nav class="flex-1 overflow-y-auto py-4 space-y-1 pb-20">
             <div class="px-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Core Operations</div>
             <div class="px-3 mb-2">
                 <div onclick="App.router('global')" id="nav-global" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-r-md active">
@@ -108,7 +108,16 @@ $db_connected = isset($pdo);
                     <h3 class="text-xl font-black text-white flex items-center gap-2">
                         <i class="fa-solid fa-brain text-orange-500"></i> Strategic Analysis
                     </h3>
-                    <p class="text-slate-400 text-xs mt-1">RMH Intelligence Engine v2.5</p>
+                    <div class="flex items-center gap-3 mt-1">
+                        <p class="text-slate-400 text-xs">RMH Intelligence Engine v2.5</p>
+                        <div class="flex items-center gap-2">
+                            <label for="modal_start_date" class="text-slate-500 text-[10px] uppercase font-bold">From:</label>
+                            <input type="date" id="modal_start_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
+                            <label for="modal_end_date" class="text-slate-500 text-[10px] uppercase font-bold">To:</label>
+                            <input type="date" id="modal_end_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
+                            <button id="apply_date_filter" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-xs font-bold transition-all">Apply</button>
+                        </div>
+                    </div>
                 </div>
                 <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="text-gray-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
             </div>
@@ -229,9 +238,145 @@ $db_connected = isset($pdo);
             },
             openStrategicModal: (cid) => {
                 const opt = DB[cid].optimizations[0];
-                if(!opt) return;
-                document.getElementById('taskModal').classList.remove('hidden');
-                document.getElementById('modal-body').innerHTML = `<div class="grid grid-cols-3 divide-x divide-gray-100"><div class="col-span-2 p-8"><div class="flex items-center gap-3 mb-6"><span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">${opt.type}</span><span class="text-xs font-bold text-gray-500">Confidence: ${opt.confidence}%</span></div><h4 class="text-2xl font-black text-gray-900 mb-4">${opt.title}</h4><div class="mb-8"><h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Root Cause</h5><p class="text-gray-700 bg-gray-50 p-4 rounded-lg border-l-4 border-slate-300 italic">"${opt.rootCause}"</p></div><div><h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Tactical Instruction</h5><div class="prose text-sm text-gray-600 leading-loose">${opt.instruction.replace(/\n/g, '<br>')}</div></div></div><div class="col-span-1 bg-slate-50 p-8 flex flex-col justify-between"><div><h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Projected Impact</h5><div class="space-y-4"><div class="bg-white p-4 rounded shadow-sm border border-gray-100"><p class="text-[10px] font-bold uppercase text-gray-400">Leads</p><p class="text-lg font-black text-emerald-600">${opt.projection.leads}</p></div><div class="bg-white p-4 rounded shadow-sm border border-gray-100"><p class="text-[10px] font-bold uppercase text-gray-400">Revenue</p><p class="text-lg font-black text-emerald-600">${opt.projection.revenue}</p></div></div></div><div class="mt-8 space-y-3"><button onclick="document.getElementById('taskModal').classList.add('hidden'); alert('Budget Updated')" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg shadow-lg">Apply Changes</button></div></div></div>`;
+                if (!opt) return;
+
+                const modal = document.getElementById('taskModal');
+                const modalBody = document.getElementById('modal-body');
+                const startDateInput = document.getElementById('modal_start_date');
+                const endDateInput = document.getElementById('modal_end_date');
+                const applyFilterBtn = document.getElementById('apply_date_filter');
+
+                // Set default dates to the current month if not already set
+                if (!startDateInput.value && !endDateInput.value) {
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = today.getMonth();
+                    const firstDay = new Date(year, month, 1);
+                    const lastDay = new Date(year, month + 1, 0);
+                    startDateInput.value = firstDay.toISOString().split('T')[0];
+                    endDateInput.value = lastDay.toISOString().split('T')[0];
+                }
+                
+                // Show loading state
+                modal.classList.remove('hidden');
+                modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-gray-500">Loading real database analysis...</p></div>`;
+                
+                // Fetch real data from database
+                const fetchAnalysisData = () => {
+                    const startDate = startDateInput.value;
+                    const endDate = endDateInput.value;
+                    let apiUrl = `api/facebook_analysis.php?action=getDetailedAnalysis&assumed_value=150000`;
+                    if (startDate) apiUrl += `&start_date=${startDate}`;
+                    if (endDate) apiUrl += `&end_date=${endDate}`;
+
+                    fetch(apiUrl)
+                    .then(response => response.json())
+                    .then(result => {
+                        if (!result.success) throw new Error(result.error);
+                        
+                        const data = result.data;
+                        const sustained = data.sustained_found;
+                        const bestWindow = data.best_window;
+                        
+                        if (!bestWindow) {
+                            throw new Error('No data available for analysis');
+                        }
+                        
+                        // Build verification section
+                        let verificationHTML = '';
+                        if (sustained) {
+                            verificationHTML = `<div class="bg-emerald-50 border-2 border-emerald-500 p-4 rounded-lg mb-6">
+                                <p class="text-emerald-700 font-bold text-sm mb-2">✓ Verified: 14-Day Sustained ROAS > 6.0x Found!</p>
+                                <p class="text-emerald-600 text-xs">Period: ${data.sustained_windows[0].start_date} to ${data.sustained_windows[0].end_date}</p>
+                                <p class="text-emerald-600 text-xs">Average ROAS: ${data.sustained_windows[0].avg_roas.toFixed(2)}x</p>
+                            </div>`;
+                        } else {
+                            const noteText = bestWindow.note ? `<p class="text-orange-600 text-xs mt-2">${bestWindow.note}</p>` : '';
+                            verificationHTML = `<div class="bg-orange-50 border-2 border-orange-500 p-4 rounded-lg mb-6">
+                                <p class="text-orange-700 font-bold text-sm mb-2">⚠ Verification Needed: No 14-Day Sustained ROAS > 6.0x</p>
+                                <p class="text-orange-600 text-xs">Highest Avg ROAS: ${bestWindow.avg_roas.toFixed(2)}x</p>
+                                <p class="text-orange-600 text-xs">Period: ${bestWindow.start_date} to ${bestWindow.end_date}</p>
+                                ${noteText}
+                            </div>`;
+                        }
+                        
+                        // Build daily breakdown table
+                        let dailyBreakdownHTML = `<table class="w-full text-xs"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Date</th><th class="p-2 text-right">Results</th><th class="p-2 text-right">Spend</th><th class="p-2 text-right">ROAS</th></tr></thead><tbody>`;
+                        
+                        // Show last 14 days or all available days
+                        const displayDays = data.daily_breakdown;
+                        displayDays.forEach(day => {
+                            const roasColor = day.roas > 6.0 ? 'text-emerald-600 font-bold' : 'text-red-600';
+                            const spend = typeof day.spend === 'number' ? day.spend : parseFloat(day.spend);
+                            const roas = typeof day.roas === 'number' ? day.roas : parseFloat(day.roas);
+                            dailyBreakdownHTML += `<tr class="border-b"><td class="p-2">${day.date}</td><td class="p-2 text-right">${day.results}</td><td class="p-2 text-right">$${spend.toFixed(0)}</td><td class="p-2 text-right ${roasColor}">${roas.toFixed(2)}x</td></tr>`;
+                        });
+                        
+                        dailyBreakdownHTML += `</tbody></table>`;
+                        
+                        // Calculate totals
+                        const totalResults = data.daily_breakdown.reduce((sum, d) => sum + d.results, 0);
+                        const totalSpend = data.daily_breakdown.reduce((sum, d) => sum + d.spend, 0);
+                        const totalRevenue = totalResults * data.assumed_value_per_result;
+                        const overallRoas = totalSpend > 0 ? (totalRevenue / totalSpend) : 0;
+                        
+                        // Build updated modal content
+                        const modalContent = `<div class="grid grid-cols-3 divide-x divide-gray-100">
+                            <div class="col-span-2 p-8">
+                                <div class="flex items-center gap-3 mb-6">
+                                    <span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">${opt.type}</span>
+                                    <span class="text-xs font-bold text-gray-500">Database Verified</span>
+                                </div>
+                                <h4 class="text-2xl font-black text-gray-900 mb-4">${opt.title}</h4>
+                                
+                                ${verificationHTML}
+                                
+                                <div class="mb-8">
+                                    <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Performance Breakdown</h5>
+                                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 overflow-x-auto max-h-48 overflow-y-auto">
+                                        ${dailyBreakdownHTML}
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Analysis Notes</h5>
+                                    <p class="text-sm text-gray-600">Data analyzed from <strong>${data.daily_breakdown.length}</strong> days of campaign activity. Each lead assumed value: <strong>$${data.assumed_value_per_result.toLocaleString()}</strong>. ROAS = (Results × $${data.assumed_value_per_result.toLocaleString()}) ÷ Spend.</p>
+                                </div>
+
+                            </div>
+                            <div class="col-span-1 bg-slate-50 p-8 flex flex-col justify-between">
+                                <div>
+                                    <div class="mt-8">
+                                        <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Projected Impact</h5>
+                                        <div class="space-y-4">
+                                            <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
+                                                <p class="text-[10px] font-bold uppercase text-gray-400">Additional Leads</p>
+                                                <p class="text-lg font-black text-emerald-600">${opt.projection.leads}</p>
+                                            </div>
+                                            <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
+                                                <p class="text-[10px] font-bold uppercase text-gray-400">Revenue</p>
+                                                <p class="text-lg font-black text-emerald-600">${opt.projection.revenue}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="mt-8 space-y-3">
+                                    <button class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg shadow-lg transition-all">Apply Changes</button>
+                                    <button class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition-all">Snooze</button>
+                                    <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg transition-all text-xs">Close Analysis</button>
+                                </div>
+                            </div>
+                        </div>`;
+                        
+                        document.getElementById('modal-body').innerHTML = modalContent;
+                    }).catch(error => {
+                        console.error('Error fetching detailed analysis:', error);
+                        modalBody.innerHTML = `<div class="p-8"><div class="bg-red-50 border border-red-200 p-4 rounded-lg"><p class="text-red-700 font-bold">Error Loading Analysis</p><p class="text-red-600 text-sm mt-2">${error.message}</p><p class="text-red-500 text-xs mt-3">Make sure XAMPP is running and the database connection is active.</p></div></div>`;
+                    });
+                };
+
+                fetchAnalysisData(); // Initial fetch
+                applyFilterBtn.onclick = fetchAnalysisData; // Re-fetch on button click
             },
             simulateUpdate: () => { location.reload(); },
             init: () => { App.router('global'); }
