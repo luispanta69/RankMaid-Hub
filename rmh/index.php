@@ -108,16 +108,24 @@ $db_connected = isset($pdo);
                     <h3 class="text-xl font-black text-white flex items-center gap-2">
                         <i class="fa-solid fa-brain text-orange-500"></i> Strategic Analysis
                     </h3>
-                    <div class="flex items-center gap-3 mt-1">
-                        <p class="text-slate-400 text-xs">RMH Intelligence Engine v2.5</p>
-                        <div class="flex items-center gap-2">
+
+                     <div style="visibility: collapse">
+                        <div class="flex items-center gap-3 mt-1">
+                            <p class="text-slate-400 text-xs">RMH Intelligence Engine v2.5</p>
+                            <div class="flex items-center gap-2">
+                            <div style="visibility: collapse">
                             <label for="modal_start_date" class="text-slate-500 text-[10px] uppercase font-bold">From:</label>
-                            <input type="date" id="modal_start_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
-                            <label for="modal_end_date" class="text-slate-500 text-[10px] uppercase font-bold">To:</label>
-                            <input type="date" id="modal_end_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
-                            <button id="apply_date_filter" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-xs font-bold transition-all">Apply</button>
+                                <input type="date" id="modal_start_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
+                                <label for="modal_end_date" class="text-slate-500 text-[10px] uppercase font-bold">To:</label>
+                                <input type="date" id="modal_end_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
+                                <button id="apply_date_filter" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-xs font-bold transition-all">Apply</button>
+                            </div>
+                            </div>
                         </div>
                     </div>
+
+
+                    <p class="text-slate-400 text-xs mt-1">RMH Intelligence Engine v2.5</p>
                 </div>
                 <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="text-gray-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
             </div>
@@ -282,24 +290,6 @@ $db_connected = isset($pdo);
                             throw new Error('No data available for analysis');
                         }
                         
-                        // Build verification section
-                        let verificationHTML = '';
-                        if (sustained) {
-                            verificationHTML = `<div class="bg-emerald-50 border-2 border-emerald-500 p-4 rounded-lg mb-6">
-                                <p class="text-emerald-700 font-bold text-sm mb-2">✓ Verified: 14-Day Sustained ROAS > 6.0x Found!</p>
-                                <p class="text-emerald-600 text-xs">Period: ${data.sustained_windows[0].start_date} to ${data.sustained_windows[0].end_date}</p>
-                                <p class="text-emerald-600 text-xs">Average ROAS: ${data.sustained_windows[0].avg_roas.toFixed(2)}x</p>
-                            </div>`;
-                        } else {
-                            const noteText = bestWindow.note ? `<p class="text-orange-600 text-xs mt-2">${bestWindow.note}</p>` : '';
-                            verificationHTML = `<div class="bg-orange-50 border-2 border-orange-500 p-4 rounded-lg mb-6">
-                                <p class="text-orange-700 font-bold text-sm mb-2">⚠ Verification Needed: No 14-Day Sustained ROAS > 6.0x</p>
-                                <p class="text-orange-600 text-xs">Highest Avg ROAS: ${bestWindow.avg_roas.toFixed(2)}x</p>
-                                <p class="text-orange-600 text-xs">Period: ${bestWindow.start_date} to ${bestWindow.end_date}</p>
-                                ${noteText}
-                            </div>`;
-                        }
-                        
                         // Build daily breakdown table
                         let dailyBreakdownHTML = `<table class="w-full text-xs"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Date</th><th class="p-2 text-right">Results</th><th class="p-2 text-right">Spend</th><th class="p-2 text-right">ROAS</th></tr></thead><tbody>`;
                         
@@ -326,21 +316,20 @@ $db_connected = isset($pdo);
                                 <div class="flex items-center gap-3 mb-6">
                                     <span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">${opt.type}</span>
                                     <span class="text-xs font-bold text-gray-500">Database Verified</span>
+                                    <span class="flex items-center gap-1 text-xs font-bold text-gray-500">Confidence: ${opt.confidence}%</span>
                                 </div>
                                 <h4 class="text-2xl font-black text-gray-900 mb-4">${opt.title}</h4>
                                 
-                                ${verificationHTML}
-                                
                                 <div class="mb-8">
-                                    <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Performance Breakdown</h5>
-                                    <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 overflow-x-auto max-h-48 overflow-y-auto">
-                                        ${dailyBreakdownHTML}
+                                    <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Root Cause</h5>
+                                    <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-slate-300">
+                                        <p class="text-gray-600 italic text-sm">${opt.rootCause}</p>
                                     </div>
                                 </div>
                                 
                                 <div>
-                                    <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Analysis Notes</h5>
-                                    <p class="text-sm text-gray-600">Data analyzed from <strong>${data.daily_breakdown.length}</strong> days of campaign activity. Each lead assumed value: <strong>$${data.assumed_value_per_result.toLocaleString()}</strong>. ROAS = (Results × $${data.assumed_value_per_result.toLocaleString()}) ÷ Spend.</p>
+                                    <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Tactical Instruction</h5>
+                                    <div class="prose text-sm text-gray-600 leading-relaxed">${opt.instruction.replace(/\n/g, '<br>')}</div>
                                 </div>
 
                             </div>
@@ -361,10 +350,8 @@ $db_connected = isset($pdo);
                                     </div>
                                 </div>
                                 <div class="mt-8 space-y-3">
-                                    <button class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg shadow-lg transition-all">Apply Changes</button>
-                                    <button class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition-all">Snooze</button>
-                                    <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg transition-all text-xs">Close Analysis</button>
-                                </div>
+                                    <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg shadow-lg transition-all">Apply Changes</button>
+                                     <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition-all">Snooze</button>
                             </div>
                         </div>`;
                         
