@@ -109,23 +109,16 @@ $db_connected = isset($pdo);
                         <i class="fa-solid fa-brain text-orange-500"></i> Strategic Analysis
                     </h3>
 
-                     <div style="visibility: collapse">
-                        <div class="flex items-center gap-3 mt-1">
-                            <p class="text-slate-400 text-xs">RMH Intelligence Engine v2.5</p>
-                            <div class="flex items-center gap-2">
-                            <div style="visibility: collapse">
-                            <label for="modal_start_date" class="text-slate-500 text-[10px] uppercase font-bold">From:</label>
-                                <input type="date" id="modal_start_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
-                                <label for="modal_end_date" class="text-slate-500 text-[10px] uppercase font-bold">To:</label>
-                                <input type="date" id="modal_end_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
-                                <button id="apply_date_filter" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-xs font-bold transition-all">Apply</button>
-                            </div>
-                            </div>
-                        </div>
+                    <div class="flex items-center gap-3 mt-1">
+                        <p class="text-slate-400 text-xs">RMH Intelligence Engine v2.5</p>
                     </div>
-
-
-                    <p class="text-slate-400 text-xs mt-1">RMH Intelligence Engine v2.5</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <label for="modal_start_date" class="text-slate-500 text-[10px] uppercase font-bold">From:</label>
+                    <input type="date" id="modal_start_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
+                    <label for="modal_end_date" class="text-slate-500 text-[10px] uppercase font-bold">To:</label>
+                    <input type="date" id="modal_end_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
+                    <button id="apply_date_filter" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-xs font-bold transition-all">Apply</button>
                 </div>
                 <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="text-gray-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
             </div>
@@ -141,7 +134,8 @@ $db_connected = isset($pdo);
                 metrics: { spend: {current:4200, prev:3800}, leads: {current:120, prev:95}, bookings: {current:18, prev:12}, revenue: {current:25000, prev:18000} }, 
                 campaigns: [{id:'C1',name:'Prospecting_Broad_V3',status:'active',spend:2800,leads:85,bookings:12,revenue:18000}, {id:'C2',name:'Retargeting_Web',status:'active',spend:900,leads:30,bookings:6,revenue:7000}], 
                 optimizations: [
-                    { id: 101, title: 'Scale "Prospecting_Broad" Budget', type: 'Scale Opportunity', confidence: 94, rootCause: 'Campaign has sustained ROAS > 6.0x for 14 days.', projection: { leads: '+12 Leads/mo', revenue: '+$4,500 Revenue' }, instruction: '1. Navigate to <strong>Ads Manager</strong>.\n2. Select <strong>Prospecting_Broad_V3</strong>.\n3. Increase Daily Budget from <strong>$100 to $120</strong> (+20%).' }
+                    { id: 101, title: 'Scale "Prospecting_Broad" Budget', type: 'Scale Opportunity', confidence: 94, rootCause: 'Campaign has sustained ROAS > 6.0x for 14 days.', projection: { leads: '+12 Leads/mo', revenue: '+$4,500 Revenue' }, instruction: '1. Navigate to <strong>Ads Manager</strong>.\n2. Select <strong>Prospecting_Broad_V3</strong>.\n3. Increase Daily Budget from <strong>$100 to $120</strong> (+20%).' },
+                    { id: 102, title: 'Retargeting Creative Fatigue', type: 'Creative Alert', confidence: 88, impact: 'Medium', rootCause: 'Frequency > 4.5 and CTR dropped to 0.6%.', projection: { leads: 'Stabilize', revenue: 'Prevent Churn' }, instruction: '1. Go to <strong>Retargeting Ad Set</strong>.\n2. Turn off "Image_Ad_04".\n3. Activate "Video_Testimonial_02".' }
                 ],
                 history: {roas:[2.1, 2.4, 3.8, 3.2, 4.0, 5.8, 6.2]} 
             },
@@ -237,136 +231,129 @@ $db_connected = isset($pdo);
                     const data = DB[route];
                     if(data) {
                         const m = data.metrics;
-                        container.innerHTML = `<div class="mb-6"><h2 class="text-2xl font-black text-gray-800">${data.name}</h2><p class="text-xs text-gray-500 font-medium">Channel Intelligence</p></div><div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">${UI.card('AD SPEND', UI.usd(m.spend.current), 'text-slate-800', '')}${UI.card('LEADS', UI.num(m.leads.current), 'text-slate-800', '')}${UI.card('BOOKED APPTS', UI.num(m.bookings.current), 'text-orange-600', '')}${UI.card('COST PER BOOK', UI.usd(m.spend.current / m.bookings.current), 'text-red-600', '')}${UI.card('REVENUE', UI.usd(m.revenue.current), 'text-emerald-600', '')}</div><div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8"><div class="lg:col-span-2 glass-panel p-6"><h3 class="font-bold text-gray-700 mb-4">Efficiency Trend</h3><div class="h-64"><canvas id="channelChart"></canvas></div></div><div class="glass-panel p-0 overflow-hidden border-2 border-orange-600"><div class="bg-white px-6 py-4 border-b border-orange-600"><div class="flex items-center justify-between"><h3 class="font-black text-gray-800 flex items-center gap-2"><i class="fa-solid fa-sparkles text-orange-600 text-lg"></i> Genius AI</h3><span class="text-xs font-bold text-orange-600">2 Ideas</span></div></div><div class="p-6 space-y-4">${data.optimizations.map((opt, i) => `<div class="border-b border-gray-200 pb-4 last:border-0"><div class="flex items-center justify-between mb-2"><span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">${opt.type}</span><span class="text-[10px] font-bold text-gray-400">${opt.confidence}% Conf.</span></div><h4 class="font-bold text-gray-900 text-sm mb-3">${opt.title}</h4><button onclick="App.openStrategicModal('${route}')" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs transition-all">Analyze</button></div>`).join('')}</div></div></div><div class="glass-panel overflow-hidden mt-8"><div class="bg-gray-50 px-6 py-4 border-b border-gray-200"><h3 class="font-bold text-gray-800">Campaign Manager</h3></div><table class="w-full text-left text-sm"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-xs font-bold text-gray-600">Status</th><th class="px-6 py-3 text-xs font-bold text-gray-600">Name</th><th class="px-6 py-3 text-xs font-bold text-gray-600">Spend</th><th class="px-6 py-3 text-xs font-bold text-gray-600">Leads</th><th class="px-6 py-3 text-xs font-bold text-gray-600">Bookings</th><th class="px-6 py-3 text-xs font-bold text-gray-600">Revenue</th></tr></thead><tbody>${data.campaigns.map(c=>`<tr class="border-t border-gray-100 hover:bg-orange-50"><td class="px-6 py-3 text-xs"><span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>ACTIVE</td><td class="px-6 py-3 font-bold text-gray-800 text-sm">${c.name}</td><td class="px-6 py-3 text-gray-600">${UI.usd(c.spend)}</td><td class="px-6 py-3 text-gray-600">${c.leads}</td><td class="px-6 py-3 text-orange-600 font-bold">${c.bookings}</td><td class="px-6 py-3 text-emerald-600 font-bold">${UI.usd(c.revenue)}</td></tr>`).join('')}</tbody></table></div>`;
+                        container.innerHTML = `<div class="mb-6"><h2 class="text-2xl font-black text-gray-800">${data.name}</h2><p class="text-xs text-gray-500 font-medium">Channel Intelligence</p></div><div class="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">${UI.card('AD SPEND', UI.usd(m.spend.current), 'text-slate-800', '')}${UI.card('LEADS', UI.num(m.leads.current), 'text-slate-800', '')}${UI.card('BOOKED APPTS', UI.num(m.bookings.current), 'text-orange-600', '')}${UI.card('COST PER BOOK', UI.usd(m.spend.current / m.bookings.current), 'text-red-600', '')}${UI.card('REVENUE', UI.usd(m.revenue.current), 'text-emerald-600', '')}</div><div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8"><div class="lg:col-span-2 glass-panel p-6"><h3 class="font-bold text-gray-700 mb-4">Efficiency Trend</h3><div class="h-64"><canvas id="channelChart"></canvas></div></div><div class="glass-panel p-0 overflow-hidden border-2 border-orange-600"><div class="bg-white px-6 py-4 border-b border-orange-600"><div class="flex items-center justify-between"><h3 class="font-black text-gray-800 flex items-center gap-2"><i class="fa-solid fa-sparkles text-orange-600 text-lg"></i> Genius AI</h3><span class="text-xs font-bold text-orange-600">${data.optimizations.length} Ideas</span></div></div><div class="p-6 space-y-4">${data.optimizations.map((opt, i) => `<div class="border-b border-gray-200 pb-4 last:border-0"><div class="flex items-center justify-between mb-2"><span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-1 rounded uppercase tracking-wider">${opt.type}</span><span class="text-[10px] font-bold text-gray-400">${opt.confidence}% Conf.</span></div><h4 class="font-bold text-gray-900 text-sm mb-3">${opt.title}</h4><button onclick="App.openStrategicModal('${route}', ${i})" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-2 rounded text-xs transition-all">Analyze</button></div>`).join('')}</div></div></div><div class="glass-panel overflow-hidden mt-8"><div class="bg-gray-50 px-6 py-4 border-b border-gray-200"><h3 class="font-bold text-gray-800">Campaign Manager</h3></div><table class="w-full text-left text-sm"><thead class="bg-gray-50"><tr><th class="px-6 py-3 text-xs font-bold text-gray-600">Status</th><th class="px-6 py-3 text-xs font-bold text-gray-600">Name</th><th class="px-6 py-3 text-xs font-bold text-gray-600">Spend</th><th class="px-6 py-3 text-xs font-bold text-gray-600">Leads</th><th class="px-6 py-3 text-xs font-bold text-gray-600">Bookings</th><th class="px-6 py-3 text-xs font-bold text-gray-600">Revenue</th></tr></thead><tbody>${data.campaigns.map(c=>`<tr class="border-t border-gray-100 hover:bg-orange-50"><td class="px-6 py-3 text-xs"><span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-2"></span>ACTIVE</td><td class="px-6 py-3 font-bold text-gray-800 text-sm">${c.name}</td><td class="px-6 py-3 text-gray-600">${UI.usd(c.spend)}</td><td class="px-6 py-3 text-gray-600">${c.leads}</td><td class="px-6 py-3 text-orange-600 font-bold">${c.bookings}</td><td class="px-6 py-3 text-emerald-600 font-bold">${UI.usd(c.revenue)}</td></tr>`).join('')}</tbody></table></div>`;
                         setTimeout(() => { new Chart(document.getElementById('channelChart'),{type:'line',data:{labels:['M','T','W','T','F','S','S'],datasets:[{data:data.history.roas,borderColor:'#ea580c',backgroundColor:'#ea580c10',fill:true}]},options:{maintainAspectRatio:false,plugins:{legend:false}}}); }, 50);
                     } else {
                         container.innerHTML = `<div class="p-20 text-center text-gray-400">Section: ${route} integration pending data source.</div>`;
                     }
                 }
             },
-            openStrategicModal: (cid) => {
-                const opt = DB[cid].optimizations[0];
-                if (!opt) return;
-
+            fetchAnalysis: () => {
                 const modal = document.getElementById('taskModal');
                 const modalBody = document.getElementById('modal-body');
+                const cid = modal.dataset.cid;
+                const optIndex = modal.dataset.optIndex;
+
+                if (!cid) return;
+
+                const opt = DB[cid].optimizations[optIndex];
+                if (!opt) return;
+
                 const startDateInput = document.getElementById('modal_start_date');
                 const endDateInput = document.getElementById('modal_end_date');
-                const applyFilterBtn = document.getElementById('apply_date_filter');
+                const startDate = startDateInput.value;
+                const endDate = endDateInput.value;
+
+                modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-gray-500">Loading real database analysis...</p></div>`;
+
+                let analysisType = 'general';
+                if (opt.rootCause.includes('Frequency > 4.5')) {
+                    analysisType = 'fatigue_critical';
+                } else if (opt.rootCause.includes('ROAS > 6.0x')) {
+                    analysisType = 'roas_sustained';
+                }
+
+                let apiUrl = `api/facebook_analysis.php?action=getDetailedAnalysis&type=${analysisType}&assumed_value=150000`;
+                if (startDate) apiUrl += `&start_date=${startDate}`;
+                if (endDate) apiUrl += `&end_date=${endDate}`;
+
+                fetch(apiUrl)
+                .then(response => response.json())
+                .then(result => {
+                    if (!result.success) throw new Error(result.error);
+                    
+                    const data = result.data;
+                    const totalResults = data.daily_breakdown.reduce((sum, d) => sum + d.results, 0);
+                    const totalRevenue = totalResults * data.assumed_value_per_result;
+
+                    const modalContent = `<div class="grid grid-cols-3 divide-x divide-gray-100">
+                        <div class="col-span-2 p-8">
+                            <div class="flex items-center gap-3 mb-6">
+                                <span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">${opt.type}</span>
+                                <span class="text-xs font-bold text-gray-500">Database Verified</span>
+                                <span class="flex items-center gap-1 text-xs font-bold text-gray-500">Confidence: ${opt.confidence}%</span>
+                            </div>
+                            <h4 class="text-2xl font-black text-gray-900 mb-4">${opt.title}</h4>
+                            
+                            <div class="mb-8">
+                                <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Root Cause</h5>
+                                <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-slate-300">
+                                    <p class="text-gray-600 italic text-sm">${opt.rootCause}</p>
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Tactical Instruction</h5>
+                                <div class="prose text-sm text-gray-600 leading-relaxed">${opt.instruction.replace(/\n/g, '<br>')}</div>
+                            </div>
+
+                        </div>
+                        <div class="col-span-1 bg-slate-50 p-8 flex flex-col justify-between">
+                            <div>
+                                <div class="mt-8">
+                                    <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Projected Impact</h5>
+                                    <div class="space-y-4">
+                                        <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
+                                            <p class="text-[10px] font-bold uppercase text-gray-400">Additional Leads</p>
+                                            <p class="text-lg font-black text-emerald-600">${totalResults.toLocaleString()}</p>
+                                        </div>
+                                        <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
+                                            <p class="text-[10px] font-bold uppercase text-gray-400">Revenue</p>
+                                            <p class="text-lg font-black text-emerald-600">$${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="mt-8 space-y-3">
+                                <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg shadow-lg transition-all">Apply Changes</button>
+                                <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition-all">Snooze</button>
+                            </div>
+                        </div>
+                    </div>`;
+                    
+                    modalBody.innerHTML = modalContent;
+                }).catch(error => {
+                    console.error('Error fetching detailed analysis:', error);
+                    modalBody.innerHTML = `<div class="p-8"><div class="bg-red-50 border border-red-200 p-4 rounded-lg"><p class="text-red-700 font-bold">Error Loading Analysis</p><p class="text-red-600 text-sm mt-2">${error.message}</p><p class="text-red-500 text-xs mt-3">Make sure XAMPP is running and the database connection is active.</p></div></div>`;
+                });
+            },
+            openStrategicModal: (cid, optIndex = 0) => {
+                const modal = document.getElementById('taskModal');
+                const startDateInput = document.getElementById('modal_start_date');
+                const endDateInput = document.getElementById('modal_end_date');
+
+                // Store context on the modal for the event listener to use
+                modal.dataset.cid = cid;
+                modal.dataset.optIndex = optIndex;
 
                 // Set default dates to the current month if not already set
-                if (!startDateInput.value && !endDateInput.value) {
+                if (!startDateInput.value || !endDateInput.value) {
                     const today = new Date();
-                    const year = today.getFullYear();
-                    const month = today.getMonth();
-                    const firstDay = new Date(year, month, 1);
-                    const lastDay = new Date(year, month + 1, 0);
+                    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+                    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
                     startDateInput.value = firstDay.toISOString().split('T')[0];
                     endDateInput.value = lastDay.toISOString().split('T')[0];
                 }
                 
-                // Show loading state
                 modal.classList.remove('hidden');
-                modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-gray-500">Loading real database analysis...</p></div>`;
-                
-                // Fetch real data from database
-                const fetchAnalysisData = () => {
-                    const startDate = startDateInput.value;
-                    const endDate = endDateInput.value;
-                    let apiUrl = `api/facebook_analysis.php?action=getDetailedAnalysis&assumed_value=150000`;
-                    if (startDate) apiUrl += `&start_date=${startDate}`;
-                    if (endDate) apiUrl += `&end_date=${endDate}`;
-
-                    fetch(apiUrl)
-                    .then(response => response.json())
-                    .then(result => {
-                        if (!result.success) throw new Error(result.error);
-                        
-                        const data = result.data;
-                        const sustained = data.sustained_found;
-                        const bestWindow = data.best_window;
-                        
-                        if (!bestWindow) {
-                            throw new Error('No data available for analysis');
-                        }
-                        
-                        // Build daily breakdown table
-                        let dailyBreakdownHTML = `<table class="w-full text-xs"><thead class="bg-gray-100"><tr><th class="p-2 text-left">Date</th><th class="p-2 text-right">Results</th><th class="p-2 text-right">Spend</th><th class="p-2 text-right">ROAS</th></tr></thead><tbody>`;
-                        
-                        // Show last 14 days or all available days
-                        const displayDays = data.daily_breakdown;
-                        displayDays.forEach(day => {
-                            const roasColor = day.roas > 6.0 ? 'text-emerald-600 font-bold' : 'text-red-600';
-                            const spend = typeof day.spend === 'number' ? day.spend : parseFloat(day.spend);
-                            const roas = typeof day.roas === 'number' ? day.roas : parseFloat(day.roas);
-                            dailyBreakdownHTML += `<tr class="border-b"><td class="p-2">${day.date}</td><td class="p-2 text-right">${day.results}</td><td class="p-2 text-right">$${spend.toFixed(0)}</td><td class="p-2 text-right ${roasColor}">${roas.toFixed(2)}x</td></tr>`;
-                        });
-                        
-                        dailyBreakdownHTML += `</tbody></table>`;
-                        
-                        // Calculate totals
-                        const totalResults = data.daily_breakdown.reduce((sum, d) => sum + d.results, 0);
-                        const totalSpend = data.daily_breakdown.reduce((sum, d) => sum + d.spend, 0);
-                        const totalRevenue = totalResults * data.assumed_value_per_result;
-                        const overallRoas = totalSpend > 0 ? (totalRevenue / totalSpend) : 0;
-                        
-                        // Build updated modal content
-                        const modalContent = `<div class="grid grid-cols-3 divide-x divide-gray-100">
-                            <div class="col-span-2 p-8">
-                                <div class="flex items-center gap-3 mb-6">
-                                    <span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">${opt.type}</span>
-                                    <span class="text-xs font-bold text-gray-500">Database Verified</span>
-                                    <span class="flex items-center gap-1 text-xs font-bold text-gray-500">Confidence: ${opt.confidence}%</span>
-                                </div>
-                                <h4 class="text-2xl font-black text-gray-900 mb-4">${opt.title}</h4>
-                                
-                                <div class="mb-8">
-                                    <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Root Cause</h5>
-                                    <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-slate-300">
-                                        <p class="text-gray-600 italic text-sm">${opt.rootCause}</p>
-                                    </div>
-                                </div>
-                                
-                                <div>
-                                    <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Tactical Instruction</h5>
-                                    <div class="prose text-sm text-gray-600 leading-relaxed">${opt.instruction.replace(/\n/g, '<br>')}</div>
-                                </div>
-
-                            </div>
-                            <div class="col-span-1 bg-slate-50 p-8 flex flex-col justify-between">
-                                <div>
-                                    <div class="mt-8">
-                                        <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Projected Impact</h5>
-                                        <div class="space-y-4">
-                                            <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
-                                                <p class="text-[10px] font-bold uppercase text-gray-400">Additional Leads</p>
-                                                <p class="text-lg font-black text-emerald-600">${opt.projection.leads}</p>
-                                            </div>
-                                            <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
-                                                <p class="text-[10px] font-bold uppercase text-gray-400">Revenue</p>
-                                                <p class="text-lg font-black text-emerald-600">${opt.projection.revenue}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="mt-8 space-y-3">
-                                    <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg shadow-lg transition-all">Apply Changes</button>
-                                     <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition-all">Snooze</button>
-                            </div>
-                        </div>`;
-                        
-                        document.getElementById('modal-body').innerHTML = modalContent;
-                    }).catch(error => {
-                        console.error('Error fetching detailed analysis:', error);
-                        modalBody.innerHTML = `<div class="p-8"><div class="bg-red-50 border border-red-200 p-4 rounded-lg"><p class="text-red-700 font-bold">Error Loading Analysis</p><p class="text-red-600 text-sm mt-2">${error.message}</p><p class="text-red-500 text-xs mt-3">Make sure XAMPP is running and the database connection is active.</p></div></div>`;
-                    });
-                };
-
-                fetchAnalysisData(); // Initial fetch
-                applyFilterBtn.onclick = fetchAnalysisData; // Re-fetch on button click
+                App.fetchAnalysis(); // Perform the initial data fetch
             },
             simulateUpdate: () => { location.reload(); },
-            init: () => { App.router('global'); }
+            init: () => { 
+                App.router('global'); 
+                // Add a single, persistent event listener for the apply button
+                document.getElementById('apply_date_filter').addEventListener('click', App.fetchAnalysis);
+            }
         };
 
         window.addEventListener('DOMContentLoaded', App.init);

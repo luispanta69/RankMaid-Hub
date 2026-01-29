@@ -8,7 +8,7 @@ session_start();
  */
 $latestStmt = $pdo->query("
   SELECT MAX(report_date) AS latest_date
-  FROM facebook_ads
+  FROM facebook_ads_data
 ");
 $latest = $latestStmt->fetch(PDO::FETCH_ASSOC)["latest_date"];
 
@@ -28,7 +28,7 @@ $end = date("Y-m-t", strtotime($latest));
  */
 $stmt = $pdo->prepare("
   SELECT raw_row
-  FROM facebook_ads
+  FROM facebook_ads_data
   WHERE report_date BETWEEN ? AND ?
   ORDER BY report_date ASC
 ");

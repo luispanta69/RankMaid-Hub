@@ -13,7 +13,7 @@ if (!$rangeId) {
 // We re-derive the range the same way
 $stmt = $pdo->query("
   SELECT report_date
-  FROM facebook_ads
+  FROM facebook_ads_data
   ORDER BY report_date ASC
 ");
 
@@ -56,7 +56,7 @@ if (!isset($ranges[$rangeId])) {
 // Fetch rows
 $stmt = $pdo->prepare("
   SELECT raw_row
-  FROM facebook_ads
+  FROM facebook_ads_data
   WHERE report_date BETWEEN ? AND ?
   ORDER BY report_date ASC
 ");
