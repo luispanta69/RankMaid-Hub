@@ -3,19 +3,16 @@ header("Content-Type: application/json");
 require_once "db.php";
 session_start();
 
-
+// Read JSON payload
 $payload = json_decode(file_get_contents("php://input"), true);
 
-if (
-    !$payload ||
-    empty($payload["rows"])
-) {
+if (!$payload || empty($payload["rows"])) {
     http_response_code(400);
     echo json_encode(["error" => "Invalid payload"]);
     exit;
 }
 
-// ✅ NOW payload exists
+// Store headers in session
 if (!empty($payload["headers"])) {
     $_SESSION["facebook_csv_headers"] = $payload["headers"];
 }
@@ -25,13 +22,19 @@ $rows = $payload["rows"];
 try {
     $pdo->beginTransaction();
 
-    // Insert or update rows. `ON DUPLICATE KEY UPDATE` handles existing dates.
+    // ✅ UPSERT with duplicate detection
     $insertStmt = $pdo->prepare("
-    INSERT INTO facebook_ads_data (report_date, raw_row)
-    VALUES (:report_date, :raw_row) 
-    ON CONFLICT (report_date) DO UPDATE SET raw_row = EXCLUDED.raw_row
+        INSERT INTO facebook_ads_data (report_date, raw_row)
+        VALUES (:report_date, :raw_row)
+        ON CONFLICT (report_date)
+        DO UPDATE SET raw_row = EXCLUDED.raw_row
+        RETURNING xmax
     ");
 
+    $inserted = 0;
+    $skipped = 0;
+
+    // Group rows by date
     $grouped = [];
 
     foreach ($rows as $item) {
@@ -46,28 +49,38 @@ try {
         $grouped[$date][] = $item["row"];
     }
 
-    $insertedOrUpdated = 0;
+    // Insert each grouped date
     foreach ($grouped as $date => $rowsForDate) {
+
+        $jsonData = json_encode($rowsForDate);
+
         $insertStmt->execute([
             ":report_date" => $date,
-            ":raw_row" => json_encode($rowsForDate)
+            ":raw_row" => $jsonData
         ]);
 
-        $insertedOrUpdated++;
+        $result = $insertStmt->fetch(PDO::FETCH_ASSOC);
+
+        // ✅ xmax tells if inserted or updated
+        if ($result["xmax"] == 0) {
+            $inserted++;
+        } else {
+            $skipped++;
+        }
     }
 
     $pdo->commit();
 
-    $totalDays = count(array_unique(array_column($rows, 'report_date')));
-
     echo json_encode([
         "success" => true,
-        "message" => "Report saved successfully.",
-        "days_processed" => $insertedOrUpdated
+        "inserted_days" => $inserted,
+        "skipped_days" => $skipped,
+        "total_days" => $inserted + $skipped
     ]);
 
 } catch (Exception $e) {
     $pdo->rollBack();
+
     http_response_code(500);
     echo json_encode([
         "error" => "Save failed",

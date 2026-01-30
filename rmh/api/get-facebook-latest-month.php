@@ -10,10 +10,15 @@ $latestStmt = $pdo->query("
   SELECT MAX(report_date) AS latest_date
   FROM facebook_ads_data
 ");
+
 $latest = $latestStmt->fetch(PDO::FETCH_ASSOC)["latest_date"];
 
 if (!$latest) {
-    echo json_encode(["headers" => null, "rows" => []]);
+    echo json_encode([
+        "headers" => [],
+        "rows" => [],
+        "month" => null
+    ]);
     exit;
 }
 
@@ -32,15 +37,22 @@ $stmt = $pdo->prepare("
   WHERE report_date BETWEEN ? AND ?
   ORDER BY report_date ASC
 ");
+
 $stmt->execute([$start, $end]);
 
 $rows = [];
-$headers = $_SESSION["facebook_csv_headers"] ?? null;
+$headers = $_SESSION["facebook_csv_headers"] ?? [];
 
 while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $dayRows = json_decode($r["raw_row"], true);
-    foreach ($dayRows as $row) {
-        $rows[] = $row;
+
+    // ✅ Safe JSONB handling for Postgres
+    $raw = $r["raw_row"];
+    $dayRows = is_string($raw) ? json_decode($raw, true) : $raw;
+
+    if (is_array($dayRows)) {
+        foreach ($dayRows as $row) {
+            $rows[] = $row;
+        }
     }
 }
 

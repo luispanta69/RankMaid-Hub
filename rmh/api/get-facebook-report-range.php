@@ -18,11 +18,17 @@ $stmt = $pdo->prepare("
     WHERE report_date BETWEEN ? AND ?
     ORDER BY report_date ASC
 ");
+
 $stmt->execute([$start, $end]);
 
 $rows = [];
+
 while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
-    $dayRows = json_decode($r["raw_row"], true);
+
+    // ✅ Safe JSONB handling
+    $raw = $r["raw_row"];
+    $dayRows = is_string($raw) ? json_decode($raw, true) : $raw;
+
     if (is_array($dayRows)) {
         foreach ($dayRows as $row) {
             $rows[] = $row;
