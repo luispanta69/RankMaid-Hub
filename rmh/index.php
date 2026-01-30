@@ -327,25 +327,73 @@ $db_connected = isset($pdo);
                     modalBody.innerHTML = `<div class="p-8"><div class="bg-red-50 border border-red-200 p-4 rounded-lg"><p class="text-red-700 font-bold">Error Loading Analysis</p><p class="text-red-600 text-sm mt-2">${error.message}</p><p class="text-red-500 text-xs mt-3">Make sure XAMPP is running and the database connection is active.</p></div></div>`;
                 });
             },
-            openStrategicModal: (cid, optIndex = 0) => {
+            openStrategicModal: async (cid, optIndex = 0) => {
                 const modal = document.getElementById('taskModal');
                 const startDateInput = document.getElementById('modal_start_date');
                 const endDateInput = document.getElementById('modal_end_date');
+                const modalBody = document.getElementById('modal-body');
 
                 // Store context on the modal for the event listener to use
                 modal.dataset.cid = cid;
                 modal.dataset.optIndex = optIndex;
 
-                // Set default dates to the current month if not already set
-                if (!startDateInput.value || !endDateInput.value) {
+                // Show modal with a loading state immediately
+                modal.classList.remove('hidden');
+                modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-gray-500">Finding most recent month with data...</p></div>`;
+
+                const opt = DB[cid].optimizations[optIndex];
+                if (!opt) {
+                    modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-red-500">Error: Optimization data not found.</p></div>`;
+                    return;
+                }
+
+                let analysisType = 'general';
+                if (opt.rootCause.includes('Frequency > 4.5')) {
+                    analysisType = 'fatigue_critical';
+                } else if (opt.rootCause.includes('ROAS > 6.0x')) {
+                    analysisType = 'roas_sustained';
+                }
+
+                let dateToTry = new Date();
+                let dataFound = false;
+                let attempts = 0;
+
+                while (!dataFound && attempts < 12) { // Search back up to 12 months
+                    const firstDay = new Date(dateToTry.getFullYear(), dateToTry.getMonth(), 1);
+                    const lastDay = new Date(dateToTry.getFullYear(), dateToTry.getMonth() + 1, 0);
+                    
+                    const startDate = firstDay.toISOString().split('T')[0];
+                    const endDate = lastDay.toISOString().split('T')[0];
+
+                    let apiUrl = `api/facebook_analysis.php?action=getDetailedAnalysis&type=${analysisType}&assumed_value=150000&start_date=${startDate}&end_date=${endDate}`;
+                    
+                    try {
+                        const response = await fetch(apiUrl);
+                        const result = await response.json();
+
+                        if (result.success && result.data.daily_breakdown.length > 0) {
+                            dataFound = true;
+                            startDateInput.value = startDate;
+                            endDateInput.value = endDate;
+                        } else {
+                            dateToTry.setMonth(dateToTry.getMonth() - 1);
+                            attempts++;
+                        }
+                    } catch (e) {
+                        modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-red-500">Error while searching for data: ${e.message}</p></div>`;
+                        return;
+                    }
+                }
+
+                if (!dataFound) {
+                    // If no data found, default to current month and let fetchAnalysis show the result
                     const today = new Date();
                     const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
                     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
                     startDateInput.value = firstDay.toISOString().split('T')[0];
                     endDateInput.value = lastDay.toISOString().split('T')[0];
                 }
-                
-                modal.classList.remove('hidden');
+
                 App.fetchAnalysis(); // Perform the initial data fetch
             },
             simulateUpdate: () => { location.reload(); },
