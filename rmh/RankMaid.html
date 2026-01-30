@@ -7,6 +7,7 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2"></script>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
@@ -481,6 +482,8 @@
       const API_BASE = `${window.location.origin}/rmh`;
       const api = (path) => `${API_BASE}${path}`;
 
+      Chart.register(ChartDataLabels);
+
       // 1. DATA STORE
       const DB = {
         facebook: {
@@ -490,8 +493,14 @@
           color: "#1877F2",
           goals: { targetCPA: 175, targetROAS: 4.0 },
 
-          csvHeaders: [],
+          // ✅ Current vs Previous storage
+          currentRows: [],
+          previousRows: [],
+
+          // Used for table display
           csvRows: [],
+
+          // Full archive
           _allRows: [],
 
           metrics: {
@@ -1362,34 +1371,68 @@
                                                                                               </div>
 
                                                                                               <div class="glass-panel p-6 mb-6">
-                                                                                                <div>
-                                                                                                  <div class="flex-1"></div>
+                                                                                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+                                                                                                  Compare Date Ranges
+                                                                                                </p>
+
+                                                                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                                                                                                  <!-- ✅ CURRENT RANGE -->
                                                                                                   <div>
-                                                                                                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Filter by Date</p>
-                                                                                                    <div class="flex flex-wrap gap-2 items-center">
-                                                                                                      <input id="fbStartDate" type="date" class="border rounded px-3 py-2 text-xs bg-white" />
-                                                                                                      <span class="text-xs text-gray-400">to</span>
-                                                                                                      <input id="fbEndDate" type="date" class="border rounded px-3 py-2 text-xs bg-white" />
-                                                                                                      <button
-                                                                                                        onclick="App.applyFacebookReportDateFilter()"
-                                                                                                        class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded text-xs font-bold"
-                                                                                                      >
-                                                                                                        Apply
-                                                                                                      </button>
-                                                                                                      <button
-                                                                                                        onclick="App.resetFacebookDateFilter()"
-                                                                                                        class="bg-white hover:bg-gray-50 text-gray-700 px-3 py-2 rounded text-xs font-bold border"
-                                                                                                      >
-                                                                                                        Reset
-                                                                                                      </button>
-                                                                                                    </div>
-                                                                                                    <p class="text-[11px] text-gray-500 mt-2">
-                                                                                                      Tip: set start and end to the same day for a single-day view.
+                                                                                                    <p class="text-[10px] font-bold text-gray-500 uppercase mb-2">
+                                                                                                      Current Period
                                                                                                     </p>
+                                                                                                    <div class="flex gap-2">
+                                                                                                      <input
+                                                                                                        id="fbStartDate"
+                                                                                                        type="date"
+                                                                                                        class="border rounded px-3 py-2 text-xs bg-white w-full"
+                                                                                                      />
+                                                                                                      <input
+                                                                                                        id="fbEndDate"
+                                                                                                        type="date"
+                                                                                                        class="border rounded px-3 py-2 text-xs bg-white w-full"
+                                                                                                      />
+                                                                                                    </div>
                                                                                                   </div>
 
+                                                                                                  <!-- ✅ PREVIOUS RANGE -->
+                                                                                                  <div>
+                                                                                                    <p class="text-[10px] font-bold text-gray-500 uppercase mb-2">
+                                                                                                      Previous Period
+                                                                                                    </p>
+                                                                                                    <div class="flex gap-2">
+                                                                                                      <input
+                                                                                                        id="fbPrevStartDate"
+                                                                                                        type="date"
+                                                                                                        class="border rounded px-3 py-2 text-xs bg-white w-full"
+                                                                                                      />
+                                                                                                      <input
+                                                                                                        id="fbPrevEndDate"
+                                                                                                        type="date"
+                                                                                                        class="border rounded px-3 py-2 text-xs bg-white w-full"
+                                                                                                      />
+                                                                                                    </div>
+                                                                                                  </div>
+                                                                                                </div>
+
+                                                                                                <div class="mt-5 flex gap-3">
+                                                                                                  <button
+                                                                                                    onclick="App.applyFacebookComparison()"
+                                                                                                    class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-xs font-bold"
+                                                                                                  >
+                                                                                                    Apply Comparison
+                                                                                                  </button>
+
+                                                                                                  <button
+                                                                                                    onclick="App.resetFacebookDateFilter()"
+                                                                                                    class="bg-white border px-4 py-2 rounded text-xs font-bold"
+                                                                                                  >
+                                                                                                    Reset
+                                                                                                  </button>
                                                                                                 </div>
                                                                                               </div>
+
 
                                                                                               <!-- ✅ Campaign Efficiency Chart -->
                                                                                                 <div class="glass-panel p-6 mb-6">
@@ -1418,9 +1461,25 @@
                                                                                                     </div>
                                                                                                   </div>
 
-                                                                                                  <div id="chartWrap" class="h-[340px]">
-                                                                                                    <canvas id="campaignBarChart"></canvas>
-                                                                                                  </div>
+                                                                                                 <!-- ✅ CURRENT PERIOD CHART -->
+                                                                                                    <div class="glass-panel p-6 mb-6">
+                                                                                                      <h3 class="font-bold text-gray-700 mb-3">
+                                                                                                        Current Period (${App.state.facebookCurrentLabel})
+                                                                                                      </h3>
+                                                                                                      <div class="h-[340px]">
+                                                                                                        <canvas id="campaignChartCurrent"></canvas>
+                                                                                                      </div>
+                                                                                                    </div>
+
+                                                                                                    <!-- ✅ PREVIOUS PERIOD CHART -->
+                                                                                                    <div class="glass-panel p-6 mb-6">
+                                                                                                      <h3 class="font-bold text-gray-700 mb-3">
+                                                                                                        Previous Period (${App.state.facebookPreviousLabel})
+                                                                                                      </h3>
+                                                                                                      <div class="h-[340px]">
+                                                                                                        <canvas id="campaignChartPrevious"></canvas>
+                                                                                                      </div>
+                                                                                                    </div>
 
                                                                                                   <p
                                                                                                     id="noSelectionMsg"
@@ -1528,6 +1587,8 @@
         state: {
           facebookReportId: null,
           facebookReportRangeLabel: null,
+          facebookCurrentLabel: "Current Period",
+          facebookPreviousLabel: "Previous Period",
           currentRoute: "global",
           filteredFacebookReports: null,
           facebookForceRender: false,
@@ -1535,197 +1596,117 @@
         },
         renderCampaignChart: () => {
           const headers = DB.facebook.csvHeaders;
-          const rows = DB.facebook.csvRows;
-
-          if (!headers.length || !rows.length) return;
-
-          // ✅ Aggregate campaign totals
-          const campaignData = Logic.aggregateCampaignMetrics(headers, rows);
-
-          let campaigns = Object.keys(campaignData);
+          if (!headers.length) return;
 
           const selector = document.getElementById("fbCampaignSelector");
+          if (!selector) return;
 
-          let selectedCampaigns = [];
+          // ✅ Selected campaigns
+          const selectedCampaigns = Array.from(
+            selector.querySelectorAll("input[type='checkbox']:checked"),
+          ).map((cb) => cb.value);
 
-          if (selector) {
-            selectedCampaigns = Array.from(
-              selector.querySelectorAll("input[type='checkbox']:checked"),
-            ).map((cb) => cb.value);
-          }
+          if (!selectedCampaigns.length) return;
 
-          // ✅ IMPORTANT FIX
-          if (!selectedCampaigns.length) {
-            campaigns = [];
-          } else {
-            campaigns = campaigns.filter((c) => selectedCampaigns.includes(c));
-          }
+          // ✅ Helper renderer
+          const drawChart = (canvasId, rows) => {
+            if (!rows.length) return;
 
-          // ✅ If nothing selected → hide chart
-          if (!campaigns.length) {
-            document.getElementById("chartWrap")?.classList.add("hidden");
-            document
-              .getElementById("noSelectionMsg")
-              ?.classList.remove("hidden");
+            const campaignData = Logic.aggregateCampaignMetrics(headers, rows);
 
-            if (App.campaignChartInstance) {
-              App.campaignChartInstance.destroy();
-              App.campaignChartInstance = null;
-            }
+            let campaigns = Object.keys(campaignData).filter((c) =>
+              selectedCampaigns.includes(c),
+            );
 
-            return;
-          }
+            if (!campaigns.length) return;
 
-          // ✅ Compare toggle mode
-          const mode =
-            document.getElementById("fbCompareMode")?.value || "current";
+            campaigns.sort(
+              (a, b) => campaignData[b].spend - campaignData[a].spend,
+            );
 
-          // Sort by spend (top campaigns)
-          campaigns.sort(
-            (a, b) => campaignData[b].spend - campaignData[a].spend,
-          );
+            const topCampaigns = campaigns.slice(0, 10);
 
-          const topCampaigns = campaigns.slice(0, 10);
+            const spendVals = topCampaigns.map((c) =>
+              campaignData[c].spend.toFixed(2),
+            );
+            const cpcVals = topCampaigns.map((c) =>
+              campaignData[c].cpc.toFixed(2),
+            );
+            const reachVals = topCampaigns.map((c) =>
+              campaignData[c].reach.toFixed(0),
+            );
+            const imprVals = topCampaigns.map((c) =>
+              campaignData[c].impressions.toFixed(0),
+            );
 
-          // Chart values
-          const spendVals = topCampaigns.map((c) =>
-            campaignData[c].spend.toFixed(2),
-          );
+            const ctx = document.getElementById(canvasId)?.getContext("2d");
+            if (!ctx) return;
 
-          const cpcVals = topCampaigns.map((c) =>
-            campaignData[c].cpc.toFixed(2),
-          );
-
-          const reachVals = topCampaigns.map((c) =>
-            campaignData[c].reach.toFixed(0),
-          );
-
-          const imprVals = topCampaigns.map((c) =>
-            campaignData[c].impressions.toFixed(0),
-          );
-
-          const ctx = document
-            .getElementById("campaignBarChart")
-            ?.getContext("2d");
-
-          if (!ctx) return;
-
-          // Destroy old chart
-          if (App.campaignChartInstance) {
-            App.campaignChartInstance.destroy();
-          }
-
-          const valueLabelPlugin = {
-            id: "valueLabelPlugin",
-            afterDatasetsDraw(chart) {
-              const { ctx } = chart;
-
-              chart.data.datasets.forEach((dataset, i) => {
-                const meta = chart.getDatasetMeta(i);
-
-                meta.data.forEach((bar, index) => {
-                  const rawValue = dataset.data[index];
-                  if (!rawValue) return;
-
-                  let display = rawValue;
-
-                  // ✅ Formatting rules
-                  if (dataset.label.includes("CPC")) {
-                    display = "$" + Number(rawValue).toFixed(2);
-                  } else if (dataset.label.includes("Spend")) {
-                    display = "$" + Number(rawValue).toFixed(2);
-                  } else {
-                    display = Number(rawValue).toLocaleString();
-                  }
-
-                  ctx.save();
-                  ctx.font = "10px Inter";
-                  ctx.fillStyle = "#111";
-                  ctx.textAlign = "center";
-                  ctx.fillText(display, bar.x, bar.y - 6);
-                  ctx.restore();
-                });
-              });
-            },
-          };
-          // ✅ If campaigns are selected → show chart
-          document.getElementById("chartWrap")?.classList.remove("hidden");
-          document.getElementById("noSelectionMsg")?.classList.add("hidden");
-
-          // ✅ Build grouped bar chart
-          App.campaignChartInstance = new Chart(ctx, {
-            type: "bar",
-
-            data: {
-              labels: topCampaigns.map((c) =>
-                c.length > 35 ? c.slice(0, 35) + "..." : c,
-              ),
-
-              datasets: [
-                {
-                  label: "Spend ($)",
-                  data: spendVals,
-                  yAxisID: "yMain",
-                },
-                {
-                  label: "CPC ($)",
-                  data: cpcVals,
-                  yAxisID: "yCPC",
-                },
-                {
-                  label: "Reach",
-                  data: reachVals,
-                  yAxisID: "yMain",
-                },
-                {
-                  label: "Impressions",
-                  data: imprVals,
-                  yAxisID: "yMain",
-                },
-              ],
-            },
-
-            options: {
-              responsive: true,
-              maintainAspectRatio: false,
-
-              plugins: {
-                legend: {
-                  position: "top",
-                },
+            return new Chart(ctx, {
+              type: "bar",
+              data: {
+                labels: topCampaigns.map((c) =>
+                  c.length > 35 ? c.slice(0, 35) + "..." : c,
+                ),
+                datasets: [
+                  { label: "Spend ($)", data: spendVals },
+                  { label: "CPC ($)", data: cpcVals },
+                  { label: "Reach", data: reachVals },
+                  { label: "Impressions", data: imprVals },
+                ],
               },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
 
-              scales: {
-                x: {
-                  ticks: {
+                plugins: {
+                  legend: { position: "top" },
+
+                  tooltip: {
+                    enabled: true,
+                  },
+
+                  datalabels: {
+                    anchor: "end",
+                    align: "top",
+                    formatter: function (value, context) {
+                      // ✅ Detect dataset label
+                      const label = context.dataset.label;
+
+                      // ✅ Add $ for Spend + CPC
+                      if (label.includes("Spend") || label.includes("CPC")) {
+                        return "$" + Number(value).toFixed(2);
+                      }
+
+                      // ✅ Reach + Impressions stay normal
+                      return Number(value).toLocaleString();
+                    },
+
                     font: {
+                      weight: "bold",
                       size: 10,
                     },
                   },
                 },
-
-                yMain: {
-                  position: "left",
-                  beginAtZero: true,
-                },
-
-                yCPC: {
-                  position: "right",
-                  beginAtZero: true,
-                  grid: {
-                    drawOnChartArea: false,
-                  },
-                  ticks: {
-                    callback: (v) => "$" + v,
-                  },
-                },
               },
-            },
+            });
+          };
 
-            // ✅ THIS WAS MISSING
-            plugins: [valueLabelPlugin],
-          });
-        }, // ✅ CLOSE renderCampaignChart FUNCTION
+          // ✅ Destroy previous chart objects
+          App.currentChart?.destroy();
+          App.previousChart?.destroy();
+
+          // ✅ Draw current + previous stacked
+          App.currentChart = drawChart(
+            "campaignChartCurrent",
+            DB.facebook.currentRows || [],
+          );
+
+          App.previousChart = drawChart(
+            "campaignChartPrevious",
+            DB.facebook.previousRows || [],
+          );
+        },
 
         populateCampaignSelector: () => {
           const headers = DB.facebook.csvHeaders;
@@ -1775,7 +1756,55 @@
             return rStart <= endD && rEnd >= startD;
           });
         },
+        applyFacebookComparison: async () => {
+          const start = document.getElementById("fbStartDate").value;
+          const end = document.getElementById("fbEndDate").value;
 
+          const pStart = document.getElementById("fbPrevStartDate").value;
+          const pEnd = document.getElementById("fbPrevEndDate").value;
+
+          if (!start || !end || !pStart || !pEnd) {
+            alert("Pick both CURRENT and PREVIOUS date ranges.");
+            return;
+          }
+
+          // ✅ Fetch Current Period
+          const resCurrent = await fetch(
+            api(`/api/get-facebook-report-range.php?start=${start}&end=${end}`),
+          );
+          const jsonCurrent = await resCurrent.json();
+
+          // ✅ Fetch Previous Period
+          const resPrev = await fetch(
+            api(
+              `/api/get-facebook-report-range.php?start=${pStart}&end=${pEnd}`,
+            ),
+          );
+          const jsonPrev = await resPrev.json();
+
+          if (
+            !Array.isArray(jsonCurrent.rows) ||
+            !Array.isArray(jsonPrev.rows)
+          ) {
+            alert("Invalid API response.");
+            return;
+          }
+
+          DB.facebook.csvHeaders = jsonCurrent.headers || [];
+
+          // ✅ Save BOTH datasets
+          DB.facebook.currentRows = jsonCurrent.rows;
+          DB.facebook.previousRows = jsonPrev.rows;
+
+          // ✅ Default table shows Current
+          DB.facebook.csvRows = DB.facebook.currentRows;
+
+          // ✅ Update labels
+          App.state.facebookCurrentLabel = `${start} → ${end}`;
+          App.state.facebookPreviousLabel = `${pStart} → ${pEnd}`;
+
+          App.router("facebook");
+        },
         applyFacebookReportDateFilter: async () => {
           const start = document.getElementById("fbStartDate").value;
           const end = document.getElementById("fbEndDate").value;
