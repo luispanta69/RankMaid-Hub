@@ -1,43 +1,27 @@
 <?php
 /**
- * Database Connection File
- * Uses PDO for secure, consistent database access.
+ * PostgreSQL Database Connection (Neon)
+ * Complete replacement for MySQL db.php
  */
 
-$host = "localhost";
-$db   = "grumpyhare__wp_dfy25";
-$user = "root";
-$pass = ""; // Default XAMPP password is empty
+// Neon connection details
+$dsn = "pgsql:host=ep-restless-bird-ahug88k0-pooler.c-3.us-east-1.aws.neon.tech;port=5432;dbname=neondb;sslmode=require;options=endpoint=ep-restless-bird-ahug88k0";
+$user = "neondb_owner";
+$pass = "npg_kvbAhwHVu15g";
 
-// Set PDO options for better error handling and security
+// PDO options
 $options = [
-    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION, // Throw exceptions on errors
-    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,      // Return arrays by default
-    PDO::ATTR_EMULATE_PREPARES   => false,                 // Use real prepared statements
+    PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+    PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+    PDO::ATTR_EMULATE_PREPARES   => false,
 ];
 
+// This variable will be available in the scripts that include this file.
+$pdo = null;
 try {
-    // Create a new PDO instance
-    $pdo = new PDO(
-        "mysql:host=$host;dbname=$db;charset=utf8mb4",
-        $user,
-        $pass,
-        $options
-    );
-
-    // Enforce strict SQL mode for data integrity
-    $pdo->exec("SET sql_mode = 'STRICT_ALL_TABLES'");
-    
-    // Set time zone to UTC to ensure consistency across servers
-    $pdo->exec("SET time_zone = '+00:00'");
-
+    $pdo = new PDO($dsn, $user, $pass, $options);
+    $pdo->exec("SET TIME ZONE 'UTC'");
 } catch (PDOException $e) {
-    // If connection fails, return a 500 error and stop execution
-    http_response_code(500);
-    echo json_encode([
-        "success" => false,
-        "error" => "Database connection failed: " . $e->getMessage()
-    ]);
-    exit;
+    // Let the script that includes this file decide how to handle connection errors.
+    // For now, $pdo will remain null and isset($pdo) will be false.
 }
-?>

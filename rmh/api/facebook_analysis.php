@@ -15,6 +15,18 @@ function cleanNum($val) {
     return (float) preg_replace('/[^\d.]/', '', $val);
 }
 
+// Define a constant map for CSV column indexes to improve clarity and maintainability.
+define('FB_AD_COLUMN_MAP', [
+    'campaign_name'    => 0,
+    'ad_set_name'      => 1,
+    'frequency'        => 7,
+    'result_type'      => 8,
+    'results'          => 9,
+    'cost_per_result'  => 10,
+    'amount_spent_usd' => 11,
+    'ctr_all'          => 17, // Corrected from 18 to 17 based on data sample
+]);
+
 // Helper function to get all ads from the database within a date range
 // and process them in PHP. This avoids using JSON_TABLE which is not supported
 // correctly in older MariaDB versions.
@@ -41,16 +53,14 @@ function get_and_process_ads_from_db($pdo, $start_date, $end_date) {
                 // Map numeric indexes to associative keys for clarity and robustness
                 $all_ads[] = [
                     'report_date'      => $report_date,
-                    'campaign_name'    => $ad_row[0] ?? '',
-                    'ad_set_name'      => $ad_row[1] ?? '',
-                    'frequency'        => $ad_row[7] ?? 0,
-                    'result_type'      => $ad_row[8] ?? '',
-                    'results'          => $ad_row[9] ?? 0,
-                    'cost_per_result'  => $ad_row[10] ?? 0,
-                    'amount_spent_usd' => $ad_row[11] ?? 0,
-                    // The original code used index 17 for CTR, which is 'reporting_ends'.
-                    // The correct index for 'CTR (All)' is typically 18.
-                    'ctr_all'          => $ad_row[18] ?? 0,
+                    'campaign_name'    => $ad_row[FB_AD_COLUMN_MAP['campaign_name']] ?? '',
+                    'ad_set_name'      => $ad_row[FB_AD_COLUMN_MAP['ad_set_name']] ?? '',
+                    'frequency'        => $ad_row[FB_AD_COLUMN_MAP['frequency']] ?? 0,
+                    'result_type'      => $ad_row[FB_AD_COLUMN_MAP['result_type']] ?? '',
+                    'results'          => $ad_row[FB_AD_COLUMN_MAP['results']] ?? 0,
+                    'cost_per_result'  => $ad_row[FB_AD_COLUMN_MAP['cost_per_result']] ?? 0,
+                    'amount_spent_usd' => $ad_row[FB_AD_COLUMN_MAP['amount_spent_usd']] ?? 0,
+                    'ctr_all'          => $ad_row[FB_AD_COLUMN_MAP['ctr_all']] ?? 0,
                 ];
             }
         }

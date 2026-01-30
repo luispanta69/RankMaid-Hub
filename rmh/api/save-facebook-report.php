@@ -28,9 +28,8 @@ try {
     // Insert or update rows. `ON DUPLICATE KEY UPDATE` handles existing dates.
     $insertStmt = $pdo->prepare("
     INSERT INTO facebook_ads_data (report_date, raw_row)
-    VALUES (:report_date, :raw_row)
-    ON DUPLICATE KEY UPDATE
-      raw_row = VALUES(raw_row)
+    VALUES (:report_date, :raw_row) 
+    ON CONFLICT (report_date) DO UPDATE SET raw_row = EXCLUDED.raw_row
     ");
 
     $grouped = [];
