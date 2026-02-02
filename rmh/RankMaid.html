@@ -479,8 +479,9 @@
         return result;
       };
 
-      const API_BASE = `${window.location.origin}/rmh`;
-      const api = (path) => `${API_BASE}${path}`;
+      // Use relative paths for API calls, just like index.php.
+      // This removes the leading slash from paths to make them relative.
+      const api = (path) => (path.startsWith("/") ? path.substring(1) : path);
 
       Chart.register(ChartDataLabels);
 
@@ -1928,23 +1929,35 @@
             document.getElementById("page-title").innerText = "Facebook Ads";
             document.getElementById("page-subtitle").innerText =
               "Reports & Filters";
-            if (App.state.facebookForceRender) {
-              App.state.facebookForceRender = false;
-              container.innerHTML = UI.renderFacebookFull(
-                App.state.filteredFacebookReports || [],
-              );
-              return;
-            }
 
             container.innerHTML = `<div class="glass-panel p-6 text-gray-500">Loading Facebook reports...</div>`;
 
-            let index = [];
+            let monthData = null;
 
             if (!App.state.facebookDateFilterActive) {
-              await App.loadLatestFacebookMonth();
+              monthData = await App.loadLatestFacebookMonth();
             }
+
             container.innerHTML = UI.renderFacebookFull([]);
+
             setTimeout(() => {
+              // ✅ Set date inputs after the UI is rendered to reflect the loaded range
+              if (monthData && monthData.start && monthData.end) {
+                  const startInput = document.getElementById('fbStartDate');
+                  const endInput = document.getElementById('fbEndDate');
+                  const pStartInput = document.getElementById('fbPrevStartDate');
+                  const pEndInput = document.getElementById('fbPrevEndDate');
+
+                  if(startInput) startInput.value = monthData.start;
+                  if(endInput) endInput.value = monthData.end;
+
+                  // Also pre-fill previous month for convenience
+                  const prevMonth = new Date(monthData.start + 'T12:00:00');
+                  prevMonth.setMonth(prevMonth.getMonth() - 1);
+                  if(pStartInput) pStartInput.value = prevMonth.toISOString().split('T')[0].slice(0, -3) + '-01';
+                  if(pEndInput) pEndInput.value = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 0).toISOString().split('T')[0];
+              }
+
               App.populateCampaignSelector(); // ✅ load names
               App.renderCampaignChart(); // ✅ draw chart
             }, 200);
@@ -2001,18 +2014,23 @@
 
           if (!Array.isArray(json.rows) || !json.rows.length) {
             DB.facebook.csvRows = [];
+            DB.facebook.currentRows = [];
+            DB.facebook.previousRows = [];
             DB.facebook.csvHeaders = json.headers || [];
             App.state.facebookReportRangeLabel = "No data";
-            return;
+            return json;
           }
 
           DB.facebook.csvHeaders = json.headers;
           DB.facebook.csvRows = json.rows;
+          DB.facebook.currentRows = json.rows; // Set current rows for chart
+          DB.facebook.previousRows = []; // Clear previous rows
           DB.facebook._allRows = json.rows.slice();
 
           App.state.facebookReportRangeLabel = json.month;
 
           App.recalculateFacebookKPIs(json.headers, json.rows);
+          return json;
         },
 
         resetFacebookDateFilter: () => {
@@ -2114,6 +2132,7 @@
           const resultsIdx = headers.findIndex(
             (h) => normalize(h) === "results",
           );
+
           const cprIdx = headers.findIndex((h) =>
             normalize(h).includes("cost per result"),
           );
