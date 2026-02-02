@@ -424,25 +424,26 @@
       <div
         class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl modal-content overflow-hidden border border-gray-200"
       >
-        <div class="bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-700">
+        <div
+          class="bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-700"
+        >
           <div>
             <h3 class="text-xl font-black text-white flex items-center gap-2">
               <i class="fa-solid fa-brain text-orange-500"></i> Strategic
               Analysis
             </h3>
-
-            <div class="flex items-center gap-3 mt-1">
-                <p class="text-slate-400 text-xs">RMH Intelligence Engine v2.5</p>
-            </div>
+            <p class="text-slate-400 text-xs mt-1">
+              RMH Intelligence Engine v2.5
+            </p>
           </div>
-          <div class="flex items-center gap-2">
-              <label for="modal_start_date" class="text-slate-500 text-[10px] uppercase font-bold">From:</label>
-              <input type="date" id="modal_start_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
-              <label for="modal_end_date" class="text-slate-500 text-[10px] uppercase font-bold">To:</label>
-              <input type="date" id="modal_end_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
-              <button id="apply_date_filter" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-xs font-bold transition-all">Apply</button>
-          </div>
-          <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="text-gray-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
+          <button
+            onclick="
+              document.getElementById('taskModal').classList.add('hidden')
+            "
+            class="text-gray-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-all"
+          >
+            <i class="fa-solid fa-xmark"></i>
+          </button>
         </div>
         <div class="p-0" id="modal-body"></div>
       </div>
@@ -979,161 +980,24 @@
 
         num: (n) => new Intl.NumberFormat("en-US").format(n || 0),
 
-        fetchAnalysis: () => {
-            const modal = document.getElementById('taskModal');
-            const modalBody = document.getElementById('modal-body');
-            const cid = modal.dataset.cid;
-            const optIndex = modal.dataset.optIndex;
-
-            if (!cid) return;
-
-            const opt = DB[cid].optimizations[optIndex];
-            if (!opt) return;
-
-            const startDateInput = document.getElementById('modal_start_date');
-            const endDateInput = document.getElementById('modal_end_date');
-            const startDate = startDateInput.value;
-            const endDate = endDateInput.value;
-
-            modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-gray-500">Loading real database analysis...</p></div>`;
-
-            let analysisType = 'general';
-            if (opt.rootCause.includes('Frequency > 4.5')) {
-                analysisType = 'fatigue_critical';
-            } else if (opt.rootCause.includes('ROAS > 6.0x')) {
-                analysisType = 'roas_sustained';
-            }
-
-            let apiUrl = `api/facebook_analysis.php?action=getDetailedAnalysis&type=${analysisType}&assumed_value=150000`;
-            if (startDate) apiUrl += `&start_date=${startDate}`;
-            if (endDate) apiUrl += `&end_date=${endDate}`;
-
-            fetch(api(apiUrl))
-            .then(response => response.json())
-            .then(result => {
-                if (!result.success) throw new Error(result.error || 'Unknown error fetching analysis.');
-                
-                const data = result.data;
-                const totalResults = data.daily_breakdown.reduce((sum, d) => sum + d.results, 0);
-                const totalRevenue = totalResults * data.assumed_value_per_result;
-
-                const modalContent = `<div class="grid grid-cols-3 divide-x divide-gray-100">
-                    <div class="col-span-2 p-8">
-                        <div class="flex items-center gap-3 mb-6">
-                            <span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">${opt.type}</span>
-                            <span class="text-xs font-bold text-gray-500">Database Verified</span>
-                            <span class="flex items-center gap-1 text-xs font-bold text-gray-500">Confidence: ${opt.confidence}%</span>
-                        </div>
-                        <h4 class="text-2xl font-black text-gray-900 mb-4">${opt.title}</h4>
-                        
-                        <div class="mb-8">
-                            <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Root Cause</h5>
-                            <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-slate-300">
-                                <p class="text-gray-600 italic text-sm">${opt.rootCause}</p>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Tactical Instruction</h5>
-                            <div class="prose text-sm text-gray-600 leading-relaxed">${opt.instruction.replace(/\n/g, '<br>')}</div>
-                        </div>
-
-                    </div>
-                    <div class="col-span-1 bg-slate-50 p-8 flex flex-col justify-between">
-                        <div>
-                            <div class="mt-8">
-                                <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Projected Impact</h5>
-                                <div class="space-y-4">
-                                    <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
-                                        <p class="text-[10px] font-bold uppercase text-gray-400">Additional Leads</p>
-                                        <p class="text-lg font-black text-emerald-600">${totalResults.toLocaleString()}</p>
-                                    </div>
-                                    <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
-                                        <p class="text-[10px] font-bold uppercase text-gray-400">Revenue</p>
-                                        <p class="text-lg font-black text-emerald-600">$${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-8 space-y-3">
-                            <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg shadow-lg transition-all">Apply Changes</button>
-                            <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition-all">Snooze</button>
-                        </div>
-                    </div>
-                </div>`;
-                
-                modalBody.innerHTML = modalContent;
-            }).catch(error => {
-                console.error('Error fetching detailed analysis:', error);
-                modalBody.innerHTML = `<div class="p-8"><div class="bg-red-50 border border-red-200 p-4 rounded-lg"><p class="text-red-700 font-bold">Error Loading Analysis</p><p class="text-red-600 text-sm mt-2">${error.message}</p><p class="text-red-500 text-xs mt-3">Make sure XAMPP is running and the database connection is active.</p></div></div>`;
-            });
-        },
-
-        openStrategicModal: async (cid, optIndex = 0) => {
-            const modal = document.getElementById('taskModal');
-            const startDateInput = document.getElementById('modal_start_date');
-            const endDateInput = document.getElementById('modal_end_date');
-            const modalBody = document.getElementById('modal-body');
-
-            modal.dataset.cid = cid;
-            modal.dataset.optIndex = optIndex;
-
-            modal.classList.remove('hidden');
-            modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-gray-500">Finding most recent month with data...</p></div>`;
-
-            const opt = DB[cid].optimizations[optIndex];
-            if (!opt) {
-                modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-red-500">Error: Optimization data not found.</p></div>`;
-                return;
-            }
-
-            let analysisType = 'general';
-            if (opt.rootCause.includes('Frequency > 4.5')) {
-                analysisType = 'fatigue_critical';
-            } else if (opt.rootCause.includes('ROAS > 6.0x')) {
-                analysisType = 'roas_sustained';
-            }
-
-            let dateToTry = new Date();
-            let dataFound = false;
-            let attempts = 0;
-
-            while (!dataFound && attempts < 12) { // Search back up to 12 months
-                const firstDay = new Date(dateToTry.getFullYear(), dateToTry.getMonth(), 1);
-                const lastDay = new Date(dateToTry.getFullYear(), dateToTry.getMonth() + 1, 0);
-                
-                const startDate = firstDay.toISOString().split('T')[0];
-                const endDate = lastDay.toISOString().split('T')[0];
-
-                let apiUrl = `api/facebook_analysis.php?action=getDetailedAnalysis&type=${analysisType}&assumed_value=150000&start_date=${startDate}&end_date=${endDate}`;
-                
-                try {
-                    const response = await fetch(api(apiUrl));
-                    const result = await response.json();
-
-                    if (result.success && result.data.daily_breakdown.length > 0) {
-                        dataFound = true;
-                        startDateInput.value = startDate;
-                        endDateInput.value = endDate;
-                    } else {
-                        dateToTry.setMonth(dateToTry.getMonth() - 1);
-                        attempts++;
-                    }
-                } catch (e) {
-                    modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-red-500">Error while searching for data: ${e.message}</p></div>`;
-                    return;
-                }
-            }
-
-            if (!dataFound) {
-                const today = new Date();
-                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-                const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                startDateInput.value = firstDay.toISOString().split('T')[0];
-                endDateInput.value = lastDay.toISOString().split('T')[0];
-            }
-
-            App.fetchAnalysis();
+        openGeniusModal: (channelId, optIndex) => {
+          const ch = DB[channelId];
+          const opt = ch.optimizations[optIndex];
+          document.getElementById("taskModal").classList.remove("hidden");
+          document.getElementById("modal-body").innerHTML = `
+                                                                                              <div class="p-8">
+                                                                                                <h4 class="text-2xl font-black text-gray-900 mb-2">${
+                                                                                                  opt.title
+                                                                                                }</h4>
+                                                                                                <p class="text-sm text-gray-600 mb-4"><strong>Root:</strong> ${
+                                                                                                  opt.rootCause
+                                                                                                }</p>
+                                                                                                <div class="prose text-sm text-gray-600">${opt.instruction.replace(
+                                                                                                  /\n/g,
+                                                                                                  "<br>",
+                                                                                                )}</div>
+                                                                                              </div>
+                                                                                            `;
         },
 
         renderGlobal: () => {
@@ -1571,84 +1435,60 @@
                                                                                               </div>
 
 
-                                                                                              <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                                                                                                <div class="lg:col-span-2">
-                                                                                                  <!-- ✅ Campaign Efficiency Chart -->
-                                                                                                  <div class="glass-panel p-6 h-full">
-                                                                                                    <div class="flex justify-between items-center mb-4">
-                                                                                                      <h3 class="font-bold text-gray-700">
-                                                                                                        Campaign Efficiency Breakdown
-                                                                                                      </h3>
+                                                                                              <!-- ✅ Campaign Efficiency Chart -->
+                                                                                                <div class="glass-panel p-6 mb-6">
+                                                                                                  <div class="flex justify-between items-center mb-4">
+                                                                                                    <h3 class="font-bold text-gray-700">
+                                                                                                      Campaign Efficiency Breakdown
+                                                                                                    </h3>
 
-                                                                                                      <div class="flex gap-3 items-center">
-                                                                                                        <!-- ✅ Campaign Selector -->
-                                                                                                        <div
-                                                                                                          id="fbCampaignSelector"
-                                                                                                          class="flex flex-wrap gap-2 p-3 border rounded bg-white w-[420px]"
-                                                                                                        ></div>
+                                                                                                    <div class="flex gap-3 items-center">
+                                                                                                      <!-- ✅ Campaign Selector -->
+                                                                                                      <div
+                                                                                                        id="fbCampaignSelector"
+                                                                                                        class="flex flex-wrap gap-2 p-3 border rounded bg-white w-[420px]"
+                                                                                                      ></div>
 
-                                                                                                        <!-- ✅ Compare Mode -->
-                                                                                                        <select
-                                                                                                          id="fbCompareMode"
-                                                                                                          onchange="App.renderCampaignChart()"
-                                                                                                          class="border rounded px-3 py-2 text-xs bg-white"
-                                                                                                        >
-                                                                                                          <option value="current">Current Period</option>
-                                                                                                          <option value="previous">Previous Period</option>
-                                                                                                          <option value="both">Compare Both</option>
-                                                                                                        </select>
-                                                                                                      </div>
+                                                                                                      <!-- ✅ Compare Mode -->
+                                                                                                      <select
+                                                                                                        id="fbCompareMode"
+                                                                                                        onchange="App.renderCampaignChart()"
+                                                                                                        class="border rounded px-3 py-2 text-xs bg-white"
+                                                                                                      >
+                                                                                                        <option value="current">Current Period</option>
+                                                                                                        <option value="previous">Previous Period</option>
+                                                                                                        <option value="both">Compare Both</option>
+                                                                                                      </select>
                                                                                                     </div>
-
-                                                                                                   <!-- ✅ CURRENT PERIOD CHART -->
-                                                                                                      <div class="glass-panel p-6 mb-6">
-                                                                                                        <h3 class="font-bold text-gray-700 mb-3">
-                                                                                                          Current Period (${App.state.facebookCurrentLabel})
-                                                                                                        </h3>
-                                                                                                        <div class="h-[340px]">
-                                                                                                          <canvas id="campaignChartCurrent"></canvas>
-                                                                                                        </div>
-                                                                                                      </div>
-
-                                                                                                      <!-- ✅ PREVIOUS PERIOD CHART -->
-                                                                                                      <div class="glass-panel p-6 mb-6">
-                                                                                                        <h3 class="font-bold text-gray-700 mb-3">
-                                                                                                          Previous Period (${App.state.facebookPreviousLabel})
-                                                                                                        </h3>
-                                                                                                        <div class="h-[340px]">
-                                                                                                          <canvas id="campaignChartPrevious"></canvas>
-                                                                                                        </div>
-                                                                                                      </div>
-
-                                                                                                    <p
-                                                                                                      id="noSelectionMsg"
-                                                                                                      class="hidden text-sm text-gray-500 mt-3 text-center"
-                                                                                                    >
-                                                                                                      Select at least one campaign to display the graph.
-                                                                                                    </p>
                                                                                                   </div>
-                                                                                                </div>
-                                                                                                <div>
-                                                                                                    <!-- ✅ Genius AI Box -->
-                                                                                                    <div class="glass-panel p-0 overflow-hidden flex flex-col border-t-4 border-orange-600 bg-white h-full">
-                                                                                                        <div class="p-4 bg-slate-50 border-b border-gray-100 flex justify-between items-center">
-                                                                                                            <h3 class="font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-robot text-orange-600"></i> Genius AI</h3>
-                                                                                                            <span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full">${ch.optimizations ? ch.optimizations.length : 0} Ideas</span>
-                                                                                                        </div>
-                                                                                                        <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
-                                                                                                            ${ch.optimizations && ch.optimizations.length > 0 ? ch.optimizations.map((opt, idx) => `
-                                                                                                            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm genius-card relative overflow-hidden">
-                                                                                                                <div class="flex justify-between items-start mb-2">
-                                                                                                                    <span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded">${opt.type}</span>
-                                                                                                                    <span class="text-[10px] font-bold text-slate-400">${opt.confidence}% Conf.</span>
-                                                                                                                </div>
-                                                                                                                <h4 class="text-sm font-bold text-gray-800 mb-1 leading-snug">${opt.title}</h4>
-                                                                                                                <button onclick="App.openStrategicModal('facebook', ${idx})" class="w-full bg-slate-900 hover:bg-orange-600 text-white text-xs font-bold py-2.5 rounded mt-3">Analyze</button>
-                                                                                                            </div>`).join('') : '<div class="text-center py-10 text-gray-400 text-xs">System Optimized</div>'}
-                                                                                                        </div>
+
+                                                                                                 <!-- ✅ CURRENT PERIOD CHART -->
+                                                                                                    <div class="glass-panel p-6 mb-6">
+                                                                                                      <h3 class="font-bold text-gray-700 mb-3">
+                                                                                                        Current Period (${App.state.facebookCurrentLabel})
+                                                                                                      </h3>
+                                                                                                      <div class="h-[340px]">
+                                                                                                        <canvas id="campaignChartCurrent"></canvas>
+                                                                                                      </div>
                                                                                                     </div>
+
+                                                                                                    <!-- ✅ PREVIOUS PERIOD CHART -->
+                                                                                                    <div class="glass-panel p-6 mb-6">
+                                                                                                      <h3 class="font-bold text-gray-700 mb-3">
+                                                                                                        Previous Period (${App.state.facebookPreviousLabel})
+                                                                                                      </h3>
+                                                                                                      <div class="h-[340px]">
+                                                                                                        <canvas id="campaignChartPrevious"></canvas>
+                                                                                                      </div>
+                                                                                                    </div>
+
+                                                                                                  <p
+                                                                                                    id="noSelectionMsg"
+                                                                                                    class="hidden text-sm text-gray-500 mt-3 text-center"
+                                                                                                  >
+                                                                                                    Select at least one campaign to display the graph.
+                                                                                                  </p>
                                                                                                 </div>
-                                                                                              </div>
                                                                                               ${
                                                                                                 hasData
                                                                                                   ? `
@@ -2019,10 +1859,6 @@
 
         init: async () => {
           App.router("global");
-          const applyBtn = document.getElementById('apply_date_filter');
-          if (applyBtn) {
-            applyBtn.addEventListener('click', App.fetchAnalysis);
-          }
         },
 
         router: async (route) => {
