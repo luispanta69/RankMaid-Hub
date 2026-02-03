@@ -218,160 +218,87 @@
   </head>
 
   <body class="h-screen flex overflow-hidden text-sm">
-    <aside
-      class="w-64 bg-slate-900 text-slate-400 flex flex-col shadow-2xl z-20 flex-shrink-0"
-    >
-      <div
-        class="h-16 flex items-center px-6 bg-slate-950 border-b border-slate-800"
-      >
+    <aside class="w-64 bg-slate-900 text-slate-400 flex flex-col shadow-2xl z-20 flex-shrink-0">
+      <div class="h-16 flex items-center px-6 bg-slate-950 border-b border-slate-800">
         <i class="fa-solid fa-layer-group text-orange-600 text-xl mr-3"></i>
         <div>
           <h1 class="font-black text-white text-xl tracking-tight">RMH</h1>
-          <p
-            class="text-[9px] uppercase font-bold text-slate-500 tracking-wider"
-          >
-            Master V27.0
-          </p>
+          <p class="text-[9px] uppercase font-bold text-slate-500 tracking-wider">Master V27.0</p>
         </div>
       </div>
 
       <nav class="flex-1 overflow-y-auto py-4 space-y-1">
-        <div
-          class="px-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest"
-        >
-          Core Operations
-        </div>
+        <div class="px-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Core Operations</div>
         <div class="px-3 mb-2">
-          <div
-            onclick="App.router('global')"
-            id="nav-global"
-            class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-r-md active"
-          >
-            <i class="fa-solid fa-earth-americas w-5 text-center mr-3"></i>
-            Global Command
+          <div onclick="App.router('global')" id="nav-global" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-r-md active">
+            <i class="fa-solid fa-earth-americas w-5 text-center mr-3"></i>Global Command
           </div>
-          <div
-            onclick="App.router('goals')"
-            id="nav-goals"
-            class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-r-md"
-          >
-            <i class="fa-solid fa-bullseye w-5 text-center mr-3"></i> Goals &
-            Alignment
+
+          <div onclick="App.router('goals')" id="nav-goals" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-r-md">
+            <i class="fa-solid fa-bullseye w-5 text-center mr-3"></i> Goals & Alignment
           </div>
-          <div
-            onclick="App.router('knowledge')"
-            id="nav-knowledge"
-            class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-r-md"
-          >
-            <i class="fa-solid fa-book-open w-5 text-center mr-3"></i>
-            Information Center
+          <div onclick="App.router('knowledge')" id="nav-knowledge" class="nav-item flex items-center px-3 py-2.5 text-sm font-medium rounded-r-md">
+            <i class="fa-solid fa-book-open w-5 text-center mr-3"></i>Information Center
           </div>
         </div>
 
-        <div
-          class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest"
-        >
-          Paid Channels
-        </div>
+        <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">Paid Channels</div>
         <div class="px-3 space-y-1">
-          <div
-            onclick="App.router('facebook')"
-            id="nav-facebook"
-            class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md"
-          >
-            <i class="fa-brands fa-facebook w-5 text-center mr-3"></i> Facebook
-            Ads
+          <div onclick="App.router('facebook')" id="nav-facebook" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+            <i class="fa-brands fa-facebook w-5 text-center mr-3"></i> Facebook Ads
           </div>
-          <div
-            onclick="App.router('google')"
-            id="nav-google"
-            class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md"
-          >
+
+          <div onclick="App.router('google')" id="nav-google" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
             <i class="fa-brands fa-google w-5 text-center mr-3"></i> Google Ads
           </div>
-          <div
-            onclick="App.router('reddit')"
-            id="nav-reddit"
-            class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md"
-          >
+
+          <div onclick="App.router('reddit')" id="nav-reddit" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
             <i class="fa-brands fa-reddit w-5 text-center mr-3"></i> Reddit Ads
           </div>
-          <div
-            onclick="App.router('quora')"
-            id="nav-quora"
-            class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md"
-          >
+
+          <div onclick="App.router('quora')" id="nav-quora" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
             <i class="fa-brands fa-quora w-5 text-center mr-3"></i> Quora Ads
           </div>
-          <div
-            onclick="App.router('taboola')"
-            id="nav-taboola"
-            class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md"
-          >
+
+          <div onclick="App.router('taboola')" id="nav-taboola" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
             <i class="fa-solid fa-bullhorn w-5 text-center mr-3"></i> Taboola
           </div>
-          <div
-            onclick="App.router('adroll')"
-            id="nav-adroll"
-            class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md"
-          >
+
+          <div onclick="App.router('adroll')" id="nav-adroll" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
             <i class="fa-solid fa-rectangle-ad w-5 text-center mr-3"></i> AdRoll
           </div>
         </div>
 
-        <div
-          class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest"
-        >
+        <div class="px-6 mt-6 mb-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest">
           Outreach
         </div>
+
         <div class="px-3 space-y-1">
-          <div
-            onclick="App.router('linkedin')"
-            id="nav-linkedin"
-            class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md"
-          >
+          <div onclick="App.router('linkedin')" id="nav-linkedin" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
             <i class="fa-brands fa-linkedin w-5 text-center mr-3"></i> LinkedIn
           </div>
-          <div
-            onclick="App.router('email')"
-            id="nav-email"
-            class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md"
-          >
-            <i class="fa-solid fa-envelope w-5 text-center mr-3"></i> Email
-            Database
+
+          <div onclick="App.router('email')" id="nav-email" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+            <i class="fa-solid fa-envelope w-5 text-center mr-3"></i> Email Database
           </div>
-          <div
-            onclick="App.router('propstream')"
-            id="nav-propstream"
-            class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md"
-          >
+
+          <div  onclick="App.router('propstream')" id="nav-propstream" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
             <i class="fa-solid fa-house-signal w-5 text-center mr-3"></i>
             PropStream
           </div>
-          <div
-            onclick="App.router('craigslist')"
-            id="nav-craigslist"
-            class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md"
-          >
+
+          <div onclick="App.router('craigslist')" id="nav-craigslist" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
             <i class="fa-solid fa-list w-5 text-center mr-3"></i> Craigslist
           </div>
-          <div
-            onclick="App.router('biggerpockets')"
-            id="nav-biggerpockets"
-            class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md"
-          >
-            <i class="fa-brands fa-get-pocket w-5 text-center mr-3"></i>
-            BiggerPockets
+
+          <div onclick="App.router('biggerpockets')" id="nav-biggerpockets" class="nav-item flex items-center px-3 py-2 text-sm font-medium rounded-r-md">
+            <i class="fa-brands fa-get-pocket w-5 text-center mr-3"></i>BiggerPockets
           </div>
         </div>
       </nav>
 
-      <div
-        class="p-4 bg-slate-950 border-t border-slate-800 flex items-center gap-3"
-      >
-        <div
-          class="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-white text-xs font-bold"
-        >
+      <div class="p-4 bg-slate-950 border-t border-slate-800 flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-orange-600 flex items-center justify-center text-white text-xs font-bold">
           JD
         </div>
         <div>
@@ -382,33 +309,18 @@
     </aside>
 
     <main class="flex-1 flex flex-col relative h-full bg-[#F3F4F6]">
-      <header
-        class="h-16 bg-white border-b border-gray-200 flex justify-between items-center px-8 z-10 shadow-sm"
-      >
+      <header class="h-16 bg-white border-b border-gray-200 flex justify-between items-center px-8 z-10 shadow-sm">
         <div>
-          <h2 id="page-title" class="text-xl font-bold text-gray-800">
-            Global Command
-          </h2>
-          <p id="page-subtitle" class="text-xs text-gray-500 font-medium">
-            Enterprise View
-          </p>
+          <h2 id="page-title" class="text-xl font-bold text-gray-800">Global Command</h2>
+          <p id="page-subtitle" class="text-xs text-gray-500 font-medium">Enterprise View</p>
         </div>
         <div class="flex items-center gap-4">
           <div class="text-right hidden md:block">
-            <p
-              class="text-[10px] font-bold text-gray-400 uppercase tracking-wider"
-            >
-              Live Sync
-            </p>
-            <p class="text-xs font-mono text-emerald-600 font-bold">
-              UPDATED: JUST NOW
-            </p>
+            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Live Sync</p>
+            <p class="text-xs font-mono text-emerald-600 font-bold">UPDATED: JUST NOW</p>
           </div>
 
-          <button
-            onclick="App.triggerFacebookUpload()"
-            class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg shadow-lg shadow-orange-100 transition-all text-xs font-bold flex items-center gap-2"
-          >
+          <button onclick="App.triggerFacebookUpload()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg shadow-lg shadow-orange-100 transition-all text-xs font-bold flex items-center gap-2">
             <i class="fa-solid fa-rotate"></i> Upload Data
           </button>
         </div>
@@ -417,31 +329,14 @@
       <div id="content-area" class="flex-1 overflow-y-auto p-8 fade-in"></div>
     </main>
 
-    <div
-      id="taskModal"
-      class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-4"
-    >
-      <div
-        class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl modal-content overflow-hidden border border-gray-200"
-      >
-        <div
-          class="bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-700"
-        >
+    <div id="taskModal" class="fixed inset-0 modal-overlay z-50 hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl modal-content overflow-hidden border border-gray-200">
+        <div class="bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-700">
           <div>
-            <h3 class="text-xl font-black text-white flex items-center gap-2">
-              <i class="fa-solid fa-brain text-orange-500"></i> Strategic
-              Analysis
-            </h3>
-            <p class="text-slate-400 text-xs mt-1">
-              RMH Intelligence Engine v2.5
-            </p>
+            <h3 class="text-xl font-black text-white flex items-center gap-2"><i class="fa-solid fa-brain text-orange-500"></i> Strategic Analysis</h3>
+            <p class="text-slate-400 text-xs mt-1">RMH Intelligence Engine v2.5</p>
           </div>
-          <button
-            onclick="
-              document.getElementById('taskModal').classList.add('hidden')
-            "
-            class="text-gray-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-all"
-          >
+          <button onclick=" document.getElementById('taskModal').classList.add('hidden')" class="text-gray-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-all">
             <i class="fa-solid fa-xmark"></i>
           </button>
         </div>
@@ -479,9 +374,8 @@
         return result;
       };
 
-      // Use relative paths for API calls, just like index.php.
-      // This removes the leading slash from paths to make them relative.
-      const api = (path) => (path.startsWith("/") ? path.substring(1) : path);
+      const API_BASE = `${window.location.origin}/rmh`;
+      const api = (path) => `${API_BASE}${path}`;
 
       Chart.register(ChartDataLabels);
 
@@ -779,13 +673,13 @@
               color: "border-blue-500",
               summary: "Meta's AI optimizes for engagement.",
               details: `
-                                                                                                  <h4>How the Algorithm Thinks</h4>
-                                                                                                  <p>Meta's algorithm doesn't care about Real Estate. It cares about <strong>user intent signals</strong>.</p>
-                                                                                                  <h4>The Learning Phase</h4>
-                                                                                                  <p>Every ad set requires <strong>50 conversions per week</strong> to exit Learning.</p>
-                                                                                                  <h4>Strategy: Broad Targeting</h4>
-                                                                                                  <p>Use broad targeting and let creative do the filtering.</p>
-                                                                                                `,
+              <h4>How the Algorithm Thinks</h4>
+              <p>Meta's algorithm doesn't care about Real Estate. It cares about <strong>user intent signals</strong>.</p>
+              <h4>The Learning Phase</h4>
+              <p>Every ad set requires <strong>50 conversions per week</strong> to exit Learning.</p>
+              <h4>Strategy: Broad Targeting</h4>
+              <p>Use broad targeting and let creative do the filtering.</p>
+            `,
             },
             {
               title: "Google Ads Quality Score",
@@ -793,9 +687,9 @@
               color: "border-red-500",
               summary: "Relevance = Lower Cost.",
               details: `
-                                                                                                  <h4>The Formula</h4>
-                                                                                                  <p><strong>Ad Rank = Bid × Quality Score</strong>.</p>
-                                                                                                `,
+              <h4>The Formula</h4>
+              <p><strong>Ad Rank = Bid × Quality Score</strong>.</p>
+            `,
             },
             {
               title: "SEO: Local Pack & E-E-A-T",
@@ -803,9 +697,9 @@
               color: "border-emerald-500",
               summary: "Map Pack drives calls.",
               details: `
-                                                                                                  <h4>Ranking Factors</h4>
-                                                                                                  <p>Proximity, Relevance, Prominence.</p>
-                                                                                                `,
+              <h4>Ranking Factors</h4>
+              <p>Proximity, Relevance, Prominence.</p>
+            `,
             },
             {
               title: "Native Ads (Taboola)",
@@ -813,9 +707,9 @@
               color: "border-indigo-500",
               summary: "High volume, low intent.",
               details: `
-                                                                                                  <h4>The Mindset</h4>
-                                                                                                  <p>Interrupt the pattern, educate first.</p>
-                                                                                                `,
+              <h4>The Mindset</h4>
+              <p>Interrupt the pattern, educate first.</p>
+            `,
             },
           ],
           sops: [
@@ -985,113 +879,113 @@
           const opt = ch.optimizations[optIndex];
           document.getElementById("taskModal").classList.remove("hidden");
           document.getElementById("modal-body").innerHTML = `
-                                                                                              <div class="p-8">
-                                                                                                <h4 class="text-2xl font-black text-gray-900 mb-2">${
-                                                                                                  opt.title
-                                                                                                }</h4>
-                                                                                                <p class="text-sm text-gray-600 mb-4"><strong>Root:</strong> ${
-                                                                                                  opt.rootCause
-                                                                                                }</p>
-                                                                                                <div class="prose text-sm text-gray-600">${opt.instruction.replace(
-                                                                                                  /\n/g,
-                                                                                                  "<br>",
-                                                                                                )}</div>
-                                                                                              </div>
-                                                                                            `;
+          <div class="p-8">
+            <h4 class="text-2xl font-black text-gray-900 mb-2">${
+              opt.title
+            }</h4>
+            <p class="text-sm text-gray-600 mb-4"><strong>Root:</strong> ${
+              opt.rootCause
+            }</p>
+            <div class="prose text-sm text-gray-600">${opt.instruction.replace(
+              /\n/g,
+              "<br>",
+            )}</div>
+          </div>
+        `;
         },
 
         renderGlobal: () => {
           const g = Logic.getGlobalStats();
           return `
-                                                                                              <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-                                                                                                ${UI.card(
-                                                                                                  "Total Revenue",
-                                                                                                  UI.usd(
-                                                                                                    g.revenue,
-                                                                                                  ),
-                                                                                                  "text-emerald-600",
-                                                                                                  "Gross Revenue",
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Total Spend",
-                                                                                                  UI.usd(
-                                                                                                    g.spend,
-                                                                                                  ),
-                                                                                                  "text-slate-600",
-                                                                                                  "Ad Spend",
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Blended CAQ",
-                                                                                                  UI.usd(
-                                                                                                    g.cpa,
-                                                                                                  ),
-                                                                                                  "text-orange-600",
-                                                                                                  "Cost per Booking",
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Pipeline Volume",
-                                                                                                  UI.num(
-                                                                                                    g.leads,
-                                                                                                  ),
-                                                                                                  "text-gray-900",
-                                                                                                  "Total Leads",
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Avg Deal Size",
-                                                                                                  UI.usd(
-                                                                                                    g.avgDeal,
-                                                                                                  ),
-                                                                                                  "text-blue-600",
-                                                                                                  "Est. Value",
-                                                                                                )}
-                                                                                              </div>
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+              ${UI.card(
+                "Total Revenue",
+                UI.usd(
+                  g.revenue,
+                ),
+                "text-emerald-600",
+                "Gross Revenue",
+              )}
+              ${UI.card(
+                "Total Spend",
+                UI.usd(
+                  g.spend,
+                ),
+                "text-slate-600",
+                "Ad Spend",
+              )}
+              ${UI.card(
+                "Blended CAQ",
+                UI.usd(
+                  g.cpa,
+                ),
+                "text-orange-600",
+                "Cost per Booking",
+              )}
+              ${UI.card(
+                "Pipeline Volume",
+                UI.num(
+                  g.leads,
+                ),
+                "text-gray-900",
+                "Total Leads",
+              )}
+              ${UI.card(
+                "Avg Deal Size",
+                UI.usd(
+                  g.avgDeal,
+                ),
+                "text-blue-600",
+                "Est. Value",
+              )}
+            </div>
 
-                                                                                              <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                                                                                                <div class="lg:col-span-2 glass-panel p-6">
-                                                                                                  <h3 class="font-bold text-gray-700 mb-4">Global Revenue Velocity</h3>
-                                                                                                  <div class="h-72"><canvas id="mainChart"></canvas></div>
-                                                                                                </div>
-                                                                                                <div class="bg-slate-800 text-white p-6 rounded-xl shadow-lg border-l-4 border-orange-600">
-                                                                                                  <h3 class="font-bold text-slate-400 text-xs uppercase tracking-widest mb-6">AI Feed</h3>
-                                                                                                  <div class="space-y-4 text-sm">
-                                                                                                    ${UI.feedItem(
-                                                                                                      "Facebook",
-                                                                                                      "good",
-                                                                                                      "Scale Warning: ROI > 400%",
-                                                                                                      "Approve",
-                                                                                                    )}
-                                                                                                    ${UI.feedItem(
-                                                                                                      "Google",
-                                                                                                      "bad",
-                                                                                                      "CAQ spiked to $190",
-                                                                                                      "Fix",
-                                                                                                    )}
-                                                                                                  </div>
-                                                                                                </div>
-                                                                                              </div>
-                                                                                            `;
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+              <div class="lg:col-span-2 glass-panel p-6">
+                <h3 class="font-bold text-gray-700 mb-4">Global Revenue Velocity</h3>
+                <div class="h-72"><canvas id="mainChart"></canvas></div>
+              </div>
+              <div class="bg-slate-800 text-white p-6 rounded-xl shadow-lg border-l-4 border-orange-600">
+                <h3 class="font-bold text-slate-400 text-xs uppercase tracking-widest mb-6">AI Feed</h3>
+                <div class="space-y-4 text-sm">
+                  ${UI.feedItem(
+                    "Facebook",
+                    "good",
+                    "Scale Warning: ROI > 400%",
+                    "Approve",
+                  )}
+                  ${UI.feedItem(
+                    "Google",
+                    "bad",
+                    "CAQ spiked to $190",
+                    "Fix",
+                  )}
+                </div>
+              </div>
+            </div>
+          `;
         },
 
         renderGoals: () => {
           const g = DB.goals;
           return `
-                                                                                              <div class="glass-panel p-8">
-                                                                                                <h2 class="text-2xl font-black text-gray-900 mb-2">Goals</h2>
-                                                                                                <p class="text-gray-600 mb-6">${g.vision}</p>
-                                                                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                                                                  <div class="glass-panel p-6">
-                                                                                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Appointments</p>
-                                                                                                    <p class="text-4xl font-black text-gray-900">${g.targets.appointments.current}</p>
-                                                                                                    <p class="text-sm text-gray-500">Target: ${g.targets.appointments.target}</p>
-                                                                                                  </div>
-                                                                                                  <div class="glass-panel p-6">
-                                                                                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">CAQ</p>
-                                                                                                    <p class="text-4xl font-black text-emerald-600">$${g.targets.caq.current}</p>
-                                                                                                    <p class="text-sm text-gray-500">Target: under $${g.targets.caq.target}</p>
-                                                                                                  </div>
-                                                                                                </div>
-                                                                                              </div>
-                                                                                            `;
+          <div class="glass-panel p-8">
+            <h2 class="text-2xl font-black text-gray-900 mb-2">Goals</h2>
+            <p class="text-gray-600 mb-6">${g.vision}</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="glass-panel p-6">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Appointments</p>
+                <p class="text-4xl font-black text-gray-900">${g.targets.appointments.current}</p>
+                <p class="text-sm text-gray-500">Target: ${g.targets.appointments.target}</p>
+              </div>
+              <div class="glass-panel p-6">
+                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">CAQ</p>
+                <p class="text-4xl font-black text-emerald-600">$${g.targets.caq.current}</p>
+                <p class="text-sm text-gray-500">Target: under $${g.targets.caq.target}</p>
+              </div>
+            </div>
+          </div>
+        `;
         },
 
         renderKnowledge: () => {
@@ -1099,27 +993,27 @@
           const tab = window.currentTab || "algo";
 
           const tabs = `
-                                                                                              <div class="flex gap-4 border-b border-gray-200 mb-8">
-                                                                                                <button onclick="window.currentTab='algo'; App.router('knowledge')" class="tab-btn ${
-                                                                                                  tab ===
-                                                                                                  "algo"
-                                                                                                    ? "active"
-                                                                                                    : ""
-                                                                                                }">Algorithms</button>
-                                                                                                <button onclick="window.currentTab='sops'; App.router('knowledge')" class="tab-btn ${
-                                                                                                  tab ===
-                                                                                                  "sops"
-                                                                                                    ? "active"
-                                                                                                    : ""
-                                                                                                }">SOP Library</button>
-                                                                                                <button onclick="window.currentTab='scripts'; App.router('knowledge')" class="tab-btn ${
-                                                                                                  tab ===
-                                                                                                  "scripts"
-                                                                                                    ? "active"
-                                                                                                    : ""
-                                                                                                }">Script Vault</button>
-                                                                                              </div>
-                                                                                            `;
+          <div class="flex gap-4 border-b border-gray-200 mb-8">
+            <button onclick="window.currentTab='algo'; App.router('knowledge')" class="tab-btn ${
+              tab ===
+              "algo"
+                ? "active"
+                : ""
+            }">Algorithms</button>
+            <button onclick="window.currentTab='sops'; App.router('knowledge')" class="tab-btn ${
+              tab ===
+              "sops"
+                ? "active"
+                : ""
+            }">SOP Library</button>
+            <button onclick="window.currentTab='scripts'; App.router('knowledge')" class="tab-btn ${
+              tab ===
+              "scripts"
+                ? "active"
+                : ""
+            }">Script Vault</button>
+          </div>
+        `;
 
           let content = "";
 
@@ -1127,18 +1021,18 @@
             content = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">${lib.algorithms
               .map(
                 (a, i) => `
-                                                                                                    <div class="glass-panel p-6 border-t-4 ${a.color} kb-card" onclick="document.getElementById('algo-details-${i}').classList.toggle('hidden'); this.classList.toggle('expanded')">
-                                                                                                      <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-4">
-                                                                                                        <i class="${a.icon} text-2xl text-gray-600"></i>
-                                                                                                        <div>
-                                                                                                          <h4 class="font-bold text-gray-900 text-lg m-0">${a.title}</h4>
-                                                                                                          <p class="text-xs text-gray-500">${a.summary}</p>
-                                                                                                        </div>
-                                                                                                      </div>
-                                                                                                      <div id="algo-details-${i}" class="hidden prose text-sm text-gray-600 border-t border-gray-100 pt-4 mt-2 bg-gray-50 p-4 rounded-lg">${a.details}</div>
-                                                                                                      <p class="text-center text-xs text-orange-600 font-bold mt-2">Click to Expand</p>
-                                                                                                    </div>
-                                                                                                  `,
+                <div class="glass-panel p-6 border-t-4 ${a.color} kb-card" onclick="document.getElementById('algo-details-${i}').classList.toggle('hidden'); this.classList.toggle('expanded')">
+                  <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-4">
+                    <i class="${a.icon} text-2xl text-gray-600"></i>
+                    <div>
+                      <h4 class="font-bold text-gray-900 text-lg m-0">${a.title}</h4>
+                      <p class="text-xs text-gray-500">${a.summary}</p>
+                    </div>
+                  </div>
+                  <div id="algo-details-${i}" class="hidden prose text-sm text-gray-600 border-t border-gray-100 pt-4 mt-2 bg-gray-50 p-4 rounded-lg">${a.details}</div>
+                  <p class="text-center text-xs text-orange-600 font-bold mt-2">Click to Expand</p>
+                </div>
+              `,
               )
               .join("")}</div>`;
           }
@@ -1147,36 +1041,36 @@
             content = `<div class="space-y-4">${lib.sops
               .map(
                 (s, i) => `
-                                                                                                    <div class="glass-panel p-6">
-                                                                                                      <div class="flex items-center gap-3 mb-2">
-                                                                                                        <div class="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-sm">${
-                                                                                                          i +
-                                                                                                          1
-                                                                                                        }</div>
-                                                                                                        <div>
-                                                                                                          <p class="font-bold text-gray-900">${
-                                                                                                            s.title
-                                                                                                          }</p>
-                                                                                                          <span class="tag bg-gray-100 text-gray-500 mt-1 inline-block">${
-                                                                                                            s.category
-                                                                                                          }</span>
-                                                                                                        </div>
-                                                                                                      </div>
-                                                                                                      <ol class="list-decimal list-inside text-sm text-gray-700 space-y-2">${s.steps
-                                                                                                        .map(
-                                                                                                          (
-                                                                                                            step,
-                                                                                                          ) =>
-                                                                                                            `<li>${step}</li>`,
-                                                                                                        )
-                                                                                                        .join(
-                                                                                                          "",
-                                                                                                        )}</ol>
-                                                                                                      <div class="mt-3 bg-blue-50 p-3 rounded border border-blue-100 text-sm text-blue-800">${
-                                                                                                        s.details
-                                                                                                      }</div>
-                                                                                                    </div>
-                                                                                                  `,
+                <div class="glass-panel p-6">
+                  <div class="flex items-center gap-3 mb-2">
+                    <div class="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-sm">${
+                      i +
+                      1
+                    }</div>
+                    <div>
+                      <p class="font-bold text-gray-900">${
+                        s.title
+                      }</p>
+                      <span class="tag bg-gray-100 text-gray-500 mt-1 inline-block">${
+                        s.category
+                      }</span>
+                    </div>
+                  </div>
+                  <ol class="list-decimal list-inside text-sm text-gray-700 space-y-2">${s.steps
+                    .map(
+                      (
+                        step,
+                      ) =>
+                        `<li>${step}</li>`,
+                    )
+                    .join(
+                      "",
+                    )}</ol>
+                  <div class="mt-3 bg-blue-50 p-3 rounded border border-blue-100 text-sm text-blue-800">${
+                    s.details
+                  }</div>
+                </div>
+              `,
               )
               .join("")}</div>`;
           }
@@ -1185,27 +1079,27 @@
             content = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">${lib.scripts
               .map(
                 (s, i) => `
-                                                                                                    <div class="glass-panel p-6">
-                                                                                                      <p class="font-bold text-gray-900 mb-1">${s.title}</p>
-                                                                                                      <p class="text-xs text-gray-500 italic mb-3">${s.context}</p>
-                                                                                                      <p class="font-mono text-sm text-gray-700 bg-orange-50 p-3 rounded border border-orange-100 mb-3">"${s.content}"</p>
-                                                                                                      <button onclick="document.getElementById('obj-${i}').classList.toggle('hidden')" class="text-xs font-bold text-gray-500 hover:text-orange-600">
-                                                                                                        View Objection Handler
-                                                                                                      </button>
-                                                                                                      <div id="obj-${i}" class="hidden mt-2 p-3 bg-red-50 text-red-800 text-xs rounded border border-red-100">${s.objections}</div>
-                                                                                                    </div>
-                                                                                                  `,
+                <div class="glass-panel p-6">
+                  <p class="font-bold text-gray-900 mb-1">${s.title}</p>
+                  <p class="text-xs text-gray-500 italic mb-3">${s.context}</p>
+                  <p class="font-mono text-sm text-gray-700 bg-orange-50 p-3 rounded border border-orange-100 mb-3">"${s.content}"</p>
+                  <button onclick="document.getElementById('obj-${i}').classList.toggle('hidden')" class="text-xs font-bold text-gray-500 hover:text-orange-600">
+                    View Objection Handler
+                  </button>
+                  <div id="obj-${i}" class="hidden mt-2 p-3 bg-red-50 text-red-800 text-xs rounded border border-red-100">${s.objections}</div>
+                </div>
+              `,
               )
               .join("")}</div>`;
           }
 
           return `<div class="mb-8">
-                                                                                                <h2 class="text-3xl font-black text-gray-900">Knowledge Hub</h2>
-                                                                                                <p class="text-gray-500">Operational Intelligence</p>
-                                                                                              </div>
-                                                                                              ${tabs}
-                                                                                              ${content}
-                                                                                            `;
+            <h2 class="text-3xl font-black text-gray-900">Knowledge Hub</h2>
+            <p class="text-gray-500">Operational Intelligence</p>
+          </div>
+          ${tabs}
+          ${content}
+        `;
         },
 
         // Base channel render (NON-FACEBOOK)
@@ -1228,88 +1122,88 @@
           };
 
           return `
-                                                                                              <div class="flex justify-between items-center mb-6">
-                                                                                                <div>
-                                                                                                  <h2 class="text-2xl font-black text-gray-800">${
-                                                                                                    ch.name
-                                                                                                  }</h2>
-                                                                                                  <p class="text-xs text-gray-500">Channel Intelligence</p>
-                                                                                                </div>
-                                                                                                <div class="text-xs font-bold text-gray-600 bg-white px-3 py-1.5 rounded border">Last 30 Days</div>
-                                                                                              </div>
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h2 class="text-2xl font-black text-gray-800">${
+                ch.name
+              }</h2>
+              <p class="text-xs text-gray-500">Channel Intelligence</p>
+            </div>
+            <div class="text-xs font-bold text-gray-600 bg-white px-3 py-1.5 rounded border">Last 30 Days</div>
+          </div>
 
-                                                                                              <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                                                                                                ${UI.card(
-                                                                                                  "Ad Spend",
-                                                                                                  UI.usd(
-                                                                                                    m
-                                                                                                      .spend
-                                                                                                      .current,
-                                                                                                  ),
-                                                                                                  d(
-                                                                                                    m
-                                                                                                      .spend
-                                                                                                      .current,
-                                                                                                    m
-                                                                                                      .spend
-                                                                                                      .prev,
-                                                                                                  ),
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Leads",
-                                                                                                  UI.num(
-                                                                                                    m
-                                                                                                      .leads
-                                                                                                      .current,
-                                                                                                  ),
-                                                                                                  d(
-                                                                                                    m
-                                                                                                      .leads
-                                                                                                      .current,
-                                                                                                    m
-                                                                                                      .leads
-                                                                                                      .prev,
-                                                                                                  ),
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Bookings",
-                                                                                                  UI.num(
-                                                                                                    m
-                                                                                                      .bookings
-                                                                                                      .current,
-                                                                                                  ),
-                                                                                                  d(
-                                                                                                    m
-                                                                                                      .bookings
-                                                                                                      .current,
-                                                                                                    m
-                                                                                                      .bookings
-                                                                                                      .prev,
-                                                                                                  ),
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Revenue",
-                                                                                                  UI.usd(
-                                                                                                    m
-                                                                                                      .revenue
-                                                                                                      .current,
-                                                                                                  ),
-                                                                                                  d(
-                                                                                                    m
-                                                                                                      .revenue
-                                                                                                      .current,
-                                                                                                    m
-                                                                                                      .revenue
-                                                                                                      .prev,
-                                                                                                  ),
-                                                                                                )}
-                                                                                              </div>
+          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+            ${UI.card(
+              "Ad Spend",
+              UI.usd(
+                m
+                  .spend
+                  .current,
+              ),
+              d(
+                m
+                  .spend
+                  .current,
+                m
+                  .spend
+                  .prev,
+              ),
+            )}
+            ${UI.card(
+              "Leads",
+              UI.num(
+                m
+                  .leads
+                  .current,
+              ),
+              d(
+                m
+                  .leads
+                  .current,
+                m
+                  .leads
+                  .prev,
+              ),
+            )}
+            ${UI.card(
+              "Bookings",
+              UI.num(
+                m
+                  .bookings
+                  .current,
+              ),
+              d(
+                m
+                  .bookings
+                  .current,
+                m
+                  .bookings
+                  .prev,
+              ),
+            )}
+            ${UI.card(
+              "Revenue",
+              UI.usd(
+                m
+                  .revenue
+                  .current,
+              ),
+              d(
+                m
+                  .revenue
+                  .current,
+                m
+                  .revenue
+                  .prev,
+              ),
+            )}
+          </div>
 
-                                                                                              <div class="glass-panel p-6">
-                                                                                                <h3 class="font-bold text-gray-700 mb-4">Efficiency Trend</h3>
-                                                                                                <div class="h-64"><canvas id="channelChart"></canvas></div>
-                                                                                              </div>
-                                                                                            `;
+          <div class="glass-panel p-6">
+            <h3 class="font-bold text-gray-700 mb-4">Efficiency Trend</h3>
+            <div class="h-64"><canvas id="channelChart"></canvas></div>
+          </div>
+        `;
         },
 
         // FACEBOOK FULL RENDER (with report selector + date filter)
@@ -1329,255 +1223,271 @@
           const hasData = ch.csvHeaders.length && ch.csvRows.length;
 
           return `
-                                                                                              <div class="flex justify-between items-center mb-6">
-                                                                                                <div>
-                                                                                                  <h2 class="text-2xl font-black text-gray-800">Facebook Ads</h2>
-                                                                                                  <p class="text-xs text-gray-500">Reports + Filters</p>
-                                                                                                </div>
-                                                                                                <div class="text-xs font-bold text-gray-600 bg-white px-3 py-1.5 rounded border">
-                                                                                                  Loaded: ${
-                                                                                                    App
-                                                                                                      .state
-                                                                                                      .facebookReportRangeLabel ||
-                                                                                                    "Latest"
-                                                                                                  }
-                                                                                                </div>
-                                                                                              </div>
+          <div class="flex justify-between items-center mb-6">
+            <div>
+              <h2 class="text-2xl font-black text-gray-800">Facebook Ads</h2>
+              <p class="text-xs text-gray-500">Reports + Filters</p>
+            </div>
+            <div class="text-xs font-bold text-gray-600 bg-white px-3 py-1.5 rounded border">
+              Loaded: ${
+                App
+                  .state
+                  .facebookReportRangeLabel ||
+                "Latest"
+              }
+            </div>
+          </div>
 
-                                                                                              <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                                                                                                <div class="glass-panel p-5">
-                                                                                                  <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Ad Spend</p>
-                                                                                                  <p class="text-3xl font-black text-slate-800">${UI.usd(
-                                                                                                    m
-                                                                                                      .spend
-                                                                                                      .current,
-                                                                                                  )}</p>
-                                                                                                </div>
-                                                                                                <div class="glass-panel p-5">
-                                                                                                  <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Results</p>
-                                                                                                  <p class="text-3xl font-black text-slate-800">${UI.num(
-                                                                                                    m
-                                                                                                      .bookings
-                                                                                                      .current,
-                                                                                                  )}</p>
-                                                                                                </div>
-                                                                                                <div class="glass-panel p-5">
-                                                                                                  <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Cost Per Result</p>
-                                                                                                  <p class="text-3xl font-black text-slate-800">${UI.usd(
-                                                                                                    m
-                                                                                                      .costPerResult
-                                                                                                      .current,
-                                                                                                  )}</p>
-                                                                                                </div>
-                                                                                              </div>
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <div class="glass-panel p-5">
+              <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Ad Spend</p>
+              <p class="text-3xl font-black text-slate-800">${UI.usd(
+                m
+                  .spend
+                  .current,
+              )}</p>
+            </div>
+            <div class="glass-panel p-5">
+              <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Results</p>
+              <p class="text-3xl font-black text-slate-800">${UI.num(
+                m
+                  .bookings
+                  .current,
+              )}</p>
+            </div>
+            <div class="glass-panel p-5">
+              <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Cost Per Result</p>
+              <p class="text-3xl font-black text-slate-800">${UI.usd(
+                m
+                  .costPerResult
+                  .current,
+              )}</p>
+            </div>
+          </div>
 
-                                                                                              <div class="glass-panel p-6 mb-6">
-                                                                                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
-                                                                                                  Compare Date Ranges
-                                                                                                </p>
+          <div class="flex justify-between items-center mb-3">
+          <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">
+            Date Range
+          </p>
 
-                                                                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- ✅ Optional Comparison Toggle -->
+          <button
+            onclick="App.toggleFacebookCompare()"
+            class="text-xs font-bold text-orange-600 hover:text-orange-700"
+          >
+            + Compare Date Ranges
+          </button>
+        </div>
 
-                                                                                                  <!-- ✅ CURRENT RANGE -->
-                                                                                                  <div>
-                                                                                                    <p class="text-[10px] font-bold text-gray-500 uppercase mb-2">
-                                                                                                      Current Period
-                                                                                                    </p>
-                                                                                                    <div class="flex gap-2">
-                                                                                                      <input
-                                                                                                        id="fbStartDate"
-                                                                                                        type="date"
-                                                                                                        class="border rounded px-3 py-2 text-xs bg-white w-full"
-                                                                                                      />
-                                                                                                      <input
-                                                                                                        id="fbEndDate"
-                                                                                                        type="date"
-                                                                                                        class="border rounded px-3 py-2 text-xs bg-white w-full"
-                                                                                                      />
-                                                                                                    </div>
-                                                                                                  </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                                                                                                  <!-- ✅ PREVIOUS RANGE -->
-                                                                                                  <div>
-                                                                                                    <p class="text-[10px] font-bold text-gray-500 uppercase mb-2">
-                                                                                                      Previous Period
-                                                                                                    </p>
-                                                                                                    <div class="flex gap-2">
-                                                                                                      <input
-                                                                                                        id="fbPrevStartDate"
-                                                                                                        type="date"
-                                                                                                        class="border rounded px-3 py-2 text-xs bg-white w-full"
-                                                                                                      />
-                                                                                                      <input
-                                                                                                        id="fbPrevEndDate"
-                                                                                                        type="date"
-                                                                                                        class="border rounded px-3 py-2 text-xs bg-white w-full"
-                                                                                                      />
-                                                                                                    </div>
-                                                                                                  </div>
-                                                                                                </div>
+          <!-- ✅ CURRENT RANGE -->
+          <div>
+            <p class="text-[10px] font-bold text-gray-500 uppercase mb-2">
+            </p>
 
-                                                                                                <div class="mt-5 flex gap-3">
-                                                                                                  <button
-                                                                                                    onclick="App.applyFacebookComparison()"
-                                                                                                    class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-xs font-bold"
-                                                                                                  >
-                                                                                                    Apply Comparison
-                                                                                                  </button>
+            <div class="flex gap-2">
+              <input
+                id="fbStartDate"
+                type="date"
+                class="border rounded px-3 py-2 text-xs bg-white w-full"
+              />
+              <input
+                id="fbEndDate"
+                type="date"
+                class="border rounded px-3 py-2 text-xs bg-white w-full"
+              />
+            </div>
 
-                                                                                                  <button
-                                                                                                    onclick="App.resetFacebookDateFilter()"
-                                                                                                    class="bg-white border px-4 py-2 rounded text-xs font-bold"
-                                                                                                  >
-                                                                                                    Reset
-                                                                                                  </button>
-                                                                                                </div>
-                                                                                              </div>
+            <!-- ✅ APPLY DATE RANGE (DEFAULT BUTTON) -->
+            <button
+              id="fbApplyRangeBtn"
+              onclick="App.applyFacebookReportDateFilter()"
+              class="mt-4 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-xs font-bold"
+            >
+              Apply Date Range
+            </button>
+            <button
+              onclick="App.resetFacebookDateFilter()"
+              class="mt-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded text-xs font-bold"
+            >
+              Reset to Latest Month
+            </button>
+          </div>
+
+          <!-- ✅ OPTIONAL COMPARISON SECTION -->
+          <div
+            id="fbCompareSection"
+            class="hidden"
+          >
+            <p class="text-[10px] font-bold text-gray-500 uppercase mb-2">
+              Previous Period (Optional)
+            </p>
+
+            <div class="flex gap-2">
+              <input
+                id="fbPrevStartDate"
+                type="date"
+                class="border rounded px-3 py-2 text-xs bg-white w-full"
+              />
+              <input
+                id="fbPrevEndDate"
+                type="date"
+                class="border rounded px-3 py-2 text-xs bg-white w-full"
+              />
+            </div>
+
+            <!-- ✅ APPLY COMPARISON BUTTON -->
+            <button
+              id="fbApplyCompareBtn"
+              onclick="App.applyFacebookComparison()"
+              class="mt-4 bg-slate-800 hover:bg-slate-900 text-white px-4 py-2 rounded text-xs font-bold"
+            >
+              Apply Comparison
+            </button>
+          </div>
+
+        </div>
+          </div>
 
 
-                                                                                              <!-- ✅ Campaign Efficiency Chart -->
-                                                                                                <div class="glass-panel p-6 mb-6">
-                                                                                                  <div class="flex justify-between items-center mb-4">
-                                                                                                    <h3 class="font-bold text-gray-700">
-                                                                                                      Campaign Efficiency Breakdown
-                                                                                                    </h3>
+          <!-- ✅ Campaign Efficiency Chart -->
+            <div class="glass-panel p-6 mb-6" style="margin-top:30px;">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="font-bold text-gray-700">
+                  Campaign Efficiency Breakdown
+                </h3>
 
-                                                                                                    <div class="flex gap-3 items-center">
-                                                                                                      <!-- ✅ Campaign Selector -->
-                                                                                                      <div
-                                                                                                        id="fbCampaignSelector"
-                                                                                                        class="flex flex-wrap gap-2 p-3 border rounded bg-white w-[420px]"
-                                                                                                      ></div>
+                <div class="flex gap-3 items-center">
+                  <!-- ✅ Campaign Selector -->
+                  <div
+                    id="fbCampaignSelector"
+                    class="flex flex-wrap gap-2 p-3 border rounded bg-white w-[420px]"
+                  ></div>
 
-                                                                                                      <!-- ✅ Compare Mode -->
-                                                                                                      <select
-                                                                                                        id="fbCompareMode"
-                                                                                                        onchange="App.renderCampaignChart()"
-                                                                                                        class="border rounded px-3 py-2 text-xs bg-white"
-                                                                                                      >
-                                                                                                        <option value="current">Current Period</option>
-                                                                                                        <option value="previous">Previous Period</option>
-                                                                                                        <option value="both">Compare Both</option>
-                                                                                                      </select>
-                                                                                                    </div>
-                                                                                                  </div>
+                  <!-- ✅ Compare Mode -->
+                  <select
+                    id="fbCompareMode"
+                    onchange="App.renderCampaignChart()"
+                    class="border rounded px-3 py-2 text-xs bg-white"
+                  >
+                    <option value="current">Current Period</option>
+                    <option value="previous">Previous Period</option>
+                    <option value="both">Compare Both</option>
+                  </select>
+                </div>
+              </div>
 
-                                                                                                 <!-- ✅ CURRENT PERIOD CHART -->
-                                                                                                    <div class="glass-panel p-6 mb-6">
-                                                                                                      <h3 class="font-bold text-gray-700 mb-3">
-                                                                                                        Current Period (${App.state.facebookCurrentLabel})
-                                                                                                      </h3>
-                                                                                                      <div class="h-[340px]">
-                                                                                                        <canvas id="campaignChartCurrent"></canvas>
-                                                                                                      </div>
-                                                                                                    </div>
+              <!-- ✅ CURRENT PERIOD CHART -->
+                <div class="glass-panel p-6 mb-6">
+                  <h3 class="font-bold text-gray-700 mb-3">
+                    Current Period (${App.state.facebookCurrentLabel})
+                  </h3>
+                  <div class="h-[340px]">
+                    <canvas id="campaignChartCurrent"></canvas>
+                  </div>
+                </div>
 
-                                                                                                    <!-- ✅ PREVIOUS PERIOD CHART -->
-                                                                                                    <div class="glass-panel p-6 mb-6">
-                                                                                                      <h3 class="font-bold text-gray-700 mb-3">
-                                                                                                        Previous Period (${App.state.facebookPreviousLabel})
-                                                                                                      </h3>
-                                                                                                      <div class="h-[340px]">
-                                                                                                        <canvas id="campaignChartPrevious"></canvas>
-                                                                                                      </div>
-                                                                                                    </div>
-
-                                                                                                  <p
-                                                                                                    id="noSelectionMsg"
-                                                                                                    class="hidden text-sm text-gray-500 mt-3 text-center"
-                                                                                                  >
-                                                                                                    Select at least one campaign to display the graph.
-                                                                                                  </p>
-                                                                                                </div>
-                                                                                              ${
-                                                                                                hasData
-                                                                                                  ? `
-                                                                                                    <div class="glass-panel overflow-hidden">
-                                                                                                      <div class="px-6 py-4 border-b border-gray-200 bg-white flex justify-between items-center">
-                                                                                                        <h3 class="font-bold text-gray-700">Facebook Ads Report</h3>
-                                                                                                        <span class="text-xs text-gray-500">Rows: ${
-                                                                                                          ch
-                                                                                                            .csvRows
-                                                                                                            .length
-                                                                                                        }</span>
-                                                                                                      </div>
-                                                                                                      <div class="overflow-x-auto">
-                                                                                                        <table class="w-full text-xs facebook-table">
-                                                                                                          <thead class="facebook-table">
-                                                                                                            <tr>${ch.csvHeaders
-                                                                                                              .map(
-                                                                                                                (
-                                                                                                                  h,
-                                                                                                                ) =>
-                                                                                                                  `<th>${h}</th>`,
-                                                                                                              )
-                                                                                                              .join(
-                                                                                                                "",
-                                                                                                              )}</tr>
-                                                                                                          </thead>
-                                                                                                          <tbody>
-                                                                                                            ${ch.csvRows
-                                                                                                              .map(
-                                                                                                                (
-                                                                                                                  row,
-                                                                                                                ) => `
-                                                                                                                <tr>
-                                                                                                                  ${row
-                                                                                                                    .map(
-                                                                                                                      (
-                                                                                                                        cell,
-                                                                                                                      ) =>
-                                                                                                                        `<td>${
-                                                                                                                          cell ||
-                                                                                                                          "-"
-                                                                                                                        }</td>`,
-                                                                                                                    )
-                                                                                                                    .join(
-                                                                                                                      "",
-                                                                                                                    )}
-                                                                                                                </tr>
-                                                                                                              `,
-                                                                                                              )
-                                                                                                              .join(
-                                                                                                                "",
-                                                                                                              )}
-                                                                                                          </tbody>
-                                                                                                        </table>
-                                                                                                      </div>
-                                                                                                    </div>
-                                                                                                  `
-                                                                                                  : `<div class="glass-panel p-6 text-gray-500">No Facebook data loaded yet. Click “Upload Data” to add a CSV.</div>`
-                                                                                              }
-                                                                                            `;
+                <!-- ✅ PREVIOUS PERIOD CHART -->
+                <div id="fbPreviousChartPanel" class="glass-panel p-6 mb-6 hidden">
+                  <h3 class="font-bold text-gray-700 mb-3">
+                    (${App.state.facebookPreviousLabel})
+                  </h3>
+                  <div class="h-[340px]">
+                    <canvas id="campaignChartPrevious"></canvas>
+                  </div>
+                </div>
+              <p id="noSelectionMsg" class="hidden text-sm text-gray-500 mt-3 text-center">Select at least one campaign to display the graph.</p>
+            </div>
+          ${
+            hasData
+              ? `
+                <div class="glass-panel overflow-hidden">
+                  <div class="px-6 py-4 border-b border-gray-200 bg-white flex justify-between items-center">
+                    <h3 class="font-bold text-gray-700">Facebook Ads Report</h3>
+                    <span class="text-xs text-gray-500">Rows: ${
+                      ch
+                        .csvRows
+                        .length
+                    }</span>
+                  </div>
+                  <div class="overflow-x-auto">
+                    <table class="w-full text-xs facebook-table">
+                      <thead class="facebook-table">
+                        <tr>${ch.csvHeaders
+                          .map(
+                            (
+                              h,
+                            ) =>
+                              `<th>${h}</th>`,
+                          )
+                          .join(
+                            "",
+                          )}</tr>
+                      </thead>
+                      <tbody>
+                        ${ch.csvRows
+                          .map(
+                            (
+                              row,
+                            ) => `
+                            <tr>
+                              ${row
+                                .map(
+                                  (
+                                    cell,
+                                  ) =>
+                                    `<td>${
+                                      cell ||
+                                      "-"
+                                    }</td>`,
+                                )
+                                .join(
+                                  "",
+                                )}
+                            </tr>
+                          `,
+                          )
+                          .join(
+                            "",
+                          )}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              `
+              : `<div class="glass-panel p-6 text-gray-500">No Facebook data loaded yet. Click “Upload Data” to add a CSV.</div>`
+          }
+        `;
         },
 
         card: (t, v, d, e = "") =>
           `<div class="glass-panel p-5 ${e}">
-                                                                                              <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">${t}</p>
-                                                                                              <div class="flex items-baseline gap-2 mt-1">
-                                                                                                <h3 class="text-2xl font-black text-slate-800">${v}</h3>
-                                                                                              </div>
-                                                                                              <div class="mt-1">${
-                                                                                                d ||
-                                                                                                ""
-                                                                                              }</div>
-                                                                                            </div>`,
+              <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">${t}</p>
+              <div class="flex items-baseline gap-2 mt-1">
+                <h3 class="text-2xl font-black text-slate-800">${v}</h3>
+              </div>
+              <div class="mt-1">${
+                d ||
+                ""
+              }</div>
+            </div>`,
 
         feedItem: (s, t, m, a) =>
           `<div class="border-b border-gray-700/50 pb-3 last:border-0 group">
-                                                                                              <div class="flex justify-between items-center mb-1">
-                                                                                                <span class="text-xs font-bold text-gray-300 flex items-center">
-                                                                                                  <span class="w-2 h-2 rounded-full ${
-                                                                                                    t ===
-                                                                                                    "good"
-                                                                                                      ? "bg-emerald-500"
-                                                                                                      : "bg-red-500"
-                                                                                                  } inline-block mr-2"></span>${s}
-                                                                                                </span>
-                                                                                                <button class="text-[9px] bg-orange-600 text-white px-2 rounded opacity-80 hover:opacity-100">${a}</button>
-                                                                                              </div>
-                                                                                              <p class="text-xs text-slate-400 pl-4">${m}</p>
-                                                                                            </div>`,
+            <div class="flex justify-between items-center mb-1">
+              <span class="text-xs font-bold text-gray-300 flex items-center">
+                <span class="w-2 h-2 rounded-full ${
+                  t ===
+                  "good"
+                    ? "bg-emerald-500"
+                    : "bg-red-500"
+                } inline-block mr-2"></span>${s}
+              </span>
+              <button class="text-[9px] bg-orange-600 text-white px-2 rounded opacity-80 hover:opacity-100">${a}</button>
+            </div>
+            <p class="text-xs text-slate-400 pl-4">${m}</p>
+          </div>`,
       };
 
       // ===============================
@@ -1594,7 +1504,30 @@
           filteredFacebookReports: null,
           facebookForceRender: false,
           facebookDateFilterActive: false,
+          compareModeActive: false
         },
+
+        toggleFacebookCompare: () => {
+        const section = document.getElementById("fbCompareSection");
+        const applyRangeBtn = document.getElementById("fbApplyRangeBtn");
+
+        if (!section || !applyRangeBtn) return;
+
+        // Toggle compare visibility
+        section.classList.toggle("hidden");
+
+        const isCompareOpen = !section.classList.contains("hidden");
+
+        // ✅ Disable Apply Range when comparison is open
+        if (isCompareOpen) {
+          applyRangeBtn.disabled = true;
+          applyRangeBtn.classList.add("opacity-40", "cursor-not-allowed");
+        } else {
+          applyRangeBtn.disabled = false;
+          applyRangeBtn.classList.remove("opacity-40", "cursor-not-allowed");
+        }
+      },
+
         renderCampaignChart: () => {
           const headers = DB.facebook.csvHeaders;
           if (!headers.length) return;
@@ -1703,15 +1636,31 @@
             DB.facebook.currentRows || [],
           );
 
-          App.previousChart = drawChart(
-            "campaignChartPrevious",
-            DB.facebook.previousRows || [],
-          );
+          // ✅ Only render Previous if user actually compared
+          const prevPanel = document.getElementById("fbPreviousChartPanel");
+
+          if (DB.facebook.previousRows && DB.facebook.previousRows.length) {
+            prevPanel?.classList.remove("hidden");
+
+            App.previousChart = drawChart(
+              "campaignChartPrevious",
+              DB.facebook.previousRows
+            );
+
+          } else {
+            prevPanel?.classList.add("hidden");
+          }
+
+          console.log("CURRENT:", DB.facebook.currentRows.length);
+          console.log("PREVIOUS:", DB.facebook.previousRows.length);
         },
 
         populateCampaignSelector: () => {
           const headers = DB.facebook.csvHeaders;
-          const rows = DB.facebook.csvRows;
+          const rows = [
+            ...(DB.facebook.currentRows || []),
+            ...(DB.facebook.previousRows || []),
+          ];
 
           if (!headers.length || !rows.length) return;
 
@@ -1769,6 +1718,18 @@
             return;
           }
 
+          App.state.compareModeActive = true;
+          App.state.facebookDateFilterActive = true;
+
+           // ✅ Keep Apply Range disabled after comparison is active
+          setTimeout(() => {
+            const applyRangeBtn = document.getElementById("fbApplyRangeBtn");
+            if (applyRangeBtn) {
+              applyRangeBtn.disabled = true;
+              applyRangeBtn.classList.add("opacity-40", "cursor-not-allowed");
+            }
+          }, 300);
+
           // ✅ Fetch Current Period
           const resCurrent = await fetch(
             api(`/api/get-facebook-report-range.php?start=${start}&end=${end}`),
@@ -1805,6 +1766,11 @@
           App.state.facebookPreviousLabel = `${pStart} → ${pEnd}`;
 
           App.router("facebook");
+
+          setTimeout(() => {
+            App.populateCampaignSelector();
+            App.renderCampaignChart();
+          }, 250);
         },
         applyFacebookReportDateFilter: async () => {
           const start = document.getElementById("fbStartDate").value;
@@ -1843,8 +1809,16 @@
           }
 
           // Set rows
-          DB.facebook.csvRows = json.rows;
-          DB.facebook._allRows = json.rows.slice();
+          // ✅ Filter becomes the NEW Current Period
+            DB.facebook.currentRows = json.rows;
+
+            // ✅ Table matches Current Period
+            DB.facebook.csvRows = json.rows;
+            DB.facebook._allRows = json.rows.slice();
+
+            // ✅ Reset labels
+            App.state.facebookCurrentLabel = `${start} → ${end}`;
+            App.state.facebookPreviousLabel = "Previous Period";
 
           App.state.facebookDateFilterActive = true;
           App.state.facebookReportRangeLabel = `${start} → ${end}`;
@@ -1929,38 +1903,28 @@
             document.getElementById("page-title").innerText = "Facebook Ads";
             document.getElementById("page-subtitle").innerText =
               "Reports & Filters";
+            if (App.state.facebookForceRender) {
+              App.state.facebookForceRender = false;
+              container.innerHTML = UI.renderFacebookFull(
+                App.state.filteredFacebookReports || [],
+              );
+              return;
+            }
 
             container.innerHTML = `<div class="glass-panel p-6 text-gray-500">Loading Facebook reports...</div>`;
 
-            let monthData = null;
+            let index = [];
 
-            if (!App.state.facebookDateFilterActive) {
-              monthData = await App.loadLatestFacebookMonth();
+            if (!App.state.facebookDateFilterActive && !App.state.compareModeActive) {
+              await App.loadLatestFacebookMonth();
             }
-
             container.innerHTML = UI.renderFacebookFull([]);
 
+            // ✅ Always render charts from currentRows
             setTimeout(() => {
-              // ✅ Set date inputs after the UI is rendered to reflect the loaded range
-              if (monthData && monthData.start && monthData.end) {
-                  const startInput = document.getElementById('fbStartDate');
-                  const endInput = document.getElementById('fbEndDate');
-                  const pStartInput = document.getElementById('fbPrevStartDate');
-                  const pEndInput = document.getElementById('fbPrevEndDate');
-
-                  if(startInput) startInput.value = monthData.start;
-                  if(endInput) endInput.value = monthData.end;
-
-                  // Also pre-fill previous month for convenience
-                  const prevMonth = new Date(monthData.start + 'T12:00:00');
-                  prevMonth.setMonth(prevMonth.getMonth() - 1);
-                  if(pStartInput) pStartInput.value = prevMonth.toISOString().split('T')[0].slice(0, -3) + '-01';
-                  if(pEndInput) pEndInput.value = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 0).toISOString().split('T')[0];
-              }
-
-              App.populateCampaignSelector(); // ✅ load names
-              App.renderCampaignChart(); // ✅ draw chart
-            }, 200);
+              App.populateCampaignSelector();
+              App.renderCampaignChart();
+            }, 300);
 
             return;
           }
@@ -2014,36 +1978,65 @@
 
           if (!Array.isArray(json.rows) || !json.rows.length) {
             DB.facebook.csvRows = [];
-            DB.facebook.currentRows = [];
-            DB.facebook.previousRows = [];
             DB.facebook.csvHeaders = json.headers || [];
             App.state.facebookReportRangeLabel = "No data";
-            return json;
+            return;
           }
 
           DB.facebook.csvHeaders = json.headers;
+          // ✅ Latest Month = Current Period
+          DB.facebook.currentRows = json.rows;
+          // ✅ Reset Previous Period
+          if (!App.state.compareModeActive) {
+            DB.facebook.previousRows = [];
+          }
+          // ✅ Table shows Current by default
           DB.facebook.csvRows = json.rows;
-          DB.facebook.currentRows = json.rows; // Set current rows for chart
-          DB.facebook.previousRows = []; // Clear previous rows
           DB.facebook._allRows = json.rows.slice();
 
           App.state.facebookReportRangeLabel = json.month;
 
           App.recalculateFacebookKPIs(json.headers, json.rows);
-          return json;
         },
 
         resetFacebookDateFilter: () => {
-          App.state.facebookDateFilterActive = false;
 
-          App.loadLatestFacebookMonth().then(() => {
-            App.router("facebook");
+        // ✅ Clear filter mode
+        App.state.facebookDateFilterActive = false;
+        App.state.facebookReportRangeLabel = "Latest";
 
-            setTimeout(() => {
-              App.renderCampaignChart();
-            }, 150);
-          });
-        },
+        // ✅ Reset comparison datasets
+        App.state.compareModeActive = false;
+        DB.facebook.previousRows = [];
+        DB.facebook.currentRows = [];
+
+        // ✅ Reset labels
+        App.state.facebookCurrentLabel = "Current Period";
+        App.state.facebookPreviousLabel = "Previous Period";
+
+        // ✅ Reload latest month fresh
+        App.loadLatestFacebookMonth().then(() => {
+          App.router("facebook");
+
+          setTimeout(() => {
+            App.populateCampaignSelector();
+            App.renderCampaignChart();
+          }, 250);
+
+          setTimeout(() => {
+          const applyRangeBtn = document.getElementById("fbApplyRangeBtn");
+          if (applyRangeBtn) {
+            applyRangeBtn.disabled = false;
+            applyRangeBtn.classList.remove("opacity-40", "cursor-not-allowed");
+          }
+
+          // Hide compare section automatically
+          document
+            .getElementById("fbCompareSection")
+            ?.classList.add("hidden");
+        }, 300);
+        });
+      },
 
         normalizeDateToYMD: (raw) => {
           if (!raw) return null;
@@ -2132,7 +2125,6 @@
           const resultsIdx = headers.findIndex(
             (h) => normalize(h) === "results",
           );
-
           const cprIdx = headers.findIndex((h) =>
             normalize(h).includes("cost per result"),
           );
