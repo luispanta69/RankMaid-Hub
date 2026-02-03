@@ -68,7 +68,6 @@ function get_and_process_ads_from_db($pdo, $start_date, $end_date) {
     return $all_ads;
 }
 
-
 try {
     // Get parameters
     $action = isset($_GET['action']) ? $_GET['action'] : 'getSummary';
@@ -121,89 +120,57 @@ try {
     // ---------------------------------------------------------
     // ACTION: GET DETAILED ANALYSIS (The "Analyze" Button Logic)
     // ---------------------------------------------------------
-    } else if ($action === 'getDetailedAnalysis') {
-        
-        // 1. Get data and process in PHP
+    } else if ($action === 'getDetailedAnalysis') {        
         $all_ads = get_and_process_ads_from_db($pdo, $start_date, $end_date);
-
-        // 2. Filter in PHP
-        $filtered_ads = [];
-        foreach ($all_ads as $ad) {
-            $frequency = cleanNum($ad['frequency'] ?? 0);
-            $ctr = cleanNum($ad['ctr_all'] ?? 0);
-            $cpr = cleanNum($ad['cost_per_result'] ?? 0);
-            $results = intval($ad['results'] ?? 0);
-            $spend = cleanNum($ad['amount_spent_usd'] ?? 0);
-
-            $passes_filter = false;
-            if ($type === 'fatigue') {
-                if ($frequency > 1.05 && $ctr < 1.0) $passes_filter = true;
-            } elseif ($type === 'fatigue_critical') {
-                if ($frequency > 4.5 && $ctr <= 0.6) $passes_filter = true;
-            } elseif ($type === 'cpa') {
-                if (($cpr > 100) || ($results == 0 && $spend > 50)) $passes_filter = true;
-            } elseif ($type === 'roas_sustained') {
-                $roas = $spend > 0 ? (($results * $assumed_value) / $spend) : 0;
-                if ($roas > 6.0) $passes_filter = true;
-            } else {
-                $passes_filter = true; // 'general'
-            }
-
-            if ($passes_filter) {
-                $filtered_ads[] = $ad;
-            }
-        }
-
-        // 3. Sort and limit in PHP
-        usort($filtered_ads, function($a, $b) {
-            return cleanNum($b['amount_spent_usd'] ?? 0) <=> cleanNum($a['amount_spent_usd'] ?? 0); // Sort by spend descending
-        });
-        $raw_data = array_slice($filtered_ads, 0, 50);
-
-        $processed_data = [];
         
-        // 5. Process Data (Safe Math)
-        foreach ($raw_data as $row) {
-            $spend   = cleanNum($row['amount_spent_usd'] ?? 0);
-            $results = intval($row['results'] ?? 0);
-            $freq    = cleanNum($row['frequency'] ?? 0);
-            $ctr     = cleanNum($row['ctr_all'] ?? 0);
-            
-            // Handle Division by Zero / Empty Results
-            if ($results > 0) {
-                $revenue = $results * $assumed_value;
-                $roas = $spend > 0 ? $revenue / $spend : 0;
-                $real_cpa = $spend / $results;
-            } else {
-                $revenue = 0;
-                $roas = 0;
-                $real_cpa = $spend; // If 0 results, treat CPA as Spend (infinite cost)
-            }
-
-            $processed_data[] = [
-                'date'      => $row['report_date'],
-                'ad_set'    => $row['ad_set_name'] ?? '',
-                'campaign'  => $row['campaign_name'] ?? '',
-                'results'   => $results,
-                'spend'     => $spend,
-                'revenue'   => $revenue,
-                'roas'      => $roas,
-                'cpa'       => $real_cpa,
-                'frequency' => $freq,
-                'ctr'       => $ctr
-            ];
+        $opportunities = [];
+        
+        if ($type === 'roas_sustained' || $type === 'general') {
+             // Group by ad set to find high ROAS opportunities
+             $ad_sets = [];
+             foreach ($all_ads as $ad) {
+                 $key = $ad['campaign_name'] . '|' . $ad['ad_set_name'];
+                 if (!isset($ad_sets[$key])) {
+                     $ad_sets[$key] = [
+                         'campaign' => $ad['campaign_name'],
+                         'ad_set' => $ad['ad_set_name'],
+                         'spend' => 0,
+                         'results' => 0
+                     ];
+                 }
+                 $ad_sets[$key]['spend'] += cleanNum($ad['amount_spent_usd']);
+                 $ad_sets[$key]['results'] += intval($ad['results']);
+             }
+             
+             foreach ($ad_sets as $set) {
+                 $revenue = $set['results'] * $assumed_value;
+                 $roas = $set['spend'] > 0 ? $revenue / $set['spend'] : 0;
+                 
+                 // If ROAS is good (e.g. > 4.0), add to opportunities
+                 if ($roas > 4.0 && $set['spend'] > 50) {
+                     $opportunities[] = [
+                         'campaign' => $set['campaign'],
+                         'ad_set' => $set['ad_set'],
+                         'roas' => $roas,
+                         'spend' => $set['spend'],
+                         'reason' => 'High ROAS'
+                     ];
+                 }
+             }
+             
+             // Sort by ROAS descending
+             usort($opportunities, function($a, $b) {
+                 return $b['roas'] <=> $a['roas'];
+             });
         }
-
+        
         echo json_encode([
             'success' => true,
             'data' => [
-                'daily_breakdown' => $processed_data,
-                'sustained_found' => count($processed_data) > 0,
-                'best_window' => true, // Kept for frontend compatibility
-                'assumed_value_per_result' => $assumed_value
+                'daily_breakdown' => $opportunities
             ]
         ]);
-        
+
     // ---------------------------------------------------------
     // ACTION: GET CAMPAIGN BREAKDOWN
     // ---------------------------------------------------------

@@ -430,17 +430,11 @@
               <i class="fa-solid fa-brain text-orange-500"></i> Strategic
               Analysis
             </h3>
-
             <div class="flex items-center gap-3 mt-1">
                 <p class="text-slate-400 text-xs">RMH Intelligence Engine v2.5</p>
             </div>
-          </div>
-          <div class="flex items-center gap-2">
-              <label for="modal_start_date" class="text-slate-500 text-[10px] uppercase font-bold">From:</label>
-              <input type="date" id="modal_start_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
-              <label for="modal_end_date" class="text-slate-500 text-[10px] uppercase font-bold">To:</label>
-              <input type="date" id="modal_end_date" class="bg-slate-800 text-white text-xs px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-orange-500">
-              <button id="apply_date_filter" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1 rounded text-xs font-bold transition-all">Apply</button>
+            <input type="hidden" id="modal_start_date">
+            <input type="hidden" id="modal_end_date">
           </div>
           <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="text-gray-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
         </div>
@@ -499,6 +493,7 @@
 
           // Used for table display
           csvRows: [],
+          csvHeaders: [],
 
           // Full archive
           _allRows: [],
@@ -778,13 +773,13 @@
               color: "border-blue-500",
               summary: "Meta's AI optimizes for engagement.",
               details: `
-                                                                                                  <h4>How the Algorithm Thinks</h4>
-                                                                                                  <p>Meta's algorithm doesn't care about Real Estate. It cares about <strong>user intent signals</strong>.</p>
-                                                                                                  <h4>The Learning Phase</h4>
-                                                                                                  <p>Every ad set requires <strong>50 conversions per week</strong> to exit Learning.</p>
-                                                                                                  <h4>Strategy: Broad Targeting</h4>
-                                                                                                  <p>Use broad targeting and let creative do the filtering.</p>
-                                                                                                `,
+                                                                                          <h4>How the Algorithm Thinks</h4>
+                                                                                          <p>Meta's algorithm doesn't care about Real Estate. It cares about <strong>user intent signals</strong>.</p>
+                                                                                          <h4>The Learning Phase</h4>
+                                                                                          <p>Every ad set requires <strong>50 conversions per week</strong> to exit Learning.</p>
+                                                                                          <h4>Strategy: Broad Targeting</h4>
+                                                                                          <p>Use broad targeting and let creative do the filtering.</p>
+                                                                                          `,
             },
             {
               title: "Google Ads Quality Score",
@@ -792,9 +787,9 @@
               color: "border-red-500",
               summary: "Relevance = Lower Cost.",
               details: `
-                                                                                                  <h4>The Formula</h4>
-                                                                                                  <p><strong>Ad Rank = Bid × Quality Score</strong>.</p>
-                                                                                                `,
+                                                                                          <h4>The Formula</h4>
+                                                                                          <p><strong>Ad Rank = Bid × Quality Score</strong>.</p>
+                                                                                          `,
             },
             {
               title: "SEO: Local Pack & E-E-A-T",
@@ -802,9 +797,9 @@
               color: "border-emerald-500",
               summary: "Map Pack drives calls.",
               details: `
-                                                                                                  <h4>Ranking Factors</h4>
-                                                                                                  <p>Proximity, Relevance, Prominence.</p>
-                                                                                                `,
+                                                                                          <h4>Ranking Factors</h4>
+                                                                                          <p>Proximity, Relevance, Prominence.</p>
+                                                                                          `,
             },
             {
               title: "Native Ads (Taboola)",
@@ -812,9 +807,9 @@
               color: "border-indigo-500",
               summary: "High volume, low intent.",
               details: `
-                                                                                                  <h4>The Mindset</h4>
-                                                                                                  <p>Interrupt the pattern, educate first.</p>
-                                                                                                `,
+                                                                                          <h4>The Mindset</h4>
+                                                                                          <p>Interrupt the pattern, educate first.</p>
+                                                                                          `,
             },
           ],
           sops: [
@@ -923,7 +918,7 @@
 
         getChannelAggregates: (id) => {
           const ch = DB[id];
-          if (ch.metrics)
+          if (ch.metrics) {
             return {
               ...ch.metrics,
               cpa:
@@ -939,8 +934,9 @@
                   ? ((ch.metrics.revenue.current - ch.metrics.spend.current) /
                       ch.metrics.spend.current) *
                     100
-                  : 9999,
+                  : 0,
             };
+          }
           return {
             spend: { current: 0 },
             leads: { current: 0 },
@@ -982,95 +978,95 @@
         renderGlobal: () => {
           const g = Logic.getGlobalStats();
           return `
-                                                                                              <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
-                                                                                                ${UI.card(
-                                                                                                  "Total Revenue",
-                                                                                                  UI.usd(
-                                                                                                    g.revenue,
-                                                                                                  ),
-                                                                                                  "text-emerald-600",
-                                                                                                  "Gross Revenue",
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Total Spend",
-                                                                                                  UI.usd(
-                                                                                                    g.spend,
-                                                                                                  ),
-                                                                                                  "text-slate-600",
-                                                                                                  "Ad Spend",
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Blended CAQ",
-                                                                                                  UI.usd(
-                                                                                                    g.cpa,
-                                                                                                  ),
-                                                                                                  "text-orange-600",
-                                                                                                  "Cost per Booking",
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Pipeline Volume",
-                                                                                                  UI.num(
-                                                                                                    g.leads,
-                                                                                                  ),
-                                                                                                  "text-gray-900",
-                                                                                                  "Total Leads",
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Avg Deal Size",
-                                                                                                  UI.usd(
-                                                                                                    g.avgDeal,
-                                                                                                  ),
-                                                                                                  "text-blue-600",
-                                                                                                  "Est. Value",
-                                                                                                )}
-                                                                                              </div>
+                                                                                          <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-8">
+                                                                                            ${UI.card(
+                                                                                              "Total Revenue",
+                                                                                              UI.usd(
+                                                                                                g.revenue,
+                                                                                              ),
+                                                                                              "text-emerald-600",
+                                                                                              "Gross Revenue",
+                                                                                            )}
+                                                                                            ${UI.card(
+                                                                                              "Total Spend",
+                                                                                              UI.usd(
+                                                                                                g.spend,
+                                                                                              ),
+                                                                                              "text-slate-600",
+                                                                                              "Ad Spend",
+                                                                                            )}
+                                                                                            ${UI.card(
+                                                                                              "Blended CAQ",
+                                                                                              UI.usd(
+                                                                                                g.cpa,
+                                                                                              ),
+                                                                                              "text-orange-600",
+                                                                                              "Cost per Booking",
+                                                                                            )}
+                                                                                            ${UI.card(
+                                                                                              "Pipeline Volume",
+                                                                                              UI.num(
+                                                                                                g.leads,
+                                                                                              ),
+                                                                                              "text-gray-900",
+                                                                                              "Total Leads",
+                                                                                            )}
+                                                                                            ${UI.card(
+                                                                                              "Avg Deal Size",
+                                                                                              UI.usd(
+                                                                                                g.avgDeal,
+                                                                                              ),
+                                                                                              "text-blue-600",
+                                                                                              "Est. Value",
+                                                                                            )}
+                                                                                          </div>
 
-                                                                                              <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
-                                                                                                <div class="lg:col-span-2 glass-panel p-6">
-                                                                                                  <h3 class="font-bold text-gray-700 mb-4">Global Revenue Velocity</h3>
-                                                                                                  <div class="h-72"><canvas id="mainChart"></canvas></div>
-                                                                                                </div>
-                                                                                                <div class="bg-slate-800 text-white p-6 rounded-xl shadow-lg border-l-4 border-orange-600">
-                                                                                                  <h3 class="font-bold text-slate-400 text-xs uppercase tracking-widest mb-6">AI Feed</h3>
-                                                                                                  <div class="space-y-4 text-sm">
-                                                                                                    ${UI.feedItem(
-                                                                                                      "Facebook",
-                                                                                                      "good",
-                                                                                                      "Scale Warning: ROI > 400%",
-                                                                                                      "Approve",
-                                                                                                    )}
-                                                                                                    ${UI.feedItem(
-                                                                                                      "Google",
-                                                                                                      "bad",
-                                                                                                      "CAQ spiked to $190",
-                                                                                                      "Fix",
-                                                                                                    )}
-                                                                                                  </div>
-                                                                                                </div>
-                                                                                              </div>
-                                                                                            `;
+                                                                                          <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
+                                                                                            <div class="lg:col-span-2 glass-panel p-6">
+                                                                                              <h3 class="font-bold text-gray-700 mb-4">Global Revenue Velocity</h3>
+                                                                                              <div class="h-72"><canvas id="mainChart"></canvas></div>
+                                                                                            </div>
+                                                                                            <div class="bg-slate-800 text-white p-6 rounded-xl shadow-lg border-l-4 border-orange-600">
+                                                                                              <h3 class="font-bold text-slate-400 text-xs uppercase tracking-widest mb-6">AI Feed</h3>
+                                                                                             <div class="space-y-4 text-sm">
+                                                                                               ${UI.feedItem(
+                                                                                                 "Facebook",
+                                                                                                 "good",
+                                                                                                 "Scale Warning: ROI > 400%",
+                                                                                                 "Approve",
+                                                                                               )}
+                                                                                               ${UI.feedItem(
+                                                                                                 "Google",
+                                                                                                 "bad",
+                                                                                                 "CAQ spiked to $190",
+                                                                                                 "Fix",
+                                                                                               )}
+                                                                                             </div>
+                                                                                            </div>
+                                                                                          </div>
+                                                                                        `;
         },
 
         renderGoals: () => {
           const g = DB.goals;
           return `
-                                                                                              <div class="glass-panel p-8">
-                                                                                                <h2 class="text-2xl font-black text-gray-900 mb-2">Goals</h2>
-                                                                                                <p class="text-gray-600 mb-6">${g.vision}</p>
-                                                                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                                                                  <div class="glass-panel p-6">
-                                                                                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Appointments</p>
-                                                                                                    <p class="text-4xl font-black text-gray-900">${g.targets.appointments.current}</p>
-                                                                                                    <p class="text-sm text-gray-500">Target: ${g.targets.appointments.target}</p>
-                                                                                                  </div>
-                                                                                                  <div class="glass-panel p-6">
-                                                                                                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">CAQ</p>
-                                                                                                    <p class="text-4xl font-black text-emerald-600">$${g.targets.caq.current}</p>
-                                                                                                    <p class="text-sm text-gray-500">Target: under $${g.targets.caq.target}</p>
-                                                                                                  </div>
-                                                                                                </div>
+                                                                                          <div class="glass-panel p-8">
+                                                                                            <h2 class="text-2xl font-black text-gray-900 mb-2">Goals</h2>
+                                                                                            <p class="text-gray-600 mb-6">${g.vision}</p>
+                                                                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                                                              <div class="glass-panel p-6">
+                                                                                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">Appointments</p>
+                                                                                                <p class="text-4xl font-black text-gray-900">${g.targets.appointments.current}</p>
+                                                                                                <p class="text-sm text-gray-500">Target: ${g.targets.appointments.target}</p>
                                                                                               </div>
-                                                                                            `;
+                                                                                              <div class="glass-panel p-6">
+                                                                                                <p class="text-xs font-bold text-gray-400 uppercase tracking-widest">CAQ</p>
+                                                                                                <p class="text-4xl font-black text-emerald-600">$${g.targets.caq.current}</p>
+                                                                                                <p class="text-sm text-gray-500">Target: under $${g.targets.caq.target}</p>
+                                                                                              </div>
+                                                                                            </div>
+                                                                                          </div>
+                                                                                        `;
         },
 
         renderKnowledge: () => {
@@ -1078,27 +1074,27 @@
           const tab = window.currentTab || "algo";
 
           const tabs = `
-                                                                                              <div class="flex gap-4 border-b border-gray-200 mb-8">
-                                                                                                <button onclick="window.currentTab='algo'; App.router('knowledge')" class="tab-btn ${
-                                                                                                  tab ===
-                                                                                                  "algo"
-                                                                                                    ? "active"
-                                                                                                    : ""
-                                                                                                }">Algorithms</button>
-                                                                                                <button onclick="window.currentTab='sops'; App.router('knowledge')" class="tab-btn ${
-                                                                                                  tab ===
-                                                                                                  "sops"
-                                                                                                    ? "active"
-                                                                                                    : ""
-                                                                                                }">SOP Library</button>
-                                                                                                <button onclick="window.currentTab='scripts'; App.router('knowledge')" class="tab-btn ${
-                                                                                                  tab ===
-                                                                                                  "scripts"
-                                                                                                    ? "active"
-                                                                                                    : ""
-                                                                                                }">Script Vault</button>
-                                                                                              </div>
-                                                                                            `;
+                                                                                          <div class="flex gap-4 border-b border-gray-200 mb-8">
+                                                                                            <button onclick="window.currentTab='algo'; App.router('knowledge')" class="tab-btn ${
+                                                                                              tab ===
+                                                                                              "algo"
+                                                                                                ? "active"
+                                                                                                : ""
+                                                                                            }">Algorithms</button>
+                                                                                            <button onclick="window.currentTab='sops'; App.router('knowledge')" class="tab-btn ${
+                                                                                              tab ===
+                                                                                              "sops"
+                                                                                                ? "active"
+                                                                                                : ""
+                                                                                            }">SOP Library</button>
+                                                                                            <button onclick="window.currentTab='scripts'; App.router('knowledge')" class="tab-btn ${
+                                                                                              tab ===
+                                                                                              "scripts"
+                                                                                                ? "active"
+                                                                                                : ""
+                                                                                            }">Script Vault</button>
+                                                                                          </div>
+                                                                                        `;
 
           let content = "";
 
@@ -1106,18 +1102,18 @@
             content = `<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">${lib.algorithms
               .map(
                 (a, i) => `
-                                                                                                    <div class="glass-panel p-6 border-t-4 ${a.color} kb-card" onclick="document.getElementById('algo-details-${i}').classList.toggle('hidden'); this.classList.toggle('expanded')">
-                                                                                                      <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-4">
-                                                                                                        <i class="${a.icon} text-2xl text-gray-600"></i>
-                                                                                                        <div>
-                                                                                                          <h4 class="font-bold text-gray-900 text-lg m-0">${a.title}</h4>
-                                                                                                          <p class="text-xs text-gray-500">${a.summary}</p>
-                                                                                                        </div>
-                                                                                                      </div>
-                                                                                                      <div id="algo-details-${i}" class="hidden prose text-sm text-gray-600 border-t border-gray-100 pt-4 mt-2 bg-gray-50 p-4 rounded-lg">${a.details}</div>
-                                                                                                      <p class="text-center text-xs text-orange-600 font-bold mt-2">Click to Expand</p>
+                                                                                                <div class="glass-panel p-6 border-t-4 ${a.color} kb-card" onclick="document.getElementById('algo-details-${i}').classList.toggle('hidden'); this.classList.toggle('expanded')">
+                                                                                                  <div class="flex items-center gap-3 mb-4 border-b border-gray-100 pb-4">
+                                                                                                    <i class="${a.icon} text-2xl text-gray-600"></i>
+                                                                                                    <div>
+                                                                                                      <h4 class="font-bold text-gray-900 text-lg m-0">${a.title}</h4>
+                                                                                                      <p class="text-xs text-gray-500">${a.summary}</p>
                                                                                                     </div>
-                                                                                                  `,
+                                                                                                  </div>
+                                                                                                  <div id="algo-details-${i}" class="hidden prose text-sm text-gray-600 border-t border-gray-100 pt-4 mt-2 bg-gray-50 p-4 rounded-lg">${a.details}</div>
+                                                                                                  <p class="text-center text-xs text-orange-600 font-bold mt-2">Click to Expand</p>
+                                                                                                </div>
+                                                                                              `,
               )
               .join("")}</div>`;
           }
@@ -1126,36 +1122,36 @@
             content = `<div class="space-y-4">${lib.sops
               .map(
                 (s, i) => `
-                                                                                                    <div class="glass-panel p-6">
-                                                                                                      <div class="flex items-center gap-3 mb-2">
-                                                                                                        <div class="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-sm">${
-                                                                                                          i +
-                                                                                                          1
-                                                                                                        }</div>
-                                                                                                        <div>
-                                                                                                          <p class="font-bold text-gray-900">${
-                                                                                                            s.title
-                                                                                                          }</p>
-                                                                                                          <span class="tag bg-gray-100 text-gray-500 mt-1 inline-block">${
-                                                                                                            s.category
-                                                                                                          }</span>
-                                                                                                        </div>
-                                                                                                      </div>
-                                                                                                      <ol class="list-decimal list-inside text-sm text-gray-700 space-y-2">${s.steps
-                                                                                                        .map(
-                                                                                                          (
-                                                                                                            step,
-                                                                                                          ) =>
-                                                                                                            `<li>${step}</li>`,
-                                                                                                        )
-                                                                                                        .join(
-                                                                                                          "",
-                                                                                                        )}</ol>
-                                                                                                      <div class="mt-3 bg-blue-50 p-3 rounded border border-blue-100 text-sm text-blue-800">${
-                                                                                                        s.details
-                                                                                                      }</div>
+                                                                                                <div class="glass-panel p-6">
+                                                                                                  <div class="flex items-center gap-3 mb-2">
+                                                                                                    <div class="w-8 h-8 rounded bg-emerald-50 flex items-center justify-center text-emerald-600 font-bold text-sm">${
+                                                                                                      i +
+                                                                                                      1
+                                                                                                    }</div>
+                                                                                                    <div>
+                                                                                                      <p class="font-bold text-gray-900">${
+                                                                                                        s.title
+                                                                                                      }</p>
+                                                                                                      <span class="tag bg-gray-100 text-gray-500 mt-1 inline-block">${
+                                                                                                        s.category
+                                                                                                      }</span>
                                                                                                     </div>
-                                                                                                  `,
+                                                                                                  </div>
+                                                                                                  <ol class="list-decimal list-inside text-sm text-gray-700 space-y-2">${s.steps
+                                                                                                    .map(
+                                                                                                      (
+                                                                                                        step,
+                                                                                                      ) =>
+                                                                                                        `<li>${step}</li>`,
+                                                                                                    )
+                                                                                                    .join(
+                                                                                                      "",
+                                                                                                    )}</ol>
+                                                                                                  <div class="mt-3 bg-blue-50 p-3 rounded border border-blue-100 text-sm text-blue-800">${
+                                                                                                    s.details
+                                                                                                  }</div>
+                                                                                                </div>
+                                                                                              `,
               )
               .join("")}</div>`;
           }
@@ -1164,27 +1160,27 @@
             content = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">${lib.scripts
               .map(
                 (s, i) => `
-                                                                                                    <div class="glass-panel p-6">
-                                                                                                      <p class="font-bold text-gray-900 mb-1">${s.title}</p>
-                                                                                                      <p class="text-xs text-gray-500 italic mb-3">${s.context}</p>
-                                                                                                      <p class="font-mono text-sm text-gray-700 bg-orange-50 p-3 rounded border border-orange-100 mb-3">"${s.content}"</p>
-                                                                                                      <button onclick="document.getElementById('obj-${i}').classList.toggle('hidden')" class="text-xs font-bold text-gray-500 hover:text-orange-600">
-                                                                                                        View Objection Handler
-                                                                                                      </button>
-                                                                                                      <div id="obj-${i}" class="hidden mt-2 p-3 bg-red-50 text-red-800 text-xs rounded border border-red-100">${s.objections}</div>
-                                                                                                    </div>
-                                                                                                  `,
+                                                                                                <div class="glass-panel p-6">
+                                                                                                  <p class="font-bold text-gray-900 mb-1">${s.title}</p>
+                                                                                                  <p class="text-xs text-gray-500 italic mb-3">${s.context}</p>
+                                                                                                  <p class="font-mono text-sm text-gray-700 bg-orange-50 p-3 rounded border border-orange-100 mb-3">"${s.content}"</p>
+                                                                                                  <button onclick="document.getElementById('obj-${i}').classList.toggle('hidden')" class="text-xs font-bold text-gray-500 hover:text-orange-600">
+                                                                                                    View Objection Handler
+                                                                                                  </button>
+                                                                                                  <div id="obj-${i}" class="hidden mt-2 p-3 bg-red-50 text-red-800 text-xs rounded border border-red-100">${s.objections}</div>
+                                                                                                </div>
+                                                                                              `,
               )
               .join("")}</div>`;
           }
 
           return `<div class="mb-8">
-                                                                                                <h2 class="text-3xl font-black text-gray-900">Knowledge Hub</h2>
-                                                                                                <p class="text-gray-500">Operational Intelligence</p>
-                                                                                              </div>
-                                                                                              ${tabs}
-                                                                                              ${content}
-                                                                                            `;
+                                                                                          <h2 class="text-3xl font-black text-gray-900">Knowledge Hub</h2>
+                                                                                          <p class="text-gray-500">Operational Intelligence</p>
+                                                                                        </div>
+                                                                                        ${tabs}
+                                                                                        ${content}
+                                                                                        `;
         },
 
         // Base channel render (NON-FACEBOOK)
@@ -1207,88 +1203,88 @@
           };
 
           return `
-                                                                                              <div class="flex justify-between items-center mb-6">
-                                                                                                <div>
-                                                                                                  <h2 class="text-2xl font-black text-gray-800">${
-                                                                                                    ch.name
-                                                                                                  }</h2>
-                                                                                                  <p class="text-xs text-gray-500">Channel Intelligence</p>
-                                                                                                </div>
-                                                                                                <div class="text-xs font-bold text-gray-600 bg-white px-3 py-1.5 rounded border">Last 30 Days</div>
-                                                                                              </div>
+                                                                                          <div class="flex justify-between items-center mb-6">
+                                                                                            <div>
+                                                                                              <h2 class="text-2xl font-black text-gray-800">${
+                                                                                                ch.name
+                                                                                              }</h2>
+                                                                                              <p class="text-xs text-gray-500">Channel Intelligence</p>
+                                                                                            </div>
+                                                                                            <div class="text-xs font-bold text-gray-600 bg-white px-3 py-1.5 rounded border">Last 30 Days</div>
+                                                                                          </div>
 
-                                                                                              <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                                                                                                ${UI.card(
-                                                                                                  "Ad Spend",
-                                                                                                  UI.usd(
-                                                                                                    m
-                                                                                                      .spend
-                                                                                                      .current,
-                                                                                                  ),
-                                                                                                  d(
-                                                                                                    m
-                                                                                                      .spend
-                                                                                                      .current,
-                                                                                                    m
-                                                                                                      .spend
-                                                                                                      .prev,
-                                                                                                  ),
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Leads",
-                                                                                                  UI.num(
-                                                                                                    m
-                                                                                                      .leads
-                                                                                                      .current,
-                                                                                                  ),
-                                                                                                  d(
-                                                                                                    m
-                                                                                                      .leads
-                                                                                                      .current,
-                                                                                                    m
-                                                                                                      .leads
-                                                                                                      .prev,
-                                                                                                  ),
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Bookings",
-                                                                                                  UI.num(
-                                                                                                    m
-                                                                                                      .bookings
-                                                                                                      .current,
-                                                                                                  ),
-                                                                                                  d(
-                                                                                                    m
-                                                                                                      .bookings
-                                                                                                      .current,
-                                                                                                    m
-                                                                                                      .bookings
-                                                                                                      .prev,
-                                                                                                  ),
-                                                                                                )}
-                                                                                                ${UI.card(
-                                                                                                  "Revenue",
-                                                                                                  UI.usd(
-                                                                                                    m
-                                                                                                      .revenue
-                                                                                                      .current,
-                                                                                                  ),
-                                                                                                  d(
-                                                                                                    m
-                                                                                                      .revenue
-                                                                                                      .current,
-                                                                                                    m
-                                                                                                      .revenue
-                                                                                                      .prev,
-                                                                                                  ),
-                                                                                                )}
-                                                                                              </div>
+                                                                                          <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                                                                                            ${UI.card(
+                                                                                              "Ad Spend",
+                                                                                              UI.usd(
+                                                                                                m
+                                                                                                  .spend
+                                                                                                  .current,
+                                                                                              ),
+                                                                                              d(
+                                                                                                m
+                                                                                                  .spend
+                                                                                                  .current,
+                                                                                                m
+                                                                                                  .spend
+                                                                                                  .prev,
+                                                                                              ),
+                                                                                            )}
+                                                                                            ${UI.card(
+                                                                                              "Leads",
+                                                                                              UI.num(
+                                                                                                m
+                                                                                                  .leads
+                                                                                                  .current,
+                                                                                              ),
+                                                                                              d(
+                                                                                                m
+                                                                                                  .leads
+                                                                                                  .current,
+                                                                                                m
+                                                                                                  .leads
+                                                                                                  .prev,
+                                                                                              ),
+                                                                                            )}
+                                                                                            ${UI.card(
+                                                                                              "Bookings",
+                                                                                              UI.num(
+                                                                                                m
+                                                                                                  .bookings
+                                                                                                  .current,
+                                                                                              ),
+                                                                                              d(
+                                                                                                m
+                                                                                                  .bookings
+                                                                                                  .current,
+                                                                                                m
+                                                                                                  .bookings
+                                                                                                  .prev,
+                                                                                              ),
+                                                                                            )}
+                                                                                            ${UI.card(
+                                                                                              "Revenue",
+                                                                                              UI.usd(
+                                                                                                m
+                                                                                                  .revenue
+                                                                                                  .current,
+                                                                                              ),
+                                                                                              d(
+                                                                                                m
+                                                                                                  .revenue
+                                                                                                  .current,
+                                                                                                m
+                                                                                                  .revenue
+                                                                                                  .prev,
+                                                                                              ),
+                                                                                            )}
+                                                                                          </div>
 
-                                                                                              <div class="glass-panel p-6">
-                                                                                                <h3 class="font-bold text-gray-700 mb-4">Efficiency Trend</h3>
-                                                                                                <div class="h-64"><canvas id="channelChart"></canvas></div>
-                                                                                              </div>
-                                                                                            `;
+                                                                                          <div class="glass-panel p-6">
+                                                                                            <h3 class="font-bold text-gray-700 mb-4">Efficiency Trend</h3>
+                                                                                            <div class="h-64"><canvas id="channelChart"></canvas></div>
+                                                                                          </div>
+                                                                                        `;
         },
 
         // FACEBOOK FULL RENDER (with report selector + date filter)
@@ -1308,279 +1304,256 @@
           const hasData = ch.csvHeaders.length && ch.csvRows.length;
 
           return `
-                                                                                              <div class="flex justify-between items-center mb-6">
-                                                                                                <div>
-                                                                                                  <h2 class="text-2xl font-black text-gray-800">Facebook Ads</h2>
-                                                                                                  <p class="text-xs text-gray-500">Reports + Filters</p>
-                                                                                                </div>
-                                                                                                <div class="text-xs font-bold text-gray-600 bg-white px-3 py-1.5 rounded border">
-                                                                                                  Loaded: ${
-                                                                                                    App
-                                                                                                      .state
-                                                                                                      .facebookReportRangeLabel ||
-                                                                                                    "Latest"
-                                                                                                  }
-                                                                                                </div>
-                                                                                              </div>
+                                                                                          <div class="flex justify-between items-center mb-6">
+                                                                                            <div>
+                                                                                              <h2 class="text-2xl font-black text-gray-800">Facebook Ads</h2>
+                                                                                              <p class="text-xs text-gray-500">Reports + Filters</p>
+                                                                                            </div>
+                                                                                            <div class="text-xs font-bold text-gray-600 bg-white px-3 py-1.5 rounded border">
+                                                                                              Loaded: ${
+                                                                                                App
+                                                                                                  .state
+                                                                                                  .facebookReportRangeLabel ||
+                                                                                                "Latest"
+                                                                                              }
+                                                                                            </div>
+                                                                                          </div>
 
-                                                                                              <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                                                                                                <div class="glass-panel p-5">
-                                                                                                  <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Ad Spend</p>
-                                                                                                  <p class="text-3xl font-black text-slate-800">${UI.usd(
-                                                                                                    m
-                                                                                                      .spend
-                                                                                                      .current,
-                                                                                                  )}</p>
-                                                                                                </div>
-                                                                                                <div class="glass-panel p-5">
-                                                                                                  <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Results</p>
-                                                                                                  <p class="text-3xl font-black text-slate-800">${UI.num(
-                                                                                                    m
-                                                                                                      .bookings
-                                                                                                      .current,
-                                                                                                  )}</p>
-                                                                                                </div>
-                                                                                                <div class="glass-panel p-5">
-                                                                                                  <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Cost Per Result</p>
-                                                                                                  <p class="text-3xl font-black text-slate-800">${UI.usd(
-                                                                                                    m
-                                                                                                      .costPerResult
-                                                                                                      .current,
-                                                                                                  )}</p>
-                                                                                                </div>
-                                                                                              </div>
+                                                                                          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                                                                                            <div class="glass-panel p-5">
+                                                                                              <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Ad Spend</p>
+                                                                                              <p class="text-3xl font-black text-slate-800">${UI.usd(
+                                                                                                m
+                                                                                                  .spend
+                                                                                                  .current,
+                                                                                              )}</p>
+                                                                                            </div>
+                                                                                            <div class="glass-panel p-5">
+                                                                                              <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Results</p>
+                                                                                              <p class="text-3xl font-black text-slate-800">${UI.num(
+                                                                                                m
+                                                                                                  .bookings
+                                                                                                  .current,
+                                                                                              )}</p>
+                                                                                            </div>
+                                                                                            <div class="glass-panel p-5">
+                                                                                              <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Cost Per Result</p>
+                                                                                              <p class="text-3xl font-black text-slate-800">${UI.usd(
+                                                                                                m
+                                                                                                  .costPerResult
+                                                                                                  .current,
+                                                                                              )}</p>
+                                                                                            </div>
+                                                                                          </div>
 
-                                                                                              <div class="glass-panel p-6 mb-6">
-                                                                                                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
-                                                                                                  Compare Date Ranges
+                                                                                          <div class="glass-panel p-6 mb-6">
+                                                                                            <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
+                                                                                              Compare Date Ranges
+                                                                                            </p>
+
+                                                                                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+                                                                                              <div>
+                                                                                                <p class="text-[10px] font-bold text-gray-500 uppercase mb-2">
+                                                                                                  Current Period
                                                                                                 </p>
-
-                                                                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-
-                                                                                                  <!-- ✅ CURRENT RANGE -->
-                                                                                                  <div>
-                                                                                                    <p class="text-[10px] font-bold text-gray-500 uppercase mb-2">
-                                                                                                      Current Period
-                                                                                                    </p>
-                                                                                                    <div class="flex gap-2">
-                                                                                                      <input
-                                                                                                        id="fbStartDate"
-                                                                                                        type="date"
-                                                                                                        class="border rounded px-3 py-2 text-xs bg-white w-full"
-                                                                                                      />
-                                                                                                      <input
-                                                                                                        id="fbEndDate"
-                                                                                                        type="date"
-                                                                                                        class="border rounded px-3 py-2 text-xs bg-white w-full"
-                                                                                                      />
-                                                                                                    </div>
-                                                                                                  </div>
-
-                                                                                                  <!-- ✅ PREVIOUS RANGE -->
-                                                                                                  <div>
-                                                                                                    <p class="text-[10px] font-bold text-gray-500 uppercase mb-2">
-                                                                                                      Previous Period
-                                                                                                    </p>
-                                                                                                    <div class="flex gap-2">
-                                                                                                      <input
-                                                                                                        id="fbPrevStartDate"
-                                                                                                        type="date"
-                                                                                                        class="border rounded px-3 py-2 text-xs bg-white w-full"
-                                                                                                      />
-                                                                                                      <input
-                                                                                                        id="fbPrevEndDate"
-                                                                                                        type="date"
-                                                                                                        class="border rounded px-3 py-2 text-xs bg-white w-full"
-                                                                                                      />
-                                                                                                    </div>
-                                                                                                  </div>
-                                                                                                </div>
-
-                                                                                                <div class="mt-5 flex gap-3">
-                                                                                                  <button
-                                                                                                    onclick="App.applyFacebookComparison()"
-                                                                                                    class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-xs font-bold"
-                                                                                                  >
-                                                                                                    Apply Comparison
-                                                                                                  </button>
-
-                                                                                                  <button
-                                                                                                    onclick="App.resetFacebookDateFilter()"
-                                                                                                    class="bg-white border px-4 py-2 rounded text-xs font-bold"
-                                                                                                  >
-                                                                                                    Reset
-                                                                                                  </button>
+                                                                                                <div class="flex gap-2">
+                                                                                                  <input
+                                                                                                    id="fbStartDate"
+                                                                                                    type="date"
+                                                                                                    class="border rounded px-3 py-2 text-xs bg-white w-full"
+                                                                                                  />
+                                                                                                  <input
+                                                                                                    id="fbEndDate"
+                                                                                                    type="date"
+                                                                                                    class="border rounded px-3 py-2 text-xs bg-white w-full"
+                                                                                                  />
                                                                                                 </div>
                                                                                               </div>
 
+                                                                                              <div>
+                                                                                                <p class="text-[10px] font-bold text-gray-500 uppercase mb-2">
+                                                                                                  Previous Period
+                                                                                                </p>
+                                                                                                <div class="flex gap-2">
+                                                                                                  <input
+                                                                                                    id="fbPrevStartDate"
+                                                                                                    type="date"
+                                                                                                    class="border rounded px-3 py-2 text-xs bg-white w-full"
+                                                                                                  />
+                                                                                                  <input
+                                                                                                    id="fbPrevEndDate"
+                                                                                                    type="date"
+                                                                                                    class="border rounded px-3 py-2 text-xs bg-white w-full"
+                                                                                                  />
+                                                                                                </div>
+                                                                                              </div>
+                                                                                            </div>
 
-                                                                                              <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                                                                                                <div class="lg:col-span-2">
-                                                                                                  <!-- ✅ Campaign Efficiency Chart -->
-                                                                                                  <div class="glass-panel p-6 h-full">
-                                                                                                    <div class="flex justify-between items-center mb-4">
-                                                                                                      <h3 class="font-bold text-gray-700">
-                                                                                                        Campaign Efficiency Breakdown
-                                                                                                      </h3>
+                                                                                            <div class="mt-5 flex gap-3">
+                                                                                              <button
+                                                                                                onclick="App.applyFacebookComparison()"
+                                                                                                class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-xs font-bold"
+                                                                                              >
+                                                                                                Apply Comparison
+                                                                                              </button>
 
-                                                                                                      <div class="flex gap-3 items-center">
-                                                                                                        <!-- ✅ Campaign Selector -->
-                                                                                                        <div
-                                                                                                          id="fbCampaignSelector"
-                                                                                                          class="flex flex-wrap gap-2 p-3 border rounded bg-white w-[420px]"
-                                                                                                        ></div>
+                                                                                              <button
+                                                                                                onclick="App.resetFacebookDateFilter()"
+                                                                                                class="bg-white border px-4 py-2 rounded text-xs font-bold"
+                                                                                              >
+                                                                                                Reset
+                                                                                              </button>
+                                                                                            </div>
+                                                                                          </div>
 
-                                                                                                        <!-- ✅ Compare Mode -->
-                                                                                                        <select
-                                                                                                          id="fbCompareMode"
-                                                                                                          onchange="App.renderCampaignChart()"
-                                                                                                          class="border rounded px-3 py-2 text-xs bg-white"
-                                                                                                        >
-                                                                                                          <option value="current">Current Period</option>
-                                                                                                          <option value="previous">Previous Period</option>
-                                                                                                          <option value="both">Compare Both</option>
-                                                                                                        </select>
-                                                                                                      </div>
-                                                                                                    </div>
 
-                                                                                                   <!-- ✅ CURRENT PERIOD CHART -->
-                                                                                                      <div class="glass-panel p-6 mb-6">
-                                                                                                        <h3 class="font-bold text-gray-700 mb-3">
-                                                                                                          Current Period (${App.state.facebookCurrentLabel})
-                                                                                                        </h3>
-                                                                                                        <div class="h-[340px]">
-                                                                                                          <canvas id="campaignChartCurrent"></canvas>
-                                                                                                        </div>
-                                                                                                      </div>
+                                                                                          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                                                                                            <div class="lg:col-span-2">
+                                                                                              <div class="glass-panel p-6 h-full">
+                                                                                                <div class="flex justify-between items-center mb-4">
+                                                                                                  <h3 class="font-bold text-gray-700">
+                                                                                                    Campaign Efficiency Breakdown
+                                                                                                  </h3>
 
-                                                                                                      <!-- ✅ PREVIOUS PERIOD CHART -->
-                                                                                                      <div class="glass-panel p-6 mb-6">
-                                                                                                        <h3 class="font-bold text-gray-700 mb-3">
-                                                                                                          Previous Period (${App.state.facebookPreviousLabel})
-                                                                                                        </h3>
-                                                                                                        <div class="h-[340px]">
-                                                                                                          <canvas id="campaignChartPrevious"></canvas>
-                                                                                                        </div>
-                                                                                                      </div>
+                                                                                                  <div class="flex gap-3 items-center">
+                                                                                                    <div
+                                                                                                      id="fbCampaignSelector"
+                                                                                                      class="flex flex-wrap gap-2 p-3 border rounded bg-white w-[420px]"
+                                                                                                    ></div>
 
-                                                                                                    <p
-                                                                                                      id="noSelectionMsg"
-                                                                                                      class="hidden text-sm text-gray-500 mt-3 text-center"
+                                                                                                    <select
+                                                                                                      id="fbCompareMode"
+                                                                                                      onchange="App.renderCampaignChart()"
+                                                                                                      class="border rounded px-3 py-2 text-xs bg-white"
                                                                                                     >
-                                                                                                      Select at least one campaign to display the graph.
-                                                                                                    </p>
+                                                                                                      <option value="current">Current Period</option>
+                                                                                                      <option value="previous">Previous Period</option>
+                                                                                                      <option value="both">Compare Both</option>
+                                                                                                    </select>
                                                                                                   </div>
                                                                                                 </div>
-                                                                                                <div>
-                                                                                                    <!-- ✅ Genius AI Box -->
-                                                                                                    <div class="glass-panel p-0 overflow-hidden flex flex-col border-t-4 border-orange-600 bg-white h-full">
-                                                                                                        <div class="p-4 bg-slate-50 border-b border-gray-100 flex justify-between items-center">
-                                                                                                            <h3 class="font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-robot text-orange-600"></i> Genius AI</h3>
-                                                                                                            <span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full">${ch.optimizations ? ch.optimizations.length : 0} Ideas</span>
-                                                                                                        </div>
-                                                                                                        <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
-                                                                                                            ${ch.optimizations && ch.optimizations.length > 0 ? ch.optimizations.map((opt, idx) => `
-                                                                                                            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm genius-card relative overflow-hidden">
-                                                                                                                <div class="flex justify-between items-start mb-2">
-                                                                                                                    <span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded">${opt.type}</span>
-                                                                                                                    <span class="text-[10px] font-bold text-slate-400">${opt.confidence}% Conf.</span>
-                                                                                                                </div>
-                                                                                                                <h4 class="text-sm font-bold text-gray-800 mb-1 leading-snug">${opt.title}</h4>
-                                                                                                                <button onclick="App.openStrategicModal('facebook', ${idx})" class="w-full bg-slate-900 hover:bg-orange-600 text-white text-xs font-bold py-2.5 rounded mt-3">Analyze</button>
-                                                                                                            </div>`).join('') : '<div class="text-center py-10 text-gray-400 text-xs">System Optimized</div>'}
-                                                                                                        </div>
-                                                                                                    </div>
+
+                                                                                                <div class="glass-panel p-6 mb-6">
+                                                                                                  <h3 class="font-bold text-gray-700 mb-3">
+                                                                                                    Current Period (${App.state.facebookCurrentLabel})
+                                                                                                  </h3>
+                                                                                                  <div class="h-[340px]">
+                                                                                                    <canvas id="campaignChartCurrent"></canvas>
+                                                                                                  </div>
                                                                                                 </div>
+
+                                                                                                <div class="glass-panel p-6 mb-6">
+                                                                                                  <h3 class="font-bold text-gray-700 mb-3">
+                                                                                                    Previous Period (${App.state.facebookPreviousLabel})
+                                                                                                  </h3>
+                                                                                                  <div class="h-[340px]">
+                                                                                                    <canvas id="campaignChartPrevious"></canvas>
+                                                                                                  </div>
+                                                                                                </div>
+
+                                                                                                <p
+                                                                                                  id="noSelectionMsg"
+                                                                                                  class="hidden text-sm text-gray-500 mt-3 text-center"
+                                                                                                >
+                                                                                                  Select at least one campaign to display the graph.
+                                                                                                </p>
                                                                                               </div>
-                                                                                              ${
-                                                                                                hasData
-                                                                                                  ? `
-                                                                                                    <div class="glass-panel overflow-hidden">
-                                                                                                      <div class="px-6 py-4 border-b border-gray-200 bg-white flex justify-between items-center">
-                                                                                                        <h3 class="font-bold text-gray-700">Facebook Ads Report</h3>
-                                                                                                        <span class="text-xs text-gray-500">Rows: ${
-                                                                                                          ch
-                                                                                                            .csvRows
-                                                                                                            .length
-                                                                                                        }</span>
-                                                                                                      </div>
-                                                                                                      <div class="overflow-x-auto">
-                                                                                                        <table class="w-full text-xs facebook-table">
-                                                                                                          <thead class="facebook-table">
-                                                                                                            <tr>${ch.csvHeaders
+                                                                                            </div>
+                                                                                            <div>
+                                                                                              <div class="glass-panel p-0 overflow-hidden flex flex-col border-t-4 border-orange-600 bg-white h-full">
+                                                                                                  <div class="p-4 bg-slate-50 border-b border-gray-100 flex justify-between items-center">
+                                                                                                      <h3 class="font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-robot text-orange-600"></i> Genius AI</h3>
+                                                                                                      <span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full">${ch.optimizations ? ch.optimizations.length : 0} Ideas</span>
+                                                                                                  </div>
+                                                                                                  <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
+                                                                                                      ${ch.optimizations && ch.optimizations.length > 0 ? ch.optimizations.map((opt, idx) => `
+                                                                                                        <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm genius-card relative overflow-hidden">
+                                                                                                           <div class="flex justify-between items-start mb-2"><span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded">${opt.type}</span><span class="text-[10px] font-bold text-slate-400">${opt.confidence}% Conf.</span></div><h4 class="text-sm font-bold text-gray-800 mb-1 leading-snug">${opt.title}</h4>
+                                                                                                           <button onclick="App.openStrategicModal('facebook', ${idx})" class="w-full bg-slate-900 hover:bg-orange-600 text-white text-xs font-bold py-2.5 rounded mt-3">Analyze</button>
+                                                                                                        </div>`).join('') : '<div class="text-center py-10 text-gray-400 text-xs">System Optimized</div>'}
+                                                                                                  </div>
+                                                                                              </div>
+                                                                                            </div>
+                                                                                          </div>
+                                                                                          ${
+                                                                                            hasData
+                                                                                              ? `
+                                                                                                <div class="glass-panel overflow-hidden">
+                                                                                                  <div class="px-6 py-4 border-b border-gray-200 bg-white flex justify-between items-center">
+                                                                                                    <h3 class="font-bold text-gray-700">Facebook Ads Report</h3>
+                                                                                                    <span class="text-xs text-gray-500">Rows: ${
+                                                                                                      ch
+                                                                                                        .csvRows
+                                                                                                        .length
+                                                                                                    }</span>
+                                                                                                  </div>
+                                                                                                  <div class="overflow-x-auto">
+                                                                                                    <table class="w-full text-xs facebook-table">
+                                                                                                      <thead class="facebook-table">
+                                                                                                        <tr>${ch.csvHeaders
+                                                                                                          .map(
+                                                                                                            (
+                                                                                                              h,
+                                                                                                            ) =>
+                                                                                                              `<th>${h}</th>`,
+                                                                                                          )
+                                                                                                          .join(
+                                                                                                            "",
+                                                                                                          )}</tr>
+                                                                                                      </thead>
+                                                                                                      <tbody>
+                                                                                                        ${ch.csvRows
+                                                                                                          .map(
+                                                                                                            (
+                                                                                                              row,
+                                                                                                            ) => `
+                                                                                                          <tr>
+                                                                                                            ${row
                                                                                                               .map(
                                                                                                                 (
-                                                                                                                  h,
+                                                                                                                  cell,
                                                                                                                 ) =>
-                                                                                                                  `<th>${h}</th>`,
-                                                                                                              )
-                                                                                                              .join(
-                                                                                                                "",
-                                                                                                              )}</tr>
-                                                                                                          </thead>
-                                                                                                          <tbody>
-                                                                                                            ${ch.csvRows
-                                                                                                              .map(
-                                                                                                                (
-                                                                                                                  row,
-                                                                                                                ) => `
-                                                                                                                <tr>
-                                                                                                                  ${row
-                                                                                                                    .map(
-                                                                                                                      (
-                                                                                                                        cell,
-                                                                                                                      ) =>
-                                                                                                                        `<td>${
-                                                                                                                          cell ||
-                                                                                                                          "-"
-                                                                                                                        }</td>`,
-                                                                                                                    )
-                                                                                                                    .join(
-                                                                                                                      "",
-                                                                                                                    )}
-                                                                                                                </tr>
-                                                                                                              `,
+                                                                                                                  `<td>${
+                                                                                                                    cell ||
+                                                                                                                    "-"
+                                                                                                                  }</td>`,
                                                                                                               )
                                                                                                               .join(
                                                                                                                 "",
                                                                                                               )}
-                                                                                                          </tbody>
-                                                                                                        </table>
-                                                                                                      </div>
-                                                                                                    </div>
-                                                                                                  `
-                                                                                                  : `<div class="glass-panel p-6 text-gray-500">No Facebook data loaded yet. Click “Upload Data” to add a CSV.</div>`
-                                                                                              }
-                                                                                            `;
+                                                                                                          </tr>
+                                                                                                        `,
+                                                                                                          )
+                                                                                                          .join(
+                                                                                                            "",
+                                                                                                          )}
+                                                                                                      </tbody>
+                                                                                                    </table>
+                                                                                                  </div>
+                                                                                                </div>
+                                                                                              `
+                                                                                              : `<div class="glass-panel p-6 text-gray-500">No Facebook data loaded yet. Click “Upload Data” to add a CSV.</div>`
+                                                                                          }
+                                                                                        `;
         },
 
         card: (t, v, d, e = "") =>
           `<div class="glass-panel p-5 ${e}">
-                                                                                              <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">${t}</p>
-                                                                                              <div class="flex items-baseline gap-2 mt-1">
-                                                                                                <h3 class="text-2xl font-black text-slate-800">${v}</h3>
-                                                                                              </div>
-                                                                                              <div class="mt-1">${
-                                                                                                d ||
-                                                                                                ""
-                                                                                              }</div>
-                                                                                            </div>`,
+                                                                                          <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">${t}</p>
+                                                                                          <div class="flex items-baseline gap-2 mt-1">
+                                                                                            <h3 class="text-2xl font-black text-slate-800">${v}</h3>
+                                                                                          </div>
+                                                                                          <div class="mt-1">${
+                                                                                            d ||
+                                                                                            ""
+                                                                                          }</div>
+                                                                                        </div>`,
 
-        feedItem: (s, t, m, a) =>
-          `<div class="border-b border-gray-700/50 pb-3 last:border-0 group">
-                                                                                              <div class="flex justify-between items-center mb-1">
-                                                                                                <span class="text-xs font-bold text-gray-300 flex items-center">
-                                                                                                  <span class="w-2 h-2 rounded-full ${
-                                                                                                    t ===
-                                                                                                    "good"
-                                                                                                      ? "bg-emerald-500"
-                                                                                                      : "bg-red-500"
-                                                                                                  } inline-block mr-2"></span>${s}
-                                                                                                </span>
-                                                                                                <button class="text-[9px] bg-orange-600 text-white px-2 rounded opacity-80 hover:opacity-100">${a}</button>
-                                                                                              </div>
-                                                                                              <p class="text-xs text-slate-400 pl-4">${m}</p>
-                                                                                            </div>`,
+        feedItem: (s, t, m, a, onclickAction = "") =>
+          `<div class="border-b border-gray-700/50 pb-3 last:border-0 group"> <div class="flex justify-between items-center mb-1"> <span class="text-xs font-bold text-gray-300 flex items-center"> <span class="w-2 h-2 rounded-full ${
+            t === "good" ? "bg-emerald-500" : "bg-red-500"
+          } inline-block mr-2"></span>${s} </span> <button onclick="${onclickAction}" class="text-[9px] bg-orange-600 text-white px-2 rounded opacity-80 hover:opacity-100">${a}</button> </div> <p class="text-xs text-slate-400 pl-4">${m}</p> </div>`,
       };
 
       // ===============================
@@ -1774,7 +1747,9 @@
 
           // ✅ Fetch Current Period
           const resCurrent = await fetch(
-            api(`/api/get-facebook-report-range.php?start=${start}&end=${end}`),
+            api(
+              `/api/get-facebook-report-range.php?start=${start}&end=${end}`,
+            ),
           );
           const jsonCurrent = await resCurrent.json();
 
@@ -1819,7 +1794,9 @@
           }
 
           const res = await fetch(
-            api(`/api/get-facebook-report-range.php?start=${start}&end=${end}`),
+            api(
+              `/api/get-facebook-report-range.php?start=${start}&end=${end}`,
+            ),
           );
 
           if (!res.ok) {
@@ -1859,169 +1836,238 @@
 
           App.router("facebook");
         },
-        
+
         fetchAnalysis: () => {
-            const modal = document.getElementById('taskModal');
-            const modalBody = document.getElementById('modal-body');
-            const cid = modal.dataset.cid;
-            const optIndex = modal.dataset.optIndex;
+          const modal = document.getElementById("taskModal");
+          const modalBody = document.getElementById("modal-body");
+          const cid = modal.dataset.cid;
+          const optIndex = modal.dataset.optIndex;
 
-            if (!cid) return;
+          if (!cid) return;
 
-            const opt = DB[cid].optimizations[optIndex];
-            if (!opt) return;
+          const opt = DB[cid].optimizations[optIndex];
+          if (!opt) return;
 
-            const startDateInput = document.getElementById('modal_start_date');
-            const endDateInput = document.getElementById('modal_end_date');
-            const startDate = startDateInput.value;
-            const endDate = endDateInput.value;
+          const startDateInput = document.getElementById("modal_start_date");
+          const endDateInput = document.getElementById("modal_end_date");
+          const startDate = startDateInput.value;
+          const endDate = endDateInput.value;
 
-            modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-gray-500">Loading real database analysis...</p></div>`;
+          modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-gray-500">Loading real database analysis...</p></div>`;
 
-            let analysisType = 'general';
-            if (opt.rootCause.includes('Frequency > 4.5')) {
-                analysisType = 'fatigue_critical';
-            } else if (opt.rootCause.includes('ROAS > 6.0x')) {
-                analysisType = 'roas_sustained';
-            }
+          let analysisType = "general";
+          if (opt.rootCause.includes("Frequency > 4.5")) {
+            analysisType = "fatigue_critical";
+          } else if (opt.rootCause.includes("ROAS > 6.0x")) {
+            analysisType = "roas_sustained";
+          }
 
-            let apiUrl = `api/facebook_analysis.php?action=getDetailedAnalysis&type=${analysisType}&assumed_value=150000`;
-            if (startDate) apiUrl += `&start_date=${startDate}`;
-            if (endDate) apiUrl += `&end_date=${endDate}`;
+          let apiUrl = `api/facebook_analysis.php?action=getDetailedAnalysis&type=${analysisType}&assumed_value=150000`;
+          if (startDate) apiUrl += `&start_date=${startDate}`;
+          if (endDate) apiUrl += `&end_date=${endDate}`;
 
-            fetch(api(apiUrl))
-            .then(response => response.json())
-            .then(result => {
-                if (!result.success) throw new Error(result.error);
-                
-                const data = result.data;
-                const totalResults = data.daily_breakdown.reduce((sum, d) => sum + d.results, 0);
-                const totalRevenue = totalResults * data.assumed_value_per_result;
+          fetch(api(apiUrl))
+            .then((response) => response.json())
+            .then((result) => {
+              if (!result.success) throw new Error(result.error);
 
-                const modalContent = `<div class="grid grid-cols-3 divide-x divide-gray-100">
-                    <div class="col-span-2 p-8">
-                        <div class="flex items-center gap-3 mb-6">
-                            <span class="bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">${opt.type}</span>
-                            <span class="text-xs font-bold text-gray-500">Database Verified</span>
-                            <span class="flex items-center gap-1 text-xs font-bold text-gray-500">Confidence: ${opt.confidence}%</span>
-                        </div>
-                        <h4 class="text-2xl font-black text-gray-900 mb-4">${opt.title}</h4>
-                        
-                        <div class="mb-8">
-                            <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Root Cause</h5>
-                            <div class="bg-gray-50 p-4 rounded-lg border-l-4 border-slate-300">
-                                <p class="text-gray-600 italic text-sm">${opt.rootCause}</p>
-                            </div>
-                        </div>
-                        
-                        <div>
-                            <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Tactical Instruction</h5>
-                            <div class="prose text-sm text-gray-600 leading-relaxed">${opt.instruction.replace(/\n/g, '<br>')}</div>
-                        </div>
+              const data = result.data;
 
-                    </div>
-                    <div class="col-span-1 bg-slate-50 p-8 flex flex-col justify-between">
-                        <div>
-                            <div class="mt-8">
-                                <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Projected Impact</h5>
-                                <div class="space-y-4">
-                                    <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
-                                        <p class="text-[10px] font-bold uppercase text-gray-400">Additional Leads</p>
-                                        <p class="text-lg font-black text-emerald-600">${totalResults.toLocaleString()}</p>
-                                    </div>
-                                    <div class="bg-white p-4 rounded shadow-sm border border-gray-100">
-                                        <p class="text-[10px] font-bold uppercase text-gray-400">Revenue</p>
-                                        <p class="text-lg font-black text-emerald-600">$${totalRevenue.toLocaleString(undefined, {minimumFractionDigits: 0, maximumFractionDigits: 0})}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="mt-8 space-y-3">
-                            <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg shadow-lg transition-all">Apply Changes</button>
-                            <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition-all">Snooze</button>
-                        </div>
-                    </div>
-                </div>`;
-                
+              if (
+                opt.type === "Scale Opportunity" &&
+                data.daily_breakdown &&
+                data.daily_breakdown.length > 0
+              ) {
+                // Limit to the top 5 opportunities to keep the analysis focused and actionable.
+                const opportunities = data.daily_breakdown.slice(0, 5);
+                const totalSlides = opportunities.length;
+
+                const slidesHTML = opportunities
+                  .map((op, index) => {
+                    const adSetName = op.ad_set || "Unknown Ad Set";
+                    const campaignName = op.campaign || "Unknown Campaign";
+                    const roas = op.roas ? op.roas.toFixed(1) + "x" : "High";
+
+                    const instruction = `
+                                                                                                        <ol class="list-decimal list-inside space-y-2">
+                                                                                                            <li>Navigate to the campaign: <strong>${campaignName}</strong>.</li>
+                                                                                                            <li>Find the ad set: <strong>${adSetName}</strong>.</li>
+                                                                                                            <li>Increase its daily budget by 20-30% to capitalize on its high ${roas} ROAS.</li>
+                                                                                                        </ol>
+                                                                                                    `;
+
+                    return `
+                                                                                                        <div class="w-full flex-shrink-0 p-8" style="width: 100%;">
+                                                                                                            <h4 class="text-2xl font-black text-gray-900 mb-4">Scale Opportunity (${
+                                                                                                              index +
+                                                                                                              1
+                                                                                                            }/${totalSlides})</h4>
+                                                                                                            <div>
+                                                                                                                <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Actions for: ${adSetName}</h5>
+                                                                                                                <div class="prose text-sm text-gray-600 leading-relaxed">${instruction}</div>
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                    `;
+                  })
+                  .join("");
+
+                const modalContent = `
+                                                                                                    <div class="relative">
+                                                                                                        <div class="overflow-hidden">
+                                                                                                            <div id="modal-slider-track" class="flex transition-transform duration-300 ease-in-out">
+                                                                                                                ${slidesHTML}
+                                                                                                            </div>
+                                                                                                        </div>
+                                                                                                        ${
+                                                                                                          totalSlides >
+                                                                                                          1
+                                                                                                            ? `
+                                                                                                        <button id="modal-prev" class="absolute top-1/2 left-4 -translate-y-1/2 bg-slate-800 hover:bg-slate-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-md disabled:opacity-30 disabled:cursor-not-allowed" disabled>
+                                                                                                            <i class="fa fa-arrow-left"></i>
+                                                                                                        </button>
+                                                                                                        <button id="modal-next" class="absolute top-1/2 right-4 -translate-y-1/2 bg-slate-800 hover:bg-slate-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-md">
+                                                                                                            <i class="fa fa-arrow-right"></i>
+                                                                                                        </button>
+                                                                                                        `
+                                                                                                            : ""
+                                                                                                        }
+                                                                                                    </div>
+                                                                                                `;
                 modalBody.innerHTML = modalContent;
-            }).catch(error => {
-                console.error('Error fetching detailed analysis:', error);
-                modalBody.innerHTML = `<div class="p-8"><div class="bg-red-50 border border-red-200 p-4 rounded-lg"><p class="text-red-700 font-bold">Error Loading Analysis</p><p class="text-red-600 text-sm mt-2">${error.message}</p><p class="text-red-500 text-xs mt-3">Make sure XAMPP is running and the database connection is active.</p></div></div>`;
+
+                if (totalSlides > 1) {
+                  let currentIndex = 0;
+                  const track = document.getElementById("modal-slider-track");
+                  const prevBtn = document.getElementById("modal-prev");
+                  const nextBtn = document.getElementById("modal-next");
+
+                  const updateSlider = () => {
+                    track.style.transform = `translateX(-${
+                      currentIndex * 100
+                    }%)`;
+                    prevBtn.disabled = currentIndex === 0;
+                    nextBtn.disabled = currentIndex === totalSlides - 1;
+                  };
+
+                  nextBtn.addEventListener("click", () => {
+                    if (currentIndex < totalSlides - 1) {
+                      currentIndex++;
+                      updateSlider();
+                    }
+                  });
+                  prevBtn.addEventListener("click", () => {
+                    if (currentIndex > 0) {
+                      currentIndex--;
+                      updateSlider();
+                    }
+                  });
+                }
+              } else {
+                // Fallback to original or simplified view
+                const modalContent = `<div class="p-8"><h4 class="text-2xl font-black text-gray-900 mb-4">${
+                  opt.title
+                }</h4><div><h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Actions to take in Facebook Ads Manager</h5><div class="prose text-sm text-gray-600 leading-relaxed">${opt.instruction.replace(
+                  /\n/g,
+                  "<br>",
+                )}</div></div><div class="mt-8 space-y-3"><button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg shadow-lg transition-all">Mark as Complete</button><button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition-all">Close</button></div></div>`;
+                modalBody.innerHTML = modalContent;
+              }
+            })
+            .catch((error) => {
+              console.error("Error fetching detailed analysis:", error);
+              modalBody.innerHTML = `<div class="p-8"><div class="bg-red-50 border border-red-200 p-4 rounded-lg"><p class="text-red-700 font-bold">Error Loading Analysis</p><p class="text-red-600 text-sm mt-2">${error.message}</p><p class="text-red-500 text-xs mt-3">Make sure XAMPP is running and the database connection is active.</p></div></div>`;
             });
         },
 
         openStrategicModal: async (cid, optIndex = 0) => {
-            const modal = document.getElementById('taskModal');
-            const startDateInput = document.getElementById('modal_start_date');
-            const endDateInput = document.getElementById('modal_end_date');
-            const modalBody = document.getElementById('modal-body');
+          const modal = document.getElementById("taskModal");
+          const startDateInput = document.getElementById("modal_start_date");
+          const endDateInput = document.getElementById("modal_end_date");
+          const modalBody = document.getElementById("modal-body");
 
-            modal.dataset.cid = cid;
-            modal.dataset.optIndex = optIndex;
+          modal.dataset.cid = cid;
+          modal.dataset.optIndex = optIndex;
 
-            modal.classList.remove('hidden');
-            modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-gray-500">Finding most recent month with data...</p></div>`;
+          modal.classList.remove("hidden");
+          modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-gray-500">Finding most recent month with data...</p></div>`;
 
-            const opt = DB[cid].optimizations[optIndex];
-            if (!opt) {
-                modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-red-500">Error: Optimization data not found.</p></div>`;
-                return;
+          const opt = DB[cid].optimizations[optIndex];
+          if (!opt) {
+            modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-red-500">Error: Optimization data not found.</p></div>`;
+            return;
+          }
+
+          let analysisType = "general";
+          if (opt.rootCause.includes("Frequency > 4.5")) {
+            analysisType = "fatigue_critical";
+          } else if (opt.rootCause.includes("ROAS > 6.0x")) {
+            analysisType = "roas_sustained";
+          }
+
+          let dateToTry = new Date();
+          let dataFound = false;
+          let attempts = 0;
+
+          while (!dataFound && attempts < 12) {
+            // Search back up to 12 months
+            const firstDay = new Date(
+              dateToTry.getFullYear(),
+              dateToTry.getMonth(),
+              1,
+            );
+            const lastDay = new Date(
+              dateToTry.getFullYear(),
+              dateToTry.getMonth() + 1,
+              0,
+            );
+
+            const startDate = firstDay.toISOString().split("T")[0];
+            const endDate = lastDay.toISOString().split("T")[0];
+
+            let apiUrl = `api/facebook_analysis.php?action=getDetailedAnalysis&type=${analysisType}&assumed_value=150000&start_date=${startDate}&end_date=${endDate}`;
+
+            try {
+              const response = await fetch(api(apiUrl));
+              const result = await response.json();
+
+              if (result.success && result.data.daily_breakdown.length > 0) {
+                dataFound = true;
+                startDateInput.value = startDate;
+                endDateInput.value = endDate;
+              } else {
+                dateToTry.setMonth(dateToTry.getMonth() - 1);
+                attempts++;
+              }
+            } catch (e) {
+              modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-red-500">Error while searching for data: ${e.message}</p></div>`;
+              return;
             }
+          }
 
-            let analysisType = 'general';
-            if (opt.rootCause.includes('Frequency > 4.5')) {
-                analysisType = 'fatigue_critical';
-            } else if (opt.rootCause.includes('ROAS > 6.0x')) {
-                analysisType = 'roas_sustained';
-            }
+          if (!dataFound) {
+            const today = new Date();
+            const firstDay = new Date(
+              today.getFullYear(),
+              today.getMonth(),
+              1,
+            );
+            const lastDay = new Date(
+              today.getFullYear(),
+              today.getMonth() + 1,
+              0,
+            );
+            startDateInput.value = firstDay.toISOString().split("T")[0];
+            endDateInput.value = lastDay.toISOString().split("T")[0];
+          }
 
-            let dateToTry = new Date();
-            let dataFound = false;
-            let attempts = 0;
-
-            while (!dataFound && attempts < 12) { // Search back up to 12 months
-                const firstDay = new Date(dateToTry.getFullYear(), dateToTry.getMonth(), 1);
-                const lastDay = new Date(dateToTry.getFullYear(), dateToTry.getMonth() + 1, 0);
-                
-                const startDate = firstDay.toISOString().split('T')[0];
-                const endDate = lastDay.toISOString().split('T')[0];
-
-                let apiUrl = `api/facebook_analysis.php?action=getDetailedAnalysis&type=${analysisType}&assumed_value=150000&start_date=${startDate}&end_date=${endDate}`;
-                
-                try {
-                    const response = await fetch(api(apiUrl));
-                    const result = await response.json();
-
-                    if (result.success && result.data.daily_breakdown.length > 0) {
-                        dataFound = true;
-                        startDateInput.value = startDate;
-                        endDateInput.value = endDate;
-                    } else {
-                        dateToTry.setMonth(dateToTry.getMonth() - 1);
-                        attempts++;
-                    }
-                } catch (e) {
-                    modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-red-500">Error while searching for data: ${e.message}</p></div>`;
-                    return;
-                }
-            }
-
-            if (!dataFound) {
-                const today = new Date();
-                const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
-                const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-                startDateInput.value = firstDay.toISOString().split('T')[0];
-                endDateInput.value = lastDay.toISOString().split('T')[0];
-            }
-
-            App.fetchAnalysis();
+          App.fetchAnalysis();
         },
 
         init: async () => {
           App.router("global");
-          const applyBtn = document.getElementById('apply_date_filter');
+          const applyBtn = document.getElementById("apply_date_filter");
           if (applyBtn) {
-            applyBtn.addEventListener('click', App.fetchAnalysis);
+            applyBtn.addEventListener("click", App.fetchAnalysis);
           }
         },
 
@@ -2107,19 +2153,28 @@
             setTimeout(() => {
               // ✅ Set date inputs after the UI is rendered to reflect the loaded range
               if (monthData && monthData.start && monthData.end) {
-                  const startInput = document.getElementById('fbStartDate');
-                  const endInput = document.getElementById('fbEndDate');
-                  const pStartInput = document.getElementById('fbPrevStartDate');
-                  const pEndInput = document.getElementById('fbPrevEndDate');
+                const startInput = document.getElementById("fbStartDate");
+                const endInput = document.getElementById("fbEndDate");
+                const pStartInput = document.getElementById("fbPrevStartDate");
+                const pEndInput = document.getElementById("fbPrevEndDate");
 
-                  if(startInput) startInput.value = monthData.start;
-                  if(endInput) endInput.value = monthData.end;
+                if (startInput) startInput.value = monthData.start;
+                if (endInput) endInput.value = monthData.end;
 
-                  // Also pre-fill previous month for convenience
-                  const prevMonth = new Date(monthData.start + 'T12:00:00');
-                  prevMonth.setMonth(prevMonth.getMonth() - 1);
-                  if(pStartInput) pStartInput.value = prevMonth.toISOString().split('T')[0].slice(0, -3) + '-01';
-                  if(pEndInput) pEndInput.value = new Date(prevMonth.getFullYear(), prevMonth.getMonth() + 1, 0).toISOString().split('T')[0];
+                // Also pre-fill previous month for convenience
+                const prevMonth = new Date(monthData.start + "T12:00:00");
+                prevMonth.setMonth(prevMonth.getMonth() - 1);
+                if (pStartInput)
+                  pStartInput.value =
+                    prevMonth.toISOString().split("T")[0].slice(0, -3) + "-01";
+                if (pEndInput)
+                  pEndInput.value = new Date(
+                    prevMonth.getFullYear(),
+                    prevMonth.getMonth() + 1,
+                    0,
+                  )
+                    .toISOString()
+                    .split("T")[0];
               }
 
               App.populateCampaignSelector(); // ✅ load names
@@ -2163,7 +2218,8 @@
               }
             }, 50);
           } else {
-            container.innerHTML = '<div class="p-10 text-center">No Data</div>';
+            container.innerHTML =
+              '<div class="p-10 text-center">No Data</div>';
           }
         },
 
@@ -2235,23 +2291,6 @@
 
           return null;
         },
-
-        // Meta exports sometimes use "2025-12-13" or "Dec 13, 2025"
-        // parseFlexibleDate: (raw) => {
-        //   if (!raw) return null;
-        //   // Try native Date first
-        //   const d1 = new Date(raw);
-        //   if (!isNaN(d1.getTime())) return d1;
-
-        //   // Try YYYY-MM-DD
-        //   const m = raw.match(/^(\d{4})-(\d{2})-(\d{2})$/);
-        //   if (m) {
-        //     const d2 = new Date(`${m[1]}-${m[2]}-${m[3]}T00:00:00`);
-        //     if (!isNaN(d2.getTime())) return d2;
-        //   }
-
-        //   return null;
-        // },
 
         getRowDate: (headers, row) => {
           const normalize = (s) =>
@@ -2457,41 +2496,6 @@
         },
       };
 
-      // ===============================
-      // FACEBOOK: LOAD SAVED REPORT BY ID
-      // ===============================
-      // App.loadFacebookReportById = async (id) => {
-      //   const res = await fetch(api(`/api/get-facebook-report.php?id=${id}`));
-      //   if (!res.ok) {
-      //     alert("Failed to load report (API error).");
-      //     return;
-      //   }
-
-      //   let json;
-      //   try {
-      //     json = await res.json();
-      //   } catch (e) {
-      //     alert("Invalid response from server.");
-      //     return;
-      //   }
-
-      //   if (!json || !json.rows) {
-      //     alert("Failed to load selected report.");
-      //     return;
-      //   }
-
-      //   // Overwrite Facebook state
-      //   DB.facebook.csvHeaders = json.headers;
-      //   DB.facebook.csvRows = json.rows;
-      //   DB.facebook._allRows = json.rows.slice();
-
-      //   App.state.facebookReportId = id;
-      //   App.state.facebookReportRangeLabel = "Saved Report";
-
-      //   App.recalculateFacebookKPIs(json.headers, json.rows);
-      //   App.state.facebookForceRender = true;
-      //   App.router("facebook");
-      // };
       // ===============================
       // FILE INPUT EVENT
       // ===============================
