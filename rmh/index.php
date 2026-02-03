@@ -1878,8 +1878,10 @@
                 data.daily_breakdown &&
                 data.daily_breakdown.length > 0
               ) {
-                // Limit to the top 5 opportunities to keep the analysis focused and actionable.
-                const opportunities = data.daily_breakdown.slice(0, 5);
+                // ✅ CHANGED: Removed the .slice(0,5) limit.
+                // Now displays ALL valid opportunities returned by the API.
+                // The API already filters for ROAS > 4.0 and Spend > 50.
+                const opportunities = data.daily_breakdown;
                 const totalSlides = opportunities.length;
 
                 const slidesHTML = opportunities

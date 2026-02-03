@@ -15,16 +15,17 @@ function cleanNum($val) {
     return (float) preg_replace('/[^\d.]/', '', $val);
 }
 
-// Define a constant map for CSV column indexes to improve clarity and maintainability.
+// ✅ FIXED: Correct Column Mapping based on Dec-*.csv headers
+// 0: Campaign, 1: Ad Set, 6: Frequency, 7: Result Type, 8: Results, 9: CPR, 10: Spend, 14: CTR
 define('FB_AD_COLUMN_MAP', [
     'campaign_name'    => 0,
     'ad_set_name'      => 1,
-    'frequency'        => 7,
-    'result_type'      => 8,
-    'results'          => 9,
-    'cost_per_result'  => 10,
-    'amount_spent_usd' => 11,
-    'ctr_all'          => 17, // Corrected from 18 to 17 based on data sample
+    'frequency'        => 6,
+    'result_type'      => 7,
+    'results'          => 8,
+    'cost_per_result'  => 9,
+    'amount_spent_usd' => 10,
+    'ctr_all'          => 14,
 ]);
 
 // Helper function to get all ads from the database within a date range
