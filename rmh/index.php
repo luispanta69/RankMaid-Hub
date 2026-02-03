@@ -436,19 +436,30 @@
       <div
         class="bg-white rounded-2xl shadow-2xl w-full max-w-3xl modal-content overflow-hidden border border-gray-200"
       >
-        <div class="bg-slate-900 px-8 py-6 flex justify-between items-center border-b border-slate-700">
-          <div>
-            <h3 class="text-xl font-black text-white flex items-center gap-2">
-              <i class="fa-solid fa-brain text-orange-500"></i> Strategic
-              Analysis
-            </h3>
-            <div class="flex items-center gap-3 mt-1">
-                <p class="text-slate-400 text-xs">RMH Intelligence Engine v2.5</p>
+        <div class="bg-slate-900 px-8 py-6 border-b border-slate-700">
+          <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="w-full">
+              <div class="flex justify-between w-full">
+                  <h3 class="text-xl font-black text-white flex items-center gap-2">
+                    <i class="fa-solid fa-brain text-orange-500"></i> Strategic Analysis
+                  </h3>
+                  <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="text-gray-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-all md:hidden"><i class="fa-solid fa-xmark"></i></button>
+              </div>
+              
+              <div class="flex flex-wrap items-center gap-3 mt-4 w-full">
+                  <span class="text-xs text-slate-400 font-bold uppercase tracking-wider">Analysis Period:</span>
+                  <div class="flex items-center gap-2 bg-slate-800 p-1 rounded-lg border border-slate-700">
+                      <input type="date" id="modal_start_date" class="bg-transparent text-white text-xs px-2 py-1 outline-none border-none">
+                      <span class="text-slate-500 text-[10px] font-bold">TO</span>
+                      <input type="date" id="modal_end_date" class="bg-transparent text-white text-xs px-2 py-1 outline-none border-none">
+                  </div>
+                  <button onclick="App.fetchAnalysis()" class="bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold px-4 py-2 rounded-lg shadow-lg transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-magnifying-glass"></i> Run Search
+                  </button>
+              </div>
             </div>
-            <input type="hidden" id="modal_start_date">
-            <input type="hidden" id="modal_end_date">
+            <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="hidden md:flex text-gray-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
           </div>
-          <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="text-gray-400 hover:text-white bg-slate-800 hover:bg-slate-700 w-8 h-8 rounded-full flex items-center justify-center transition-all"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div class="p-0" id="modal-body"></div>
       </div>
@@ -1481,7 +1492,7 @@
                                                                                                   <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
                                                                                                       ${ch.optimizations && ch.optimizations.length > 0 ? ch.optimizations.map((opt, idx) => `
                                                                                                         <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm genius-card relative overflow-hidden">
-                                                                                                           <div class="flex justify-between items-start mb-2"><span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded">${opt.type}</span><span class="text-[10px] font-bold text-slate-400">${opt.confidence}% Conf.</span></div>
+                                                                                                           <div class="flex justify-between items-start mb-2"><span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded">${opt.type}</span><span class="text-[10px] font-bold text-slate-400">${opt.confidence}% Conf.</span></div><h4 class="text-sm font-bold text-gray-800 mb-1 leading-snug">${opt.title}</h4>
                                                                                                            <p class="text-xs text-gray-500 mb-2">${opt.rootCause}</p>
                                                                                                            <button onclick="App.openStrategicModal('facebook', ${idx})" class="w-full bg-slate-900 hover:bg-orange-600 text-white text-xs font-bold py-2.5 rounded mt-3">Analyze</button>
                                                                                                         </div>`).join('') : '<div class="text-center py-10 text-gray-400 text-xs">System Optimized</div>'}
@@ -1872,10 +1883,10 @@
           const startDate = startDateInput.value;
           const endDate = endDateInput.value;
 
-          modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-gray-500">Loading real database analysis...</p></div>`;
+          modalBody.innerHTML = `<div class="p-8 text-center"><div class="animate-pulse"><p class="text-gray-500 font-bold">Analyzing campaign data...</p><p class="text-xs text-gray-400 mt-2">Scanning for fatigue and efficiency...</p></div></div>`;
 
           let analysisType = "general";
-          if (opt.rootCause.includes("Frequency > 4.5")) {
+          if (opt.rootCause.includes("Frequency > 4.5") || opt.type === "Creative Alert") {
             analysisType = "fatigue_critical";
           } else if (opt.rootCause.includes("ROAS > 6.0x")) {
             analysisType = "roas_sustained";
@@ -1900,38 +1911,62 @@
                  titlePrefix = "Scale Opportunity";
               } 
               
-              // 2. Handle "Optimization/Creative Alerts" (High Spend, Low ROAS)
+              // 2. Handle "Optimization/Creative Alerts"
               else if ((opt.type === "Creative Alert" || opt.type === "Optimization Opportunity") && data.daily_breakdown) {
-                 // Use whatever the backend sends for this type, or filter locally if needed
-                 // The backend now returns BOTH types in the list, so we can filter based on what we want to show
-                 // For "Creative Alert", we probably want to see the bleeders first.
-                 opportunities = data.daily_breakdown.filter(op => op.roas === 0 && op.spend > 100);
+                 // First pass: Look for specific problems (Bleeders or Fatigue)
+                 opportunities = data.daily_breakdown.filter(op => op.type === 'bleeder' || op.type === 'fatigue');
                  titlePrefix = "Optimization Opportunity";
+
+                 // ✅ FALLBACK: If no specific issues found, grab the highest spending ad set for manual review
+                 if (opportunities.length === 0) {
+                     const manualReview = data.daily_breakdown
+                        .filter(op => op.roas < 4.0 && op.spend > 0) // Not a winner
+                        .sort((a, b) => b.spend - a.spend)[0];   // Highest spend
+
+                     if (manualReview) {
+                         opportunities.push({
+                             ...manualReview,
+                             type: 'manual_review',
+                             reason: 'Highest Spender (Manual Audit)'
+                         });
+                         titlePrefix = "Manual Review";
+                     }
+                 }
               }
 
               if (opportunities.length > 0) {
                 const totalSlides = opportunities.length;
                 
-                // Count types for summary
-                const highPerformerCount = opportunities.filter(op => op.roas > 4.0).length;
-                const bleederCount = opportunities.filter(op => op.roas === 0).length;
-                const summaryText = `Found: ${highPerformerCount} High Performer${highPerformerCount !== 1 ? 's' : ''}, ${bleederCount} Budget Bleeder${bleederCount !== 1 ? 's' : ''}`;
+                // Count types for summary header
+                const highCount = opportunities.filter(op => op.roas > 4.0).length;
+                const bleedCount = opportunities.filter(op => op.type === 'bleeder').length;
+                const fatigueCount = opportunities.filter(op => op.type === "fatigue").length;
+                const reviewCount = opportunities.filter(op => op.type === "manual_review").length;
+                
+                let summaryParts = [];
+                if(highCount > 0) summaryParts.push(`${highCount} Winner${highCount !== 1 ? 's' : ''}`);
+                if(bleedCount > 0) summaryParts.push(`${bleedCount} Bleeder${bleedCount !== 1 ? 's' : ''}`);
+                if(fatigueCount > 0) summaryParts.push(`${fatigueCount} Fatigue`);
+                if(reviewCount > 0) summaryParts.push(`${reviewCount} for Review`);
+                
+                const summaryText = summaryParts.length > 0 ? `Found: ${summaryParts.join(', ')}` : "Analysis Complete";
 
                 const slidesHTML = opportunities
                   .map((op, index) => {
                     const adSetName = op.ad_set || "Unknown Ad Set";
                     const campaignName = op.campaign || "Unknown Campaign";
                     
-                    // Dynamic Content based on Type
                     let instruction = "";
                     let badgeColor = "";
                     let badgeText = "";
+                    let icon = "";
 
                     if (op.roas > 4.0) {
-                        // Scale Logic
+                        // SCALE
                         const roas = op.roas.toFixed(1) + "x";
                         badgeColor = "bg-green-100 text-green-800 border-green-200";
                         badgeText = "High Performer";
+                        icon = "fa-arrow-trend-up";
                         instruction = `
                             <ol class="list-decimal list-inside space-y-2">
                                 <li>Navigate to campaign: <strong>${campaignName}</strong>.</li>
@@ -1940,17 +1975,55 @@
                                 <li><strong>Reason:</strong> High ROAS of ${roas}.</li>
                             </ol>
                         `;
-                    } else {
-                        // Cut/Optimize Logic (Bleeders)
+                    } else if (op.type === "fatigue") {
+                        // FATIGUE
+                        const ctr = op.ctr.toFixed(2) + "%";
+                        badgeColor = "bg-yellow-100 text-yellow-800 border-yellow-200";
+                        badgeText = "Creative Fatigue";
+                        icon = "fa-eye-slash";
+                        instruction = `
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Navigate to campaign: <strong>${campaignName}</strong>.</li>
+                                <li>Find ad set: <strong>${adSetName}</strong>.</li>
+                                <li><strong>Action:</strong> Test new hooks/angles or refresh creative.</li>
+                                <li><strong>Reason:</strong> Low CTR (${ctr}) suggests ad blindness.</li>
+                            </ol>
+                        `;
+                    } else if (op.type === "bleeder") {
+                        // BLEEDER
                         const spend = "$" + op.spend.toFixed(2);
                         badgeColor = "bg-red-100 text-red-800 border-red-200";
                         badgeText = "Budget Bleeder";
+                        icon = "fa-triangle-exclamation";
                         instruction = `
                             <ol class="list-decimal list-inside space-y-2">
                                 <li>Navigate to campaign: <strong>${campaignName}</strong>.</li>
                                 <li>Find ad set: <strong>${adSetName}</strong>.</li>
                                 <li><strong>Action:</strong> Pause Ad Set or Refresh Creative.</li>
                                 <li><strong>Reason:</strong> Spent ${spend} with 0 Results.</li>
+                            </ol>
+                        `;
+                    } else {
+                        // MANUAL REVIEW (Fallback)
+                        const spend = "$" + op.spend.toFixed(2);
+                        const roas = op.roas.toFixed(2);
+                        const ctr = op.ctr.toFixed(2) + "%";
+                        badgeColor = "bg-blue-100 text-blue-800 border-blue-200";
+                        badgeText = "Manual Audit";
+                        icon = "fa-magnifying-glass";
+                        instruction = `
+                            <div class="mb-3 p-3 bg-white rounded border border-gray-200 text-xs">
+                                <div class="grid grid-cols-3 gap-2 text-center">
+                                    <div><p class="text-gray-400">Spend</p><p class="font-bold text-gray-800">${spend}</p></div>
+                                    <div><p class="text-gray-400">ROAS</p><p class="font-bold text-gray-800">${roas}x</p></div>
+                                    <div><p class="text-gray-400">CTR</p><p class="font-bold text-gray-800">${ctr}</p></div>
+                                </div>
+                            </div>
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Navigate to campaign: <strong>${campaignName}</strong>.</li>
+                                <li>Find ad set: <strong>${adSetName}</strong>.</li>
+                                <li><strong>Action:</strong> Check secondary metrics (CPC, CPM).</li>
+                                <li><strong>Reason:</strong> Highest spender without clear 'Winner' status.</li>
                             </ol>
                         `;
                     }
@@ -1961,7 +2034,11 @@
                                 <span class="inline-block bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full mb-4 border border-slate-200">${summaryText}</span>
                             </div>
                             <div class="flex justify-between items-start mb-4">
-                                <h4 class="text-2xl font-black text-gray-900">${titlePrefix} (${index + 1}/${totalSlides})</h4>
+                                <h4 class="text-2xl font-black text-gray-900 flex items-center gap-2">
+                                    <i class="fa-solid ${icon} text-slate-400"></i>
+                                    ${titlePrefix} 
+                                    <span class="text-sm font-normal text-gray-400 ml-1">(${index + 1}/${totalSlides})</span>
+                                </h4>
                                 <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor}">${badgeText}</span>
                             </div>
                             
@@ -2006,10 +2083,9 @@
                         }
                     </div>
                 `;
-                
+
                 modalBody.innerHTML = modalContent;
 
-                // Slider Logic (Re-used)
                 if (totalSlides > 1) {
                   let currentIndex = 0;
                   const track = document.getElementById("modal-slider-track");
@@ -2035,10 +2111,8 @@
                     }
                   });
                 }
-                
               } else {
-                // Fallback if no specific data found
-                modalBody.innerHTML = `<div class="p-8 text-center"><div class="bg-gray-50 border border-gray-200 p-6 rounded-lg"><h4 class="text-lg font-bold text-gray-700 mb-2">No Specific Opportunities Found</h4><p class="text-sm text-gray-500">Based on the current date range, no campaigns met the criteria for this alert.</p><button onclick="document.getElementById('taskModal').classList.add('hidden')" class="mt-4 px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded text-slate-700 font-bold text-sm">Close</button></div></div>`;
+                modalBody.innerHTML = `<div class="p-8 text-center"><div class="bg-gray-50 border border-gray-200 p-6 rounded-lg"><h4 class="text-lg font-bold text-gray-700 mb-2">No Data Available</h4><p class="text-sm text-gray-500">No campaigns found for the selected period.</p><button onclick="document.getElementById('taskModal').classList.add('hidden')" class="mt-4 px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded text-slate-700 font-bold text-sm">Close</button></div></div>`;
               }
             })
             .catch((error) => {
@@ -2064,6 +2138,17 @@
             modalBody.innerHTML = `<div class="p-8 text-center"><p class="text-red-500">Error: Optimization data not found.</p></div>`;
             return;
           }
+          
+          let dateToTry = new Date();
+          
+          // ✅ NEW: Smart Date Sync - Check loaded rows first!
+          // If we have loaded data, start looking from the end of that data
+          if (DB.facebook.csvRows.length > 0) {
+               const screenEnd = document.getElementById('fbEndDate').value;
+               if (screenEnd) {
+                   dateToTry = new Date(screenEnd);
+               }
+          }
 
           let analysisType = "general";
           if (opt.rootCause.includes("Frequency > 4.5")) {
@@ -2071,8 +2156,7 @@
           } else if (opt.rootCause.includes("ROAS > 6.0x")) {
             analysisType = "roas_sustained";
           }
-
-          let dateToTry = new Date();
+          
           let dataFound = false;
           let attempts = 0;
 
@@ -2447,7 +2531,7 @@
              
              if (roas > 4.0 && item.spend > 50) {
                  highPerformers++;
-             } else if (item.results === 0 && item.spend > 100) {
+             } else if (item.results === 0 && item.spend > 50) { // Widened threshold > 50
                  budgetBleeders++;
              }
           });

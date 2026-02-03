@@ -156,15 +156,17 @@ try {
                      'reason' => 'High ROAS'
                  ];
              }
-             // 2. Optimization Opportunity (Bleeder): Zero Results & High Spend (> 100)
+             // 2. Optimization Opportunity (Bleeder): Zero Results & High Spend (> 50)
              // We include this if the request asks for 'fatigue_critical' OR generally
-             else if ($set['results'] == 0 && $set['spend'] > 100) {
+             // Lowered threshold from >100 to >50 to be safer for short ranges
+             else if ($set['results'] == 0 && $set['spend'] > 50) {
                  $opportunities[] = [
                      'campaign' => $set['campaign'],
                      'ad_set' => $set['ad_set'],
                      'roas' => 0,
                      'spend' => $set['spend'],
-                     'reason' => 'Zero Results / High Spend'
+                     'reason' => 'Zero Results / High Spend',
+                     'type' => 'bleeder'
                  ];
              }
         }
