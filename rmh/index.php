@@ -544,7 +544,7 @@
           optimizations: [
             {
               id: 101,
-              title: 'Scale "Prospecting_Broad" Budget',
+              title: 'Scale Opportunity',
               type: "Scale Opportunity",
               confidence: 94,
               impact: "High",
@@ -559,7 +559,7 @@
             },
             {
               id: 102,
-              title: "Retargeting Creative Fatigue",
+              title: "Creative Alert",
               type: "Creative Alert",
               confidence: 88,
               impact: "Medium",
@@ -1481,7 +1481,8 @@
                                                                                                   <div class="flex-1 overflow-y-auto p-4 space-y-4 bg-slate-50/50">
                                                                                                       ${ch.optimizations && ch.optimizations.length > 0 ? ch.optimizations.map((opt, idx) => `
                                                                                                         <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm genius-card relative overflow-hidden">
-                                                                                                           <div class="flex justify-between items-start mb-2"><span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded">${opt.type}</span><span class="text-[10px] font-bold text-slate-400">${opt.confidence}% Conf.</span></div><h4 class="text-sm font-bold text-gray-800 mb-1 leading-snug">${opt.title}</h4>
+                                                                                                           <div class="flex justify-between items-start mb-2"><span class="text-[10px] font-bold uppercase tracking-wider text-orange-600 bg-orange-50 px-2 py-0.5 rounded">${opt.type}</span><span class="text-[10px] font-bold text-slate-400">${opt.confidence}% Conf.</span></div>
+                                                                                                           <p class="text-xs text-gray-500 mb-2">${opt.rootCause}</p>
                                                                                                            <button onclick="App.openStrategicModal('facebook', ${idx})" class="w-full bg-slate-900 hover:bg-orange-600 text-white text-xs font-bold py-2.5 rounded mt-3">Analyze</button>
                                                                                                         </div>`).join('') : '<div class="text-center py-10 text-gray-400 text-xs">System Optimized</div>'}
                                                                                                   </div>
@@ -1910,6 +1911,11 @@
 
               if (opportunities.length > 0) {
                 const totalSlides = opportunities.length;
+                
+                // Count types for summary
+                const highPerformerCount = opportunities.filter(op => op.roas > 4.0).length;
+                const bleederCount = opportunities.filter(op => op.roas === 0).length;
+                const summaryText = `Found: ${highPerformerCount} High Performer${highPerformerCount !== 1 ? 's' : ''}, ${bleederCount} Budget Bleeder${bleederCount !== 1 ? 's' : ''}`;
 
                 const slidesHTML = opportunities
                   .map((op, index) => {
@@ -1951,6 +1957,9 @@
 
                     return `
                         <div class="w-full flex-shrink-0 p-8" style="width: 100%;">
+                            <div class="mb-4 text-center">
+                                <span class="inline-block bg-slate-100 text-slate-600 text-xs font-bold px-3 py-1 rounded-full mb-4 border border-slate-200">${summaryText}</span>
+                            </div>
                             <div class="flex justify-between items-start mb-4">
                                 <h4 class="text-2xl font-black text-gray-900">${titlePrefix} (${index + 1}/${totalSlides})</h4>
                                 <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor}">${badgeText}</span>
@@ -1964,7 +1973,7 @@
                             </div>
                             
                             <div class="flex gap-3">
-                                <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-2">
+                                <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white font-bold py-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-2">
                                     <i class="fa-solid fa-check"></i> Mark as Complete
                                 </button>
                                 <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-bold py-3 rounded-lg border border-gray-200 transition-all flex items-center justify-center gap-2">
@@ -2373,7 +2382,7 @@
         },
 
         // ===============================
-        // FACEBOOK: KPI RECALC
+        // FACEBOOK: KPI RECALC & OPPORTUNITY SCAN
         // ===============================
         recalculateFacebookKPIs: (headers, rows) => {
           if (!Array.isArray(headers) || !headers.length) {
@@ -2398,25 +2407,59 @@
           const cprIdx = headers.findIndex((h) =>
             normalize(h).includes("cost per result"),
           );
+          
+          const adSetIdx = headers.findIndex((h) =>
+            normalize(h).includes("ad set name"),
+          );
 
           let spend = 0;
           let results = 0;
           let cprSum = 0;
+          
+          // Data Aggregation for Opportunity Counting
+          const adSetMap = {};
 
           rows.forEach((r) => {
-            spend +=
-              parseFloat(
-                (r[spendIdx] || "0").toString().replace(/[^0-9.]/g, ""),
-              ) || 0;
-            results +=
-              parseInt(
-                (r[resultsIdx] || "0").toString().replace(/[^0-9]/g, ""),
-              ) || 0;
-            cprSum +=
-              parseFloat(
-                (r[cprIdx] || "0").toString().replace(/[^0-9.]/g, ""),
-              ) || 0;
+            const rowSpend = parseFloat((r[spendIdx] || "0").toString().replace(/[^0-9.]/g, "")) || 0;
+            const rowResults = parseInt((r[resultsIdx] || "0").toString().replace(/[^0-9]/g, "")) || 0;
+            
+            spend += rowSpend;
+            results += rowResults;
+            cprSum += parseFloat((r[cprIdx] || "0").toString().replace(/[^0-9.]/g, "")) || 0;
+            
+            // Aggregate per Ad Set
+            const adSetName = r[adSetIdx] || "Unknown Ad Set";
+            if (!adSetMap[adSetName]) {
+                adSetMap[adSetName] = { spend: 0, results: 0 };
+            }
+            adSetMap[adSetName].spend += rowSpend;
+            adSetMap[adSetName].results += rowResults;
           });
+
+          // Analyze Opportunities
+          let highPerformers = 0;
+          let budgetBleeders = 0;
+          const assumedValue = 150000;
+
+          Object.values(adSetMap).forEach(item => {
+             const revenue = item.results * assumedValue;
+             const roas = item.spend > 0 ? revenue / item.spend : 0;
+             
+             if (roas > 4.0 && item.spend > 50) {
+                 highPerformers++;
+             } else if (item.results === 0 && item.spend > 100) {
+                 budgetBleeders++;
+             }
+          });
+          
+          // Update Optimization Object Text
+          if (DB.facebook.optimizations && DB.facebook.optimizations.length > 0) {
+              // Find the Scale Opportunity card
+              const scaleOpt = DB.facebook.optimizations.find(o => o.type === "Scale Opportunity");
+              if (scaleOpt) {
+                  scaleOpt.rootCause = `Found: ${highPerformers} High Performers, ${budgetBleeders} Budget Bleeders based on current data.`;
+              }
+          }
 
           DB.facebook.metrics.spend.current = spend;
           DB.facebook.metrics.bookings.current = results;
