@@ -1890,76 +1890,117 @@
               if (!result.success) throw new Error(result.error);
 
               const data = result.data;
+              let opportunities = [];
+              let titlePrefix = "";
+              
+              // 1. Handle "Scale Opportunities" (High ROAS)
+              if (opt.type === "Scale Opportunity" && data.daily_breakdown) {
+                 opportunities = data.daily_breakdown.filter(op => op.roas > 4.0);
+                 titlePrefix = "Scale Opportunity";
+              } 
+              
+              // 2. Handle "Optimization/Creative Alerts" (High Spend, Low ROAS)
+              else if ((opt.type === "Creative Alert" || opt.type === "Optimization Opportunity") && data.daily_breakdown) {
+                 // Use whatever the backend sends for this type, or filter locally if needed
+                 // The backend now returns BOTH types in the list, so we can filter based on what we want to show
+                 // For "Creative Alert", we probably want to see the bleeders first.
+                 opportunities = data.daily_breakdown.filter(op => op.roas === 0 && op.spend > 100);
+                 titlePrefix = "Optimization Opportunity";
+              }
 
-              if (
-                opt.type === "Scale Opportunity" &&
-                data.daily_breakdown &&
-                data.daily_breakdown.length > 0
-              ) {
-                // ✅ CHANGED: Removed the .slice(0,5) limit.
-                // Now displays ALL valid opportunities returned by the API.
-                // The API already filters for ROAS > 4.0 and Spend > 50.
-                const opportunities = data.daily_breakdown;
+              if (opportunities.length > 0) {
                 const totalSlides = opportunities.length;
 
                 const slidesHTML = opportunities
                   .map((op, index) => {
                     const adSetName = op.ad_set || "Unknown Ad Set";
                     const campaignName = op.campaign || "Unknown Campaign";
-                    const roas = op.roas ? op.roas.toFixed(1) + "x" : "High";
+                    
+                    // Dynamic Content based on Type
+                    let instruction = "";
+                    let badgeColor = "";
+                    let badgeText = "";
 
-                    const instruction = `
-                                                                                                        <ol class="list-decimal list-inside space-y-2">
-                                                                                                            <li>Navigate to the campaign: <strong>${campaignName}</strong>.</li>
-                                                                                                            <li>Find the ad set: <strong>${adSetName}</strong>.</li>
-                                                                                                            <li>Increase its daily budget by 20-30% to capitalize on its high ${roas} ROAS.</li>
-                                                                                                        </ol>
-                                                                                                    `;
+                    if (op.roas > 4.0) {
+                        // Scale Logic
+                        const roas = op.roas.toFixed(1) + "x";
+                        badgeColor = "bg-green-100 text-green-800 border-green-200";
+                        badgeText = "High Performer";
+                        instruction = `
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Navigate to campaign: <strong>${campaignName}</strong>.</li>
+                                <li>Find ad set: <strong>${adSetName}</strong>.</li>
+                                <li><strong>Action:</strong> Increase daily budget by 20-30%.</li>
+                                <li><strong>Reason:</strong> High ROAS of ${roas}.</li>
+                            </ol>
+                        `;
+                    } else {
+                        // Cut/Optimize Logic (Bleeders)
+                        const spend = "$" + op.spend.toFixed(2);
+                        badgeColor = "bg-red-100 text-red-800 border-red-200";
+                        badgeText = "Budget Bleeder";
+                        instruction = `
+                            <ol class="list-decimal list-inside space-y-2">
+                                <li>Navigate to campaign: <strong>${campaignName}</strong>.</li>
+                                <li>Find ad set: <strong>${adSetName}</strong>.</li>
+                                <li><strong>Action:</strong> Pause Ad Set or Refresh Creative.</li>
+                                <li><strong>Reason:</strong> Spent ${spend} with 0 Results.</li>
+                            </ol>
+                        `;
+                    }
 
                     return `
-    <div class="w-full flex-shrink-0 p-8" style="width: 100%;">
-        <h4 class="text-2xl font-black text-gray-900 mb-4">Scale Opportunity (${index + 1}/${totalSlides})</h4>
-        <div class="mb-6">
-            <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Actions for: ${adSetName}</h5>
-            <div class="prose text-sm text-gray-600 leading-relaxed">${instruction}</div>
-        </div>
-        <div class="flex gap-3">
-            <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-2">
-                <i class="fa-solid fa-check"></i> Mark as Complete
-            </button>
-            <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 rounded-lg border border-gray-200 transition-all flex items-center justify-center gap-2">
-                <i class="fa-solid fa-clock"></i> Snooze
-            </button>
-        </div>
-    </div>
-`;
+                        <div class="w-full flex-shrink-0 p-8" style="width: 100%;">
+                            <div class="flex justify-between items-start mb-4">
+                                <h4 class="text-2xl font-black text-gray-900">${titlePrefix} (${index + 1}/${totalSlides})</h4>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold border ${badgeColor}">${badgeText}</span>
+                            </div>
+                            
+                            <div class="mb-6">
+                                <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Target: ${adSetName}</h5>
+                                <div class="prose text-sm text-gray-600 leading-relaxed bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                    ${instruction}
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3">
+                                <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-check"></i> Mark as Complete
+                                </button>
+                                <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="flex-1 bg-white hover:bg-gray-50 text-gray-700 font-bold py-3 rounded-lg border border-gray-200 transition-all flex items-center justify-center gap-2">
+                                    <i class="fa-solid fa-clock"></i> Snooze
+                                </button>
+                            </div>
+                        </div>
+                    `;
                   })
                   .join("");
 
                 const modalContent = `
-                                                                                                    <div class="relative">
-                                                                                                        <div class="overflow-hidden">
-                                                                                                            <div id="modal-slider-track" class="flex transition-transform duration-300 ease-in-out">
-                                                                                                                ${slidesHTML}
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                        ${
-                                                                                                          totalSlides >
-                                                                                                          1
-                                                                                                            ? `
-                                                                                                        <button id="modal-prev" class="absolute top-1/2 left-4 -translate-y-1/2 bg-slate-800 hover:bg-slate-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-md disabled:opacity-30 disabled:cursor-not-allowed" disabled>
-                                                                                                            <i class="fa fa-arrow-left"></i>
-                                                                                                        </button>
-                                                                                                        <button id="modal-next" class="absolute top-1/2 right-4 -translate-y-1/2 bg-slate-800 hover:bg-slate-700 text-white rounded-full w-10 h-10 flex items-center justify-center shadow-md">
-                                                                                                            <i class="fa fa-arrow-right"></i>
-                                                                                                        </button>
-                                                                                                        `
-                                                                                                            : ""
-                                                                                                        }
-                                                                                                    </div>
-                                                                                                `;
+                    <div class="relative">
+                        <div class="overflow-hidden">
+                            <div id="modal-slider-track" class="flex transition-transform duration-300 ease-in-out">
+                                ${slidesHTML}
+                            </div>
+                        </div>
+                        ${
+                          totalSlides > 1
+                            ? `
+                        <button id="modal-prev" class="absolute top-1/2 left-4 -translate-y-1/2 bg-white hover:bg-gray-100 text-slate-800 border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow-lg disabled:opacity-30 disabled:cursor-not-allowed" disabled>
+                            <i class="fa fa-arrow-left"></i>
+                        </button>
+                        <button id="modal-next" class="absolute top-1/2 right-4 -translate-y-1/2 bg-white hover:bg-gray-100 text-slate-800 border border-gray-200 rounded-full w-10 h-10 flex items-center justify-center shadow-lg">
+                            <i class="fa fa-arrow-right"></i>
+                        </button>
+                        `
+                            : ""
+                        }
+                    </div>
+                `;
+                
                 modalBody.innerHTML = modalContent;
 
+                // Slider Logic (Re-used)
                 if (totalSlides > 1) {
                   let currentIndex = 0;
                   const track = document.getElementById("modal-slider-track");
@@ -1967,9 +2008,7 @@
                   const nextBtn = document.getElementById("modal-next");
 
                   const updateSlider = () => {
-                    track.style.transform = `translateX(-${
-                      currentIndex * 100
-                    }%)`;
+                    track.style.transform = `translateX(-${currentIndex * 100}%)`;
                     prevBtn.disabled = currentIndex === 0;
                     nextBtn.disabled = currentIndex === totalSlides - 1;
                   };
@@ -1987,20 +2026,15 @@
                     }
                   });
                 }
+                
               } else {
-                // Fallback to original or simplified view
-                const modalContent = `<div class="p-8"><h4 class="text-2xl font-black text-gray-900 mb-4">${
-                  opt.title
-                }</h4><div><h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Actions to take in Facebook Ads Manager</h5><div class="prose text-sm text-gray-600 leading-relaxed">${opt.instruction.replace(
-                  /\n/g,
-                  "<br>",
-                )}</div></div><div class="mt-8 space-y-3"><button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-lg shadow-lg transition-all">Mark as Complete</button><button onclick="document.getElementById('taskModal').classList.add('hidden')" class="w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 rounded-lg transition-all">Close</button></div></div>`;
-                modalBody.innerHTML = modalContent;
+                // Fallback if no specific data found
+                modalBody.innerHTML = `<div class="p-8 text-center"><div class="bg-gray-50 border border-gray-200 p-6 rounded-lg"><h4 class="text-lg font-bold text-gray-700 mb-2">No Specific Opportunities Found</h4><p class="text-sm text-gray-500">Based on the current date range, no campaigns met the criteria for this alert.</p><button onclick="document.getElementById('taskModal').classList.add('hidden')" class="mt-4 px-4 py-2 bg-slate-200 hover:bg-slate-300 rounded text-slate-700 font-bold text-sm">Close</button></div></div>`;
               }
             })
             .catch((error) => {
-              console.error("Error fetching detailed analysis:", error);
-              modalBody.innerHTML = `<div class="p-8"><div class="bg-red-50 border border-red-200 p-4 rounded-lg"><p class="text-red-700 font-bold">Error Loading Analysis</p><p class="text-red-600 text-sm mt-2">${error.message}</p><p class="text-red-500 text-xs mt-3">Make sure XAMPP is running and the database connection is active.</p></div></div>`;
+              console.error("Error:", error);
+              modalBody.innerHTML = `<div class="p-8 text-center text-red-500">Error loading data.</div>`;
             });
         },
 

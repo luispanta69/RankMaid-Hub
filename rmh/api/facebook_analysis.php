@@ -126,44 +126,67 @@ try {
         
         $opportunities = [];
         
-        if ($type === 'roas_sustained' || $type === 'general') {
-             // Group by ad set to find high ROAS opportunities
-             $ad_sets = [];
-             foreach ($all_ads as $ad) {
-                 $key = $ad['campaign_name'] . '|' . $ad['ad_set_name'];
-                 if (!isset($ad_sets[$key])) {
-                     $ad_sets[$key] = [
-                         'campaign' => $ad['campaign_name'],
-                         'ad_set' => $ad['ad_set_name'],
-                         'spend' => 0,
-                         'results' => 0
-                     ];
-                 }
-                 $ad_sets[$key]['spend'] += cleanNum($ad['amount_spent_usd']);
-                 $ad_sets[$key]['results'] += intval($ad['results']);
+        // Group by ad set to find both winners and bleeders
+        $ad_sets = [];
+        foreach ($all_ads as $ad) {
+             $key = $ad['campaign_name'] . '|' . $ad['ad_set_name'];
+             if (!isset($ad_sets[$key])) {
+                 $ad_sets[$key] = [
+                     'campaign' => $ad['campaign_name'],
+                     'ad_set' => $ad['ad_set_name'],
+                     'spend' => 0,
+                     'results' => 0
+                 ];
              }
-             
-             foreach ($ad_sets as $set) {
-                 $revenue = $set['results'] * $assumed_value;
-                 $roas = $set['spend'] > 0 ? $revenue / $set['spend'] : 0;
-                 
-                 // If ROAS is good (e.g. > 4.0), add to opportunities
-                 if ($roas > 4.0 && $set['spend'] > 50) {
-                     $opportunities[] = [
-                         'campaign' => $set['campaign'],
-                         'ad_set' => $set['ad_set'],
-                         'roas' => $roas,
-                         'spend' => $set['spend'],
-                         'reason' => 'High ROAS'
-                     ];
-                 }
-             }
-             
-             // Sort by ROAS descending
-             usort($opportunities, function($a, $b) {
-                 return $b['roas'] <=> $a['roas'];
-             });
+             $ad_sets[$key]['spend'] += cleanNum($ad['amount_spent_usd']);
+             $ad_sets[$key]['results'] += intval($ad['results']);
         }
+         
+        foreach ($ad_sets as $set) {
+             $revenue = $set['results'] * $assumed_value;
+             $roas = $set['spend'] > 0 ? $revenue / $set['spend'] : 0;
+             
+             // 1. Scale Opportunity (Winner): High ROAS (> 4.0) & Significant Spend (> 50)
+             if ($roas > 4.0 && $set['spend'] > 50) {
+                 $opportunities[] = [
+                     'campaign' => $set['campaign'],
+                     'ad_set' => $set['ad_set'],
+                     'roas' => $roas,
+                     'spend' => $set['spend'],
+                     'reason' => 'High ROAS'
+                 ];
+             }
+             // 2. Optimization Opportunity (Bleeder): Zero Results & High Spend (> 100)
+             // We include this if the request asks for 'fatigue_critical' OR generally
+             else if ($set['results'] == 0 && $set['spend'] > 100) {
+                 $opportunities[] = [
+                     'campaign' => $set['campaign'],
+                     'ad_set' => $set['ad_set'],
+                     'roas' => 0,
+                     'spend' => $set['spend'],
+                     'reason' => 'Zero Results / High Spend'
+                 ];
+             }
+        }
+         
+        // Sort strategy: 
+        // If getting 'fatigue_critical' (Creative Alert), prioritize bleeders (ROAS=0) first.
+        // Otherwise, prioritize Winners (High ROAS) first.
+        usort($opportunities, function($a, $b) use ($type) {
+             if ($type === 'fatigue_critical') {
+                 // Prioritize Bleeders (ROAS = 0)
+                 if ($a['roas'] == 0 && $b['roas'] > 0) return -1;
+                 if ($b['roas'] == 0 && $a['roas'] > 0) return 1;
+                 // If both are bleeders, sort by Spend desc
+                 if ($a['roas'] == 0 && $b['roas'] == 0) return $b['spend'] <=> $a['spend'];
+             }
+             
+             // Default (Scale Opportunities): Prioritize High ROAS
+             if ($a['roas'] > 0 && $b['roas'] > 0) return $b['roas'] <=> $a['roas'];
+             if ($a['roas'] > 0) return -1;
+             if ($b['roas'] > 0) return 1;
+             return $b['spend'] <=> $a['spend'];
+        });
         
         echo json_encode([
             'success' => true,
