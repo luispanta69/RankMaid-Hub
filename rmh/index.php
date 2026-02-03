@@ -217,22 +217,29 @@
     </style>
   </head>
 
-  <body class="h-screen flex overflow-hidden text-sm">
+  <body class="h-screen flex overflow-hidden text-sm relative">
+    
+    <div id="mobile-backdrop" onclick="App.toggleSidebar()" class="fixed inset-0 bg-black/50 z-20 hidden md:hidden glass-panel backdrop-blur-sm"></div>
+
     <aside
-      class="w-64 bg-slate-900 text-slate-400 flex flex-col shadow-2xl z-20 flex-shrink-0"
+      id="sidebar"
+      class="w-64 bg-slate-900 text-slate-400 flex flex-col shadow-2xl z-30 flex-shrink-0 transform -translate-x-full md:translate-x-0 transition-transform duration-300 fixed md:relative h-full"
     >
       <div
-        class="h-16 flex items-center px-6 bg-slate-950 border-b border-slate-800"
+        class="h-16 flex items-center px-6 bg-slate-950 border-b border-slate-800 justify-between"
       >
-        <i class="fa-solid fa-layer-group text-orange-600 text-xl mr-3"></i>
-        <div>
-          <h1 class="font-black text-white text-xl tracking-tight">RMH</h1>
-          <p
-            class="text-[9px] uppercase font-bold text-slate-500 tracking-wider"
-          >
-            Master V27.0
-          </p>
+        <div class="flex items-center">
+            <i class="fa-solid fa-layer-group text-orange-600 text-xl mr-3"></i>
+            <div>
+            <h1 class="font-black text-white text-xl tracking-tight">RMH</h1>
+            <p
+                class="text-[9px] uppercase font-bold text-slate-500 tracking-wider"
+            >
+                Master V27.0
+            </p>
+            </div>
         </div>
+        <button onclick="App.toggleSidebar()" class="md:hidden text-slate-400 hover:text-white"><i class="fa-solid fa-xmark text-lg"></i></button>
       </div>
 
       <nav class="flex-1 overflow-y-auto py-4 space-y-1">
@@ -381,17 +388,22 @@
       </div>
     </aside>
 
-    <main class="flex-1 flex flex-col relative h-full bg-[#F3F4F6]">
+    <main class="flex-1 flex flex-col relative h-full bg-[#F3F4F6] w-full">
       <header
-        class="h-16 bg-white border-b border-gray-200 flex justify-between items-center px-8 z-10 shadow-sm"
+        class="h-16 bg-white border-b border-gray-200 flex justify-between items-center px-4 md:px-8 z-10 shadow-sm flex-shrink-0"
       >
-        <div>
-          <h2 id="page-title" class="text-xl font-bold text-gray-800">
-            Global Command
-          </h2>
-          <p id="page-subtitle" class="text-xs text-gray-500 font-medium">
-            Enterprise View
-          </p>
+        <div class="flex items-center gap-4">
+            <button onclick="App.toggleSidebar()" class="md:hidden text-gray-500 hover:text-gray-800">
+                <i class="fa-solid fa-bars text-xl"></i>
+            </button>
+            <div>
+            <h2 id="page-title" class="text-lg md:text-xl font-bold text-gray-800">
+                Global Command
+            </h2>
+            <p id="page-subtitle" class="text-xs text-gray-500 font-medium">
+                Enterprise View
+            </p>
+            </div>
         </div>
         <div class="flex items-center gap-4">
           <div class="text-right hidden md:block">
@@ -407,14 +419,14 @@
 
           <button
             onclick="App.triggerFacebookUpload()"
-            class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg shadow-lg shadow-orange-100 transition-all text-xs font-bold flex items-center gap-2"
+            class="bg-orange-600 hover:bg-orange-700 text-white px-3 md:px-4 py-2 rounded-lg shadow-lg shadow-orange-100 transition-all text-xs font-bold flex items-center gap-2"
           >
-            <i class="fa-solid fa-rotate"></i> Upload Data
+            <i class="fa-solid fa-rotate"></i> <span class="hidden md:inline">Upload Data</span><span class="md:hidden">Upload</span>
           </button>
         </div>
       </header>
 
-      <div id="content-area" class="flex-1 overflow-y-auto p-8 fade-in"></div>
+      <div id="content-area" class="flex-1 overflow-y-auto p-4 md:p-8 fade-in"></div>
     </main>
 
     <div
@@ -1410,7 +1422,7 @@
 
                                                                                           <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
                                                                                             <div class="lg:col-span-2">
-                                                                                              <div class="glass-panel p-6 h-full">
+                                                                                              <div class="glass-panel p-6 h-auto lg:h-full">
                                                                                                 <div class="flex justify-between items-center mb-4">
                                                                                                   <h3 class="font-bold text-gray-700">
                                                                                                     Campaign Efficiency Breakdown
@@ -1419,7 +1431,7 @@
                                                                                                   <div class="flex gap-3 items-center">
                                                                                                     <div
                                                                                                       id="fbCampaignSelector"
-                                                                                                      class="flex flex-wrap gap-2 p-3 border rounded bg-white w-[420px]"
+                                                                                                      class="flex flex-wrap gap-2 p-3 border rounded bg-white w-full max-w-md"
                                                                                                     ></div>
 
                                                                                                     <select
@@ -1461,7 +1473,7 @@
                                                                                               </div>
                                                                                             </div>
                                                                                             <div>
-                                                                                              <div class="glass-panel p-0 overflow-hidden flex flex-col border-t-4 border-orange-600 bg-white h-full">
+                                                                                              <div class="glass-panel p-0 overflow-hidden flex flex-col border-t-4 border-orange-600 bg-white h-[500px] lg:h-full">
                                                                                                   <div class="p-4 bg-slate-50 border-b border-gray-100 flex justify-between items-center">
                                                                                                       <h3 class="font-bold text-gray-800 flex items-center gap-2"><i class="fa-solid fa-robot text-orange-600"></i> Genius AI</h3>
                                                                                                       <span class="bg-orange-100 text-orange-700 text-[10px] font-bold px-2 py-0.5 rounded-full">${ch.optimizations ? ch.optimizations.length : 0} Ideas</span>
@@ -1570,6 +1582,12 @@
           filteredFacebookReports: null,
           facebookForceRender: false,
           facebookDateFilterActive: false,
+        },
+        toggleSidebar: () => {
+            const sidebar = document.getElementById('sidebar');
+            const backdrop = document.getElementById('mobile-backdrop');
+            sidebar.classList.toggle('-translate-x-full');
+            backdrop.classList.toggle('hidden');
         },
         renderCampaignChart: () => {
           const headers = DB.facebook.csvHeaders;
@@ -1899,17 +1917,22 @@
                                                                                                     `;
 
                     return `
-                                                                                                        <div class="w-full flex-shrink-0 p-8" style="width: 100%;">
-                                                                                                            <h4 class="text-2xl font-black text-gray-900 mb-4">Scale Opportunity (${
-                                                                                                              index +
-                                                                                                              1
-                                                                                                            }/${totalSlides})</h4>
-                                                                                                            <div>
-                                                                                                                <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Actions for: ${adSetName}</h5>
-                                                                                                                <div class="prose text-sm text-gray-600 leading-relaxed">${instruction}</div>
-                                                                                                            </div>
-                                                                                                        </div>
-                                                                                                    `;
+    <div class="w-full flex-shrink-0 p-8" style="width: 100%;">
+        <h4 class="text-2xl font-black text-gray-900 mb-4">Scale Opportunity (${index + 1}/${totalSlides})</h4>
+        <div class="mb-6">
+            <h5 class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Actions for: ${adSetName}</h5>
+            <div class="prose text-sm text-gray-600 leading-relaxed">${instruction}</div>
+        </div>
+        <div class="flex gap-3">
+            <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg shadow-md transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-check"></i> Mark as Complete
+            </button>
+            <button onclick="document.getElementById('taskModal').classList.add('hidden')" class="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-600 font-bold py-3 rounded-lg border border-gray-200 transition-all flex items-center justify-center gap-2">
+                <i class="fa-solid fa-clock"></i> Snooze
+            </button>
+        </div>
+    </div>
+`;
                   })
                   .join("");
 
