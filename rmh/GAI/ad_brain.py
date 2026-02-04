@@ -3,30 +3,34 @@ import google.generativeai as genai
 import json
 import urllib.parse
 import os
-import math
+import time
+import numpy as np
+import re
 from sqlalchemy import create_engine, text
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.impute import SimpleImputer
 from datetime import datetime
 
 # ==========================================
-# 1. DATABASE CONFIGURATION
+# 1. CONFIGURATION
 # ==========================================
 DB_USER = "neondb_owner" 
-DB_PASS = "npg_kvbAhwHVu15g"  # <--- PASTE PASSWORD
+DB_PASS = "npg_kvbAhwHVu15g" # <--- PASTE PASSWORD HERE
 DB_HOST = "ep-restless-bird-ahug88k0-pooler.c-3.us-east-1.aws.neon.tech"
 DB_NAME = "neondb"
 ENDPOINT_ID = "ep-restless-bird-ahug88k0-pooler"
 
-# 2. AI & STRATEGY SETTINGS
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "YOUR_GEMINI_KEY_HERE")
-TARGET_CPA = 50.00   # You want leads under $50
-KILL_CPA = 80.00     # Kill if over $80
+# API & THRESHOLDS
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyCxdmqcA7WYOOHoaeqT_Lpg13Fpwc9ucvY")
+TARGET_CPA = 50.00   # Goal: Leads under $50
+KILL_CPA = 80.00     # Kill: Leads over $80
+FATIGUE_LIMIT = 2.5  # Frequency where ads usually die
 
-# Configure Gemini
-genai.configure(api_key=GEMINI_API_KEY)
+# Configure AI
+if GEMINI_API_KEY and "YOUR_" not in GEMINI_API_KEY:
+    genai.configure(api_key=GEMINI_API_KEY)
 
-# Construct Secure URL
+# Database Connection String
 encoded_pass = urllib.parse.quote_plus(DB_PASS)
 DB_URL = (
     f"postgresql://{DB_USER}:{encoded_pass}@{DB_HOST}:5432/{DB_NAME}"
@@ -36,17 +40,39 @@ DB_URL = (
 class AdPredictorEngine:
     def __init__(self, db_url):
         self.engine = create_engine(db_url)
-        # Base features + Advanced Ratios
+        self.active_model_name = None 
+        # Full Feature Set for the Brain
         self.features = [
             'spend', 'cpm', 'ctr', 'cpc', 'frequency', 
-            'day_of_week', 'cvr', 'click_lead_ratio', 'auction_competitiveness'
+            'day_of_week', 'cvr', 'click_lead_ratio', 
+            'cpa_velocity', 'keyword_score', 'audience_score'
         ]
 
+    def get_valid_model_name(self):
+        """
+        Dynamically finds a working Gemini model to prevent 404 Errors.
+        """
+        if self.active_model_name: return self.active_model_name
+        
+        print("🔍 Scanning for available Gemini models...")
+        try:
+            for m in genai.list_models():
+                if 'generateContent' in m.supported_generation_methods:
+                    # Prefer Flash (Fastest) -> Then Pro
+                    if 'flash' in m.name:
+                        self.active_model_name = m.name
+                        return m.name
+            
+            # Fallback
+            return 'models/gemini-1.5-flash'
+        except:
+            return 'gemini-1.5-flash'
+
     def setup_database(self):
-        """Creates Table and View, and ensures new columns exist."""
+        """Auto-heals the database structure (Tables + Columns + Views)."""
         print("🛠️ Checking database structure...")
         with self.engine.begin() as conn:
-            # 1. Create Table (If not exists)
+            # 1. Create Main Prediction Table
             conn.execute(text("""
                 CREATE TABLE IF NOT EXISTS ad_predictions (
                     prediction_id SERIAL PRIMARY KEY,
@@ -59,27 +85,27 @@ class AdPredictorEngine:
                     ai_rewrites TEXT,
                     suggested_budget NUMERIC,
                     fatigue_score NUMERIC,
+                    cpa_velocity NUMERIC,
+                    days_remaining NUMERIC,
+                    max_efficient_spend NUMERIC,
+                    audience_type TEXT,
                     prediction_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
             """))
 
-            # 2. Patch Table: Ensure new columns exist (If table was created previously)
-            # We try to add them; if they exist, Postgres ignores or we catch error
-            new_cols = [
-                "ai_rewrites TEXT", 
-                "suggested_budget NUMERIC", 
-                "fatigue_score NUMERIC"
-            ]
-            for col_def in new_cols:
+            # 2. Add columns if missing (Evolution Support)
+            cols = ["cpa_velocity", "ai_rewrites", "suggested_budget", "fatigue_score", 
+                    "days_remaining", "max_efficient_spend", "audience_type"]
+            for col in cols:
+                type_def = "TEXT" if col == "audience_type" else "NUMERIC"
                 try:
-                    conn.execute(text(f"ALTER TABLE ad_predictions ADD COLUMN IF NOT EXISTS {col_def};"))
-                except Exception:
-                    pass # Column likely exists or specific DB version issue
+                    conn.execute(text(f"ALTER TABLE ad_predictions ADD COLUMN IF NOT EXISTS {col} {type_def};"))
+                except: pass 
 
-            # 3. Refresh View (Drop first to avoid 'cannot drop columns' error)
+            # 3. Refresh the View
             conn.execute(text("DROP VIEW IF EXISTS active_ads_view CASCADE;"))
             
-            # 4. Create View with 'cpm' included
+            # 4. Create the Standardized View
             conn.execute(text("""
                 CREATE VIEW active_ads_view AS
                 SELECT 
@@ -104,129 +130,167 @@ class AdPredictorEngine:
 
     def fetch_data(self):
         print("📥 Fetching active ads...")
-        return pd.read_sql(text("SELECT * FROM active_ads_view WHERE spend > 0"), self.engine)
+        # Get data sorted by date for velocity calculations
+        return pd.read_sql(text("SELECT * FROM active_ads_view WHERE spend > 0 ORDER BY reporting_starts ASC"), self.engine)
 
-    def add_advanced_features(self, df):
-        """Calculates Ratios (CVR, Day of Week) for deeper analysis."""
-        # 1. Day of Week (0=Mon, 6=Sun)
+    def classify_audience(self, ad_name):
+        """Extracts audience type from naming convention."""
+        name = str(ad_name).lower()
+        if 'lookalike' in name or 'lal' in name: return 'Lookalike'
+        if 'retargeting' in name or 'warm' in name or 'visit' in name: return 'Retargeting'
+        if 'broad' in name or 'open' in name: return 'Broad'
+        if 'interest' in name or '+' in name: return 'Interest'
+        return 'General'
+
+    def calculate_advanced_metrics(self, df):
+        """Feature Engineering: Velocity, Life Expectancy, Saturation."""
+        print("📈 Calculating Advanced Predictive Metrics...")
+        
+        # 1. CPA VELOCITY (The Crash Detector)
+        df = df.sort_values(by=['ad_id', 'reporting_starts'])
+        df['prev_cpa'] = df.groupby('ad_id')['cpa'].shift(1)
+        df['cpa_velocity'] = (df['cpa'] - df['prev_cpa']) / (df['prev_cpa'] + 0.01)
+        df['cpa_velocity'] = df['cpa_velocity'].fillna(0)
+
+        # 2. AUDIENCE SEGMENTATION
+        df['audience_type'] = df['ad_id'].apply(self.classify_audience)
+        audience_map = {'Lookalike': 1, 'Retargeting': 2, 'Broad': 3, 'Interest': 1, 'General': 0}
+        df['audience_score'] = df['audience_type'].map(audience_map)
+
+        # 3. LIFE EXPECTANCY (Days Remaining)
+        # Calculate daily frequency growth. If freq grows 0.1/day, and limit is 2.5...
+        df['freq_growth'] = df.groupby('ad_id')['frequency'].diff()
+        df['freq_growth'] = df['freq_growth'].fillna(0.05) 
+        df['days_remaining'] = (FATIGUE_LIMIT - df['frequency']) / (df['freq_growth'].replace(0, 0.05))
+        df['days_remaining'] = df['days_remaining'].clip(lower=0)
+
+        # 4. MAX EFFICIENT SPEND (Saturation Ceiling)
+        # Buffer of 0.8 ensures we don't spend right up to the breaking point
+        df['spend_headroom'] = (TARGET_CPA / (df['cpa'] + 0.01)) * 0.8
+        df['max_efficient_spend'] = df['spend'] * df['spend_headroom']
+
+        # 5. KEYWORD SCORING
+        def score_keywords(text):
+            s = 0
+            t = str(text).lower()
+            if 'video' in t: s += 1
+            if 'offer' in t: s += 1
+            if 'test' in t: s -= 1
+            return s
+        df['keyword_score'] = df['headline'].apply(score_keywords)
+
+        # 6. EFFICIENCY RATIOS
         if 'reporting_starts' in df.columns and not df['reporting_starts'].isnull().all():
             df['day_of_week'] = pd.to_datetime(df['reporting_starts']).dt.dayofweek
         else:
-            df['day_of_week'] = datetime.now().weekday() # Fallback to today
+            df['day_of_week'] = datetime.now().weekday()
 
-        # 2. Conversion Rate (Leads / Clicks)
         df['cvr'] = df['conversions'] / (df['clicks'] + 1)
-
-        # 3. Click-to-Lead Cost Ratio (CPC / CPA)
-        # Avoid division by zero
         df['click_lead_ratio'] = df['clicks'] / (df['conversions'] + 1)
-
-        # 4. Auction Competitiveness (CPM / CPC)
-        df['auction_competitiveness'] = df['cpm'] / (df['cpc'] + 0.1)
         
         return df
 
     def train_model(self):
-        print("🧠 Training Advanced AI Model...")
-        # Mock Data with NEW FEATURES
+        print("🧠 Training AI Model...")
+        # Mock Data with all new features
         X_mock = pd.DataFrame({
-            'spend':     [100, 200, 50, 300, 150],
-            'cpm':       [15, 35, 10, 40, 20],
-            'ctr':       [1.5, 0.5, 2.0, 0.4, 1.2],
-            'cpc':       [1.0, 3.5, 0.8, 5.0, 1.5],
-            'frequency': [1.1, 2.5, 1.0, 3.0, 1.5],
-            'day_of_week': [0, 1, 2, 6, 4], # Mon, Tue, Wed, Sun, Fri
-            'cvr':       [0.1, 0.01, 0.15, 0.02, 0.12], 
-            'click_lead_ratio': [10, 100, 6, 50, 8],    
-            'auction_competitiveness': [15, 10, 12, 8, 13]
+            'spend': [100, 200, 50], 'cpm': [15, 35, 10], 'ctr': [1.5, 0.5, 2.0],
+            'cpc': [1.0, 3.5, 0.8], 'frequency': [1.1, 2.5, 1.0], 'day_of_week': [0, 1, 2],
+            'cvr': [0.1, 0.01, 0.15], 'click_lead_ratio': [10, 100, 6],
+            'cpa_velocity': [0.1, 0.5, -0.2], 'keyword_score': [1, 0, 2],
+            'audience_score': [1, 2, 3]
         })
-        y_mock = [1, 0, 1, 0, 1] # 1=Good, 0=Bad
-        
+        y_mock = [1, 0, 1] 
         self.model = RandomForestClassifier(n_estimators=100)
         self.model.fit(X_mock[self.features], y_mock)
 
-    def generate_fixes_with_gemini(self, ad_text, cpa):
-        """Asks Gemini to rewrite the hook for failing ads."""
-        if "YOUR_GEMINI" in GEMINI_API_KEY or not GEMINI_API_KEY: 
-            return "AI Skipped (No Key)"
+    def generate_gemini_analysis(self, row, context_type="general"):
+        if not GEMINI_API_KEY or "YOUR_" in GEMINI_API_KEY: return "AI Skipped (No Key)"
         
-        prompt = f"""
-        I am running a Lead Gen Ad. It is failing (CPA: ${cpa}).
-        Current Ad Hook: "{ad_text}"
+        # Rate Limit Protection
+        time.sleep(2)
 
-        Task:
-        1. Diagnose the failure in 10 words.
-        2. Write 3 NEW, BETTER hooks to test.
-        Format: Return ONLY the 3 hooks as a bulleted list.
-        """
+        prompt = ""
+        if context_type == "crash":
+            prompt = f"Ad '{row['headline']}' CPA spiked {int(row['cpa_velocity']*100)}% to ${row['cpa']}. Why? 1 sentence."
+        elif context_type == "fatigue":
+            prompt = f"Ad '{row['headline']}' is dying (Days Left: {int(row['days_remaining'])}). Suggest a creative refresh."
+        else:
+            prompt = f"Ad '{row['headline']}' is performing well. Why is this hook effective? 1 sentence."
+
         try:
-            model = genai.GenerativeModel('gemini-1.5-pro')
+            model_name = self.get_valid_model_name()
+            model = genai.GenerativeModel(model_name)
             response = model.generate_content(prompt)
             return response.text.strip()
-        except:
-            return "AI Generation Failed"
-
-    def calculate_smart_budget(self, current_spend, prob):
-        """Suggests budget scaling based on confidence."""
-        if prob > 0.9: return round(current_spend * 1.20, 2) # +20%
-        if prob > 0.75: return round(current_spend * 1.10, 2) # +10%
-        return 0.00
+        except Exception as e:
+            print(f"⚠️ Gemini Error: {e}")
+            return f"AI Error: {str(e)[:50]}..."
 
     def run_pipeline(self):
-        # 1. Setup DB
+        # 1. Setup
         self.setup_database()
 
-        # 2. Get Data
+        # 2. Fetch & Enrich
         df = self.fetch_data()
         if df.empty:
             print("⚠️ No active ads found with spend > 0.")
             return
 
-        # 3. Calculate Advanced Features (The Upgrade)
-        df = self.add_advanced_features(df)
+        df = self.calculate_advanced_metrics(df)
 
-        # 4. Train Model
+        # 3. Train
         self.train_model()
         
-        # 5. Predict
+        # 4. Predict
         imputer = SimpleImputer(strategy='constant', fill_value=0)
         X = pd.DataFrame(imputer.fit_transform(df[self.features]), columns=self.features)
         probs = self.model.predict_proba(X)[:, 1]
 
         results = []
-        print(f"📊 Analyzing {len(df)} ads with Advanced Metrics...")
+        print(f"📊 Analyzing {len(df)} ads...")
 
-        for idx, row in df.iterrows():
-            prob = probs[idx]
+        # Analyze LATEST snapshot only
+        latest_status = df.groupby('ad_id').tail(1)
+
+        for idx, row in latest_status.iterrows():
+            prob = probs[0] if len(probs) > 0 else 0.5
+            
             cpa = row['cpa']
-            freq = row['frequency']
-            ctr = row['ctr']
+            velocity = row['cpa_velocity']
+            days_left = row['days_remaining']
+            max_spend = row['max_efficient_spend']
             
             action = "WATCH"
             reason = ""
             rewrites = ""
-            new_budget = 0.0
-
-            # --- LOGIC ENGINE ---
             
-            # Fatigue Calculation: (Freq * 5) / CTR
-            # If Freq is high and CTR is low, score explodes.
-            fatigue_score = (freq * 5) / (ctr + 0.01)
-
-            if cpa > KILL_CPA:
+            # --- DECISION LOGIC ---
+            
+            # 1. CRASH (Velocity > 30%)
+            if velocity > 0.30:
                 action = "KILL"
-                reason = f"CPA ${cpa} exceeds limit."
-                rewrites = self.generate_fixes_with_gemini(row['headline'], cpa)
+                reason = f"CRASH: CPA spiked {int(velocity*100)}%."
+                reason += " " + self.generate_gemini_analysis(row, "crash")
             
-            elif fatigue_score > 15:
-                action = "ROTATE CREATIVE"
-                reason = f"Fatigue detected (Score: {round(fatigue_score,1)}). Audience bored."
-                rewrites = self.generate_fixes_with_gemini(row['headline'], cpa)
+            # 2. DEATH APPROACHING (Life Expectancy < 2 days)
+            elif days_left < 2 and cpa < KILL_CPA:
+                action = "PREPARE NEW CREATIVE" 
+                reason = f"Ad will saturate in ~{int(days_left)} days."
+                rewrites = self.generate_gemini_analysis(row, "fatigue")
 
-            elif prob > 0.80 and cpa < TARGET_CPA:
+            # 3. EXPENSIVE
+            elif cpa > KILL_CPA:
+                action = "KILL"
+                reason = f"CPA ${cpa} too high."
+
+            # 4. WINNER
+            elif prob > 0.75 and cpa < TARGET_CPA:
                 action = "SCALE"
-                new_budget = self.calculate_smart_budget(row['spend'], prob)
-                reason = f"High Efficiency (Prob: {int(prob*100)}%). Scale budget."
+                reason = f"Winner ({row['audience_type']}). Scale until ${int(max_spend)}."
+                
+            else:
+                reason = "Performance stable."
 
             results.append({
                 'campaign_id': row['campaign_id'],
@@ -236,16 +300,20 @@ class AdPredictorEngine:
                 'confidence_score': float(prob),
                 'ai_analysis': reason,
                 'ai_rewrites': rewrites,
-                'suggested_budget': new_budget,
-                'fatigue_score': float(fatigue_score)
+                'suggested_budget': round(max_spend, 2),
+                'fatigue_score': 0, 
+                'cpa_velocity': float(velocity),
+                'days_remaining': float(days_left),
+                'max_efficient_spend': float(max_spend),
+                'audience_type': row['audience_type']
             })
 
-        # 6. Save to DB
+        # 5. Save Results
         if results:
             final_df = pd.DataFrame(results)
             final_df.to_sql('ad_predictions', self.engine, if_exists='append', index=False)
-            print("🚀 Advanced Predictions saved to DB!")
-            print(final_df[['suggested_action', 'suggested_budget', 'fatigue_score']].head())
+            print("🚀 Oracle Predictions saved!")
+            print(final_df[['ad_id', 'suggested_action', 'days_remaining']].head(3))
 
 if __name__ == "__main__":
     try:
