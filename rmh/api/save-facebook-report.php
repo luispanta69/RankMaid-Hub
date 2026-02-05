@@ -24,11 +24,12 @@ try {
 
     // ✅ UPSERT with duplicate detection
     $insertStmt = $pdo->prepare("
-        INSERT INTO facebook_ads_data (report_date, raw_row)
-        VALUES (:report_date, :raw_row)
-        ON CONFLICT (report_date)
-        DO UPDATE SET raw_row = EXCLUDED.raw_row
-        RETURNING xmax
+    INSERT INTO facebook_ads_data (report_date, headers, raw_row)
+    VALUES (:report_date, :headers, :raw_row)
+    ON CONFLICT (report_date)
+    DO UPDATE SET raw_row = EXCLUDED.raw_row,
+                  headers = EXCLUDED.headers
+    RETURNING xmax
     ");
 
     $inserted = 0;
@@ -56,6 +57,7 @@ try {
 
         $insertStmt->execute([
             ":report_date" => $date,
+            ":headers" => json_encode($payload["headers"]),
             ":raw_row" => $jsonData
         ]);
 

@@ -1,7 +1,6 @@
 <?php
 header("Content-Type: application/json");
 require_once "db.php";
-session_start();
 
 $start = $_GET["start"] ?? null;
 $end = $_GET["end"] ?? null;
@@ -13,7 +12,7 @@ if (!$start || !$end) {
 }
 
 $stmt = $pdo->prepare("
-    SELECT raw_row
+    SELECT headers, raw_row
     FROM facebook_ads_data
     WHERE report_date BETWEEN ? AND ?
     ORDER BY report_date ASC
@@ -22,12 +21,15 @@ $stmt = $pdo->prepare("
 $stmt->execute([$start, $end]);
 
 $rows = [];
+$headers = [];
 
 while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
-    // ✅ Safe JSONB handling
-    $raw = $r["raw_row"];
-    $dayRows = is_string($raw) ? json_decode($raw, true) : $raw;
+    if (empty($headers) && !empty($r["headers"])) {
+        $headers = json_decode($r["headers"], true);
+    }
+
+    $dayRows = json_decode($r["raw_row"], true);
 
     if (is_array($dayRows)) {
         foreach ($dayRows as $row) {
@@ -37,6 +39,6 @@ while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
 }
 
 echo json_encode([
-    "headers" => $_SESSION["facebook_csv_headers"] ?? [],
+    "headers" => $headers,
     "rows" => $rows
 ]);

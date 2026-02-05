@@ -320,7 +320,7 @@
             <p class="text-xs font-mono text-emerald-600 font-bold">UPDATED: JUST NOW</p>
           </div>
 
-          <button onclick="App.triggerFacebookUpload()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg shadow-lg shadow-orange-100 transition-all text-xs font-bold flex items-center gap-2">
+          <button onclick="App.triggerUpload()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg shadow-lg shadow-orange-100 transition-all text-xs font-bold flex items-center gap-2">
             <i class="fa-solid fa-rotate"></i> Upload Data
           </button>
         </div>
@@ -381,6 +381,7 @@
 
       // 1. DATA STORE
       const DB = {
+        
         facebook: {
           id: "facebook",
           name: "Facebook Ads",
@@ -388,14 +389,10 @@
           color: "#1877F2",
           goals: { targetCPA: 175, targetROAS: 4.0 },
 
-          // ✅ Current vs Previous storage
+          csvHeaders: [],
           currentRows: [],
           previousRows: [],
-
-          // Used for table display
           csvRows: [],
-
-          // Full archive
           _allRows: [],
 
           metrics: {
@@ -466,48 +463,34 @@
         },
 
         google: {
-          id: "google",
-          name: "Google Ads",
-          type: "paid",
-          color: "#EA4335",
-          goals: { targetCPA: 175, targetROAS: 3.5 },
-          metrics: {
-            spend: { current: 3100, prev: 3000 },
-            leads: { current: 45, prev: 50 },
-            bookings: { current: 8, prev: 10 },
-            revenue: { current: 12000, prev: 15000 },
-          },
-          campaigns: [
-            {
-              id: "G1",
-              name: "Brand_Search",
-              status: "active",
-              spend: 2100,
-              clicks: 1200,
-              leads: 35,
-              bookings: 6,
-              revenue: 10000,
-            },
-          ],
-          optimizations: [
-            {
-              id: 201,
-              title: "Negative Keyword Addition",
-              type: "Budget Protection",
-              confidence: 98,
-              impact: "High",
-              rootCause: "Detected $240 spend on low-intent search terms.",
-              projection: {
-                leads: "N/A",
-                revenue: "Save $800/mo",
-                cpa: "Reduce by 15%",
-              },
-              instruction:
-                '1. Go to <strong>Keywords > Search Terms</strong>.\n2. Exclude "rent", "job".',
-            },
-          ],
-          history: { roas: [4.1, 4.2, 3.8, 3.5, 3.2, 3.0, 3.1] },
+        id: "google",
+        name: "Google Ads",
+        type: "paid",
+        color: "#EA4335",
+
+        csvHeaders: [],
+        csvRows: [],
+        currentRows: [],
+        previousRows: [],
+
+        _allRows: [],                 // optional: if you ever want local cache
+        availableDates: [],           // dates pulled from DB
+
+        activeFilters: {
+          start: null,
+          end: null,
+          status: "all"               // all | enabled | paused
         },
+
+        metrics: {
+          spend: { current: 0, prev: 0 },
+          clicks: { current: 0, prev: 0 },
+          conversions: { current: 0, prev: 0 },
+          costPerConv: { current: 0 }
+        },
+
+        history: { roas: [] }
+      },
 
         reddit: {
           id: "reddit",
@@ -740,6 +723,79 @@
 
       // 2. LOGIC
       const Logic = {
+        aggregateGoogleCampaignMetrics: (headers, rows) => {
+          const normalize = (s) =>
+            (s || "").toLowerCase().replace(/\s+/g, " ").trim();
+
+          const campaignIdx = 0;
+
+          const costIdx = headers.findIndex(h =>
+            normalize(h).includes("cost")
+          );
+
+          const clickIdx = headers.findIndex(h =>
+            normalize(h).includes("click")
+          );
+
+          const resultIdx = headers.findIndex(h =>
+            normalize(h).includes("result") ||
+            normalize(h).includes("conversion")
+          );
+
+          const imprIdx = headers.findIndex(h =>
+            normalize(h).includes("impression")
+          );
+
+          if (campaignIdx === -1) return {};
+
+          const totals = {};
+
+          rows.forEach(r => {
+          const campaign = (r[campaignIdx] || "").trim();
+
+          if (
+            !campaign ||
+            campaign.toLowerCase().includes("total") ||
+            campaign.toLowerCase().includes("account") ||
+            campaign.toLowerCase().includes("search") ||
+            campaign.toLowerCase().includes("display") ||
+            campaign.toLowerCase().includes("video") ||
+            campaign.toLowerCase().includes("performance max") ||
+            campaign.toLowerCase().includes("demand gen")
+          ) {
+            return;
+          }
+
+            const cost =
+              parseFloat((r[costIdx] || "0").replace(/[^0-9.]/g, "")) || 0;
+
+            const clicks =
+              parseFloat((r[clickIdx] || "0").replace(/[^0-9.]/g, "")) || 0;
+
+            const results =
+              parseFloat((r[resultIdx] || "0").replace(/[^0-9.]/g, "")) || 0;
+
+            const impressions =
+              parseFloat((r[imprIdx] || "0").replace(/[^0-9.]/g, "")) || 0;
+
+            if (!totals[campaign]) {
+              totals[campaign] = {
+                cost: 0,
+                clicks: 0,
+                results: 0,
+                impressions: 0
+              };
+            }
+
+            totals[campaign].cost += cost;
+            totals[campaign].clicks += clicks;
+            totals[campaign].results += results;
+            totals[campaign].impressions += impressions;
+          });
+
+          return totals;
+        },
+        
         // ✅ Campaign Aggregator
         aggregateCampaignMetrics: (headers, rows) => {
           const normalize = (s) =>
@@ -846,16 +902,18 @@
             roi: 0,
           };
         },
+
+        
         getGlobalStats: () => {
           let g = { revenue: 0, spend: 0, leads: 0, bookings: 0 };
           Object.keys(DB).forEach((k) => {
-            if (DB[k].metrics && DB[k].type) {
-              g.revenue += DB[k].metrics.revenue.current || 0;
-              g.spend += DB[k].metrics.spend.current || 0;
-              g.leads += DB[k].metrics.leads.current || 0;
-              g.bookings += DB[k].metrics.bookings.current || 0;
-            }
-          });
+          if (DB[k].metrics && DB[k].type) {
+            g.revenue += DB[k].metrics.revenue?.current || 0;
+            g.spend += DB[k].metrics.spend?.current || 0;
+            g.leads += DB[k].metrics.leads?.current || 0;
+            g.bookings += DB[k].metrics.bookings?.current || 0;
+          }
+        });
           g.cpa = g.bookings > 0 ? g.spend / g.bookings : 0;
           g.avgDeal = g.bookings > 0 ? g.revenue / (g.bookings * 0.2) : 0;
           return g;
@@ -1220,7 +1278,9 @@
             )
             .join("");
 
-          const hasData = ch.csvHeaders.length && ch.csvRows.length;
+          const headers = Array.isArray(ch.csvHeaders) ? ch.csvHeaders : [];
+          const rows = Array.isArray(ch.csvRows) ? ch.csvRows : [];
+          const hasData = headers.length && rows.length;
 
           return `
           <div class="flex justify-between items-center mb-6">
@@ -1414,16 +1474,8 @@
                   <div class="overflow-x-auto">
                     <table class="w-full text-xs facebook-table">
                       <thead class="facebook-table">
-                        <tr>${ch.csvHeaders
-                          .map(
-                            (
-                              h,
-                            ) =>
-                              `<th>${h}</th>`,
-                          )
-                          .join(
-                            "",
-                          )}</tr>
+                        <!-- <tr>${ch.csvHeaders.map((h,) => `<th>${h}</th>`,).join("",)}</tr> -->
+                        <tr>${headers.map(h => `<th>${h}</th>`).join("")}</tr>
                       </thead>
                       <tbody>
                         ${ch.csvRows
@@ -1488,13 +1540,136 @@
             </div>
             <p class="text-xs text-slate-400 pl-4">${m}</p>
           </div>`,
+
+          //GOOGLE RENDER
+          renderGoogleFull: () => {
+            const ch = DB.google;
+            const m = ch.metrics;
+            const hasData = ch.csvHeaders.length && ch.csvRows.length;
+
+            const status = ch.activeFilters?.status || "all";
+            const start = ch.activeFilters?.start || "";
+            const end = ch.activeFilters?.end || "";
+
+            return `
+              <div class="flex justify-between items-center mb-6">
+                <div>
+                  <h2 class="text-2xl font-black text-gray-800">Google Ads</h2>
+                  <p class="text-xs text-gray-500">Reports & Performance</p>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <!-- Status Selector -->
+                  <div class="flex flex-col items-end">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
+                    <select
+                      id="googleStatusFilter"
+                      class="border rounded px-3 py-2 text-xs bg-white"
+                      onchange="App.applyGoogleStatusFilter()"
+                    >
+                      <option value="all" ${status === "all" ? "selected" : ""}>Enabled + Paused</option>
+                      <option value="enabled" ${status === "enabled" ? "selected" : ""}>Enabled</option>
+                      <option value="paused" ${status === "paused" ? "selected" : ""}>Paused</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Date Range -->
+              <div class="flex justify-between items-center mb-3">
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Date Range</p>
+                <div class="text-xs font-bold text-gray-600 bg-white px-3 py-1.5 rounded border">
+                  Loaded: ${start && end ? `${start} → ${end}` : "Latest"}
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div>
+                  <div class="flex gap-2">
+                    <input id="googleStartDate" type="date" value="${start}" onchange="App.validateGoogleDateRange()" class="border rounded px-3 py-2 text-xs bg-white w-full"/>
+                    <input id="googleEndDate" type="date" value="${end}" onchange="App.validateGoogleDateRange()" class="border rounded px-3 py-2 text-xs bg-white w-full"/>
+                  </div>
+
+                  <button id="googleApplyRangeBtn" onclick="App.applyGoogleReportDateFilter()" class="mt-4 bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded text-xs font-bold">Apply Date Range</button>
+
+                  <button onclick="App.resetGoogleDateFilter()" class="mt-2 bg-gray-200 hover:bg-gray-300 text-gray-800 px-4 py-2 rounded text-xs font-bold">Reset to Latest</button>
+                </div>
+
+                <div class="glass-panel p-4">
+                  <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider mb-2">Available Dates</p>
+                  <div class="text-xs text-gray-600">
+                    ${Array.isArray(ch.availableDates) && ch.availableDates.length
+                      ? `${ch.availableDates[0]} to ${ch.availableDates[ch.availableDates.length - 1]} (${ch.availableDates.length} day(s))`
+                      : "No dates loaded yet. Upload or load from DB."}
+                  </div>
+                </div>
+              </div>
+
+              <!-- KPI CARDS -->
+              <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="glass-panel p-5">
+                  <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Ad Spend</p>
+                  <p class="text-3xl font-black text-slate-800">${UI.usd(m.spend.current)}</p>
+                </div>
+
+                <div class="glass-panel p-5">
+                  <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Results</p>
+                  <p class="text-3xl font-black text-slate-800">${UI.num(m.conversions.current)}</p>
+                </div>
+
+                <div class="glass-panel p-5">
+                  <p class="text-[10px] uppercase font-bold text-gray-400 tracking-wider">Cost Per Result</p>
+                  <p class="text-3xl font-black text-slate-800">${UI.usd(m.costPerConv.current)}</p>
+                </div>
+              </div>
+
+              ${
+                hasData
+                  ? `
+                  <div class="glass-panel overflow-hidden">
+                    <div class="px-6 py-4 border-b border-gray-200 bg-white flex justify-between items-center">
+                      <h3 class="font-bold text-gray-700">Google Ads Report</h3>
+                      <span class="text-xs text-gray-500">Rows: ${ch.csvRows.length}</span>
+                    </div>
+
+                    <div class="overflow-x-auto">
+                      <div class="glass-panel p-6 mb-6" style="margin-top:30px;">
+                        <h3 class="font-bold text-gray-700 mb-3">
+                          Campaign Efficiency Breakdown
+                        </h3>
+
+                        <div class="h-[340px]">
+                          <canvas id="googleCampaignChart"></canvas>
+                        </div>
+                      </div>
+                      <table class="w-full text-xs facebook-table">
+                        <thead>
+                          <tr>${ch.csvHeaders.map((h) => `<th>${h}</th>`).join("")}</tr>
+                        </thead>
+                        <tbody>
+                         ${(ch.csvRows || [])
+                        .filter(r => Array.isArray(r))
+                        .map(row =>
+                          `<tr>${row.map(cell => `<td>${cell || "-"}</td>`).join("")}</tr>`
+                        )
+                        .join("")}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                `
+                  : `<div class="glass-panel p-6 text-gray-500">No Google Ads data loaded yet. Click Upload Data to add a CSV.</div>`
+              }
+            `;
+          },
       };
 
       // ===============================
       // APP (ONE CLEAN OBJECT)
       // ===============================
       const App = {
-        campaignChartInstance: null,
+        currentChart: null,
+        previousChart: null,
         state: {
           facebookReportId: null,
           facebookReportRangeLabel: null,
@@ -1504,8 +1679,292 @@
           filteredFacebookReports: null,
           facebookForceRender: false,
           facebookDateFilterActive: false,
-          compareModeActive: false
+          compareModeActive: false,
+          googleDateFilterActive: false
         },
+
+        triggerUpload: () => {
+          const route = App.state.currentRoute;
+
+          if (route === "facebook") {
+            document.getElementById("fbUpload").click();
+          }
+
+          if (route === "google") {
+            document.getElementById("googleUpload").click();
+          }
+        },
+
+        validateGoogleDateRange: () => {
+        const start = document.getElementById("googleStartDate")?.value;
+        const end = document.getElementById("googleEndDate")?.value;
+        const btn = document.getElementById("googleApplyRangeBtn");
+
+        if (!btn) return;
+
+        // Default = disabled
+        btn.disabled = true;
+        btn.classList.add("opacity-40", "cursor-not-allowed");
+
+        if (!start || !end) return;
+
+        // ✅ Available date window
+        const dates = DB.google.availableDates;
+
+        if (!dates.length) return;
+
+        const minDate = dates[0];
+        const maxDate = dates[dates.length - 1];
+
+        // ❌ Outside allowed range
+        if (start < minDate || end > maxDate) return;
+
+        // ✅ Check if there is at least 1 day in the range
+        const hasMatch = dates.some((d) => d >= start && d <= end);
+
+        if (!hasMatch) return;
+
+        // ✅ Enable Apply Button
+        btn.disabled = false;
+        btn.classList.remove("opacity-40", "cursor-not-allowed");
+      },
+
+        getGoogleStatusIdx: (headers) => {
+        const normalize = (s) => (s || "").toLowerCase().replace(/\s+/g, " ").trim();
+
+        const idx = headers.findIndex((h) => {
+          const x = normalize(h);
+          return x === "status" || x.includes("status");
+        });
+
+        return idx;
+      },
+
+      loadGoogleAvailableDates: async () => {
+  const res = await fetch(api("/api/get-google-available-dates.php"));
+  if (!res.ok) {
+    console.warn("❌ Failed loading available dates");
+    return;
+  }
+
+  const json = await res.json();
+
+  DB.google.availableDates = Array.isArray(json.dates)
+    ? json.dates.sort()
+    : [];
+
+  console.log("✅ Available Google Dates:", DB.google.availableDates);
+},
+
+  loadLatestGoogleRange: async () => {
+    const res = await fetch(api("/api/get-google-latest-range.php"));
+    if (!res.ok) return;
+
+    const json = await res.json();
+
+    // ✅ Headers
+    DB.google.csvHeaders = json.headers || [];
+
+    // ✅ Extract real row arrays (FIX)
+    DB.google.currentRows = (json.rows || [])
+    .map(r => Array.isArray(r) ? r : r.row)
+    .filter(r => Array.isArray(r));
+
+    // ✅ Table rows
+    DB.google.csvRows = DB.google.currentRows;
+
+    // ✅ Set filter bounds
+    DB.google.activeFilters.start = json.start || null;
+    DB.google.activeFilters.end = json.end || null;
+
+    App.state.googleDateFilterActive = false;
+
+    console.log("✅ Google Rows Loaded:", DB.google.csvRows.length);
+  },
+
+  applyGoogleReportDateFilter: async () => {
+  const start = document.getElementById("googleStartDate")?.value;
+  const end = document.getElementById("googleEndDate")?.value;
+
+  if (!start || !end) {
+    alert("Pick both start and end dates.");
+    return;
+  }
+
+  const res = await fetch(
+    api(`/api/get-google-report-range.php?start=${start}&end=${end}`)
+  );
+
+  if (!res.ok) {
+    alert("Failed to load date range.");
+    return;
+  }
+
+  const json = await res.json();
+
+  // ✅ SAFETY: Ensure rows exist
+  if (!Array.isArray(json.rows)) {
+    console.error("Invalid API response:", json);
+    alert("Unexpected response from server.");
+    return;
+  }
+
+  // ✅ ALERT if NO DATA FOUND
+  if (!json.rows.length) {
+  return;
+}
+
+  // ✅ Apply headers + rows
+  DB.google.csvHeaders = json.headers || DB.google.csvHeaders;
+  DB.google.currentRows = (json.rows || [])
+  .map(r => Array.isArray(r) ? r : r.row)
+  .filter(r => Array.isArray(r));
+
+  // ✅ Save filter state
+  DB.google.activeFilters.start = start;
+  DB.google.activeFilters.end = end;
+
+  App.state.googleDateFilterActive = true;
+
+  // ✅ Apply current status filter
+  const status = DB.google.activeFilters?.status || "all";
+
+  DB.google.csvRows = App.filterGoogleRowsByStatus(
+    DB.google.csvHeaders,
+    DB.google.currentRows,
+    status
+  );
+
+  // ✅ Recalculate KPIs
+  App.recalculateGoogleKPIs(DB.google.csvHeaders, DB.google.csvRows);
+
+  // ✅ Update UI (DO NOT router reload)
+  document.getElementById("content-area").innerHTML = UI.renderGoogleFull();
+
+    setTimeout(() => {
+    App.renderGoogleCampaignChart();
+  }, 200);
+},
+
+  resetGoogleDateFilter: async () => {
+    DB.google.activeFilters.start = null;
+    DB.google.activeFilters.end = null;
+    App.state.googleDateFilterActive = false;
+
+    await App.loadLatestGoogleRange();
+
+    const status = DB.google.activeFilters?.status || "all";
+    DB.google.csvRows = App.filterGoogleRowsByStatus(DB.google.csvHeaders, DB.google.currentRows, status);
+
+    App.recalculateGoogleKPIs(DB.google.csvHeaders, DB.google.csvRows);
+    document.getElementById("content-area").innerHTML = UI.renderGoogleFull();
+    console.log(DB.google.csvRows[0]);
+
+    setTimeout(() => {
+      App.renderGoogleCampaignChart();
+    }, 200);
+  },
+
+      filterGoogleRowsByStatus: (headers, rows, status) => {
+        if (!rows?.length) return [];
+        if (!status || status === "all") return rows;
+
+        const statusIdx = App.getGoogleStatusIdx(headers);
+        if (statusIdx === -1) return rows;
+
+        const norm = (v) => (v || "").toString().toLowerCase().trim();
+
+        return rows.filter((r) => {
+          const v = norm(r[statusIdx]);
+          if (status === "enabled") return v.includes("enabled");
+          if (status === "paused") return v.includes("paused");
+          return true;
+        });
+      },
+
+      applyGoogleStatusFilter: () => {
+        const sel = document.getElementById("googleStatusFilter");
+        const status = sel ? sel.value : "all";
+
+        DB.google.activeFilters.status = status;
+
+        // Re-apply status filter on current dataset, then recalc KPI and rerender
+        const filtered = App.filterGoogleRowsByStatus(DB.google.csvHeaders, DB.google.currentRows, status);
+
+        DB.google.csvRows = filtered;
+
+        App.recalculateGoogleKPIs(DB.google.csvHeaders, DB.google.csvRows);
+        App.router("google");
+      },
+
+      renderGoogleCampaignChart: () => {
+      const headers = DB.google.csvHeaders;
+      const rows = DB.google.csvRows;
+
+      if (!headers.length || !rows.length) return;
+
+      const normalize = (s) =>
+        (s || "").toLowerCase().replace(/\s+/g, " ").trim();
+
+      const costIdx = headers.findIndex(h => normalize(h).includes("cost"));
+      const clickIdx = headers.findIndex(h => normalize(h).includes("click"));
+      const resultIdx = headers.findIndex(h =>
+        normalize(h).includes("result") ||
+        normalize(h).includes("conversion")
+      );
+      const imprIdx = headers.findIndex(h => normalize(h).includes("impression"));
+
+      if (costIdx === -1) return;
+
+      let totalCost = 0;
+      let totalClicks = 0;
+      let totalResults = 0;
+      let totalImpr = 0;
+
+      rows.forEach(r => {
+        if (!Array.isArray(r)) return;
+
+        totalCost += parseFloat((r[costIdx] || "0").replace(/[^0-9.]/g, "")) || 0;
+        totalClicks += parseFloat((r[clickIdx] || "0").replace(/[^0-9.]/g, "")) || 0;
+        totalResults += parseFloat((r[resultIdx] || "0").replace(/[^0-9.]/g, "")) || 0;
+        totalImpr += parseFloat((r[imprIdx] || "0").replace(/[^0-9.]/g, "")) || 0;
+      });
+
+      const ctx = document.getElementById("googleCampaignChart")?.getContext("2d");
+      if (!ctx) return;
+
+      if (App.googleChart) App.googleChart.destroy();
+
+      App.googleChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: ["Filtered Date Range"],
+          datasets: [
+            { label: "Cost ($)", data: [totalCost.toFixed(2)] },
+            { label: "Clicks", data: [totalClicks] },
+            { label: "Results", data: [totalResults] },
+            { label: "Impressions", data: [totalImpr] }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: "top" },
+            datalabels: {
+              anchor: "end",
+              align: "top",
+              formatter: (v, ctx) => {
+                if (ctx.dataset.label.includes("Cost")) {
+                  return "$" + Number(v).toFixed(2);
+                }
+                return Number(v).toLocaleString();
+              }
+            }
+          }
+        }
+      });
+    },
 
         toggleFacebookCompare: () => {
         const section = document.getElementById("fbCompareSection");
@@ -1540,7 +1999,12 @@
             selector.querySelectorAll("input[type='checkbox']:checked"),
           ).map((cb) => cb.value);
 
-          if (!selectedCampaigns.length) return;
+          if (!selectedCampaigns.length) {
+          // fallback: auto-select everything
+          selectedCampaigns.push(...Object.keys(
+          Logic.aggregateCampaignMetrics(headers, DB.facebook.currentRows || [])
+          ));
+          }
 
           // ✅ Helper renderer
           const drawChart = (canvasId, rows) => {
@@ -1755,8 +2219,13 @@
           DB.facebook.csvHeaders = jsonCurrent.headers || [];
 
           // ✅ Save BOTH datasets
-          DB.facebook.currentRows = jsonCurrent.rows;
-          DB.facebook.previousRows = jsonPrev.rows;
+          DB.facebook.currentRows = (jsonCurrent.rows || [])
+          .map(r => Array.isArray(r) ? r : r.row)
+          .filter(r => Array.isArray(r));
+
+          DB.facebook.previousRows = (jsonPrev.rows || [])
+          .map(r => Array.isArray(r) ? r : r.row)
+          .filter(r => Array.isArray(r));
 
           // ✅ Default table shows Current
           DB.facebook.csvRows = DB.facebook.currentRows;
@@ -1768,9 +2237,14 @@
           App.router("facebook");
 
           setTimeout(() => {
-            App.populateCampaignSelector();
-            App.renderCampaignChart();
-          }, 250);
+          App.populateCampaignSelector();
+
+          // Force all campaigns selected before rendering
+          const boxes = document.querySelectorAll("#fbCampaignSelector input");
+          boxes.forEach(cb => cb.checked = true);
+
+          App.renderCampaignChart();
+          }, 400);
         },
         applyFacebookReportDateFilter: async () => {
           const start = document.getElementById("fbStartDate").value;
@@ -1810,7 +2284,11 @@
 
           // Set rows
           // ✅ Filter becomes the NEW Current Period
-            DB.facebook.currentRows = json.rows;
+            DB.facebook.currentRows = (json.rows || [])
+            .map(r => Array.isArray(r) ? r : r.row)
+            .filter(r => Array.isArray(r));
+
+            DB.facebook.csvRows = DB.facebook.currentRows;
 
             // ✅ Table matches Current Period
             DB.facebook.csvRows = json.rows;
@@ -1829,6 +2307,10 @@
           );
 
           App.router("facebook");
+
+          console.log("Facebook API Returned:", json);
+          console.log("Rows:", json.rows?.length);
+          console.log("Headers:", json.headers?.length);
         },
 
         init: async () => {
@@ -1902,7 +2384,7 @@
           if (route === "facebook") {
             document.getElementById("page-title").innerText = "Facebook Ads";
             document.getElementById("page-subtitle").innerText =
-              "Reports & Filters";
+              "Campaign Performance";
             if (App.state.facebookForceRender) {
               App.state.facebookForceRender = false;
               container.innerHTML = UI.renderFacebookFull(
@@ -1914,11 +2396,16 @@
             container.innerHTML = `<div class="glass-panel p-6 text-gray-500">Loading Facebook reports...</div>`;
 
             let index = [];
-
-            if (!App.state.facebookDateFilterActive && !App.state.compareModeActive) {
+            // ✅ Load latest Facebook month if nothing is loaded yet and no filters/comparison are active
+            if (
+              (!DB.facebook.currentRows || !DB.facebook.currentRows.length) &&
+              !App.state.facebookDateFilterActive &&
+              !App.state.compareModeActive
+            ) {
               await App.loadLatestFacebookMonth();
             }
-            container.innerHTML = UI.renderFacebookFull([]);
+
+            container.innerHTML = UI.renderFacebookFull();
 
             // ✅ Always render charts from currentRows
             setTimeout(() => {
@@ -1928,6 +2415,37 @@
 
             return;
           }
+
+          if (route === "google") {
+          document.getElementById("page-title").innerText = "Google Ads";
+          document.getElementById("page-subtitle").innerText = "Campaign Performance";
+
+          // ✅ ONLY reload latest if NO date filter is active
+          if (!App.state.googleDateFilterActive) {
+            await App.loadLatestGoogleRange();
+            await App.loadGoogleAvailableDates();
+          }
+
+          // ✅ Always apply status filter to whatever data is loaded
+          const status = DB.google.activeFilters?.status || "all";
+
+          DB.google.csvRows = App.filterGoogleRowsByStatus(
+            DB.google.csvHeaders,
+            DB.google.currentRows,
+            status
+          );
+
+          App.recalculateGoogleKPIs(DB.google.csvHeaders, DB.google.csvRows);
+
+          container.innerHTML = UI.renderGoogleFull();
+           // ✅ Run validation after UI mounts
+          setTimeout(() => {
+            App.validateGoogleDateRange();
+            App.renderGoogleCampaignChart();
+          }, 100);
+
+            return;
+        }
 
           // Other channels (non-async)
           const data = DB[route];
@@ -1983,7 +2501,7 @@
             return;
           }
 
-          DB.facebook.csvHeaders = json.headers;
+          DB.facebook.csvHeaders = json.headers?.length ? json.headers : DB.facebook.csvHeaders;
           // ✅ Latest Month = Current Period
           DB.facebook.currentRows = json.rows;
           // ✅ Reset Previous Period
@@ -2008,8 +2526,7 @@
         // ✅ Reset comparison datasets
         App.state.compareModeActive = false;
         DB.facebook.previousRows = [];
-        DB.facebook.currentRows = [];
-
+        
         // ✅ Reset labels
         App.state.facebookCurrentLabel = "Current Period";
         App.state.facebookPreviousLabel = "Previous Period";
@@ -2083,25 +2600,27 @@
         // },
 
         getRowDate: (headers, row) => {
-          const normalize = (s) =>
-            (s || "").toLowerCase().replace(/\s+/g, " ").trim();
+        const normalize = (s) =>
+          (s || "").toLowerCase().replace(/\s+/g, " ").trim();
 
-          const candidates = [
-            "day",
-            "date",
-            "reporting starts",
-            "reporting ends",
-          ];
+        const candidates = [
+          "day",
+          "date",
+          "segments date",
+          "time period",
+          "campaign day",
+        ];
 
-          for (let i = 0; i < headers.length; i++) {
-            const h = normalize(headers[i]);
-            if (candidates.some((c) => h === c || h.includes(c))) {
-              return App.normalizeDateToYMD(row[i]);
-            }
+        for (let i = 0; i < headers.length; i++) {
+          const h = normalize(headers[i]);
+
+          if (candidates.some((c) => h === c || h.includes(c))) {
+            return App.normalizeDateToYMD(row[i]);
           }
+        }
 
-          return null;
-        },
+        return null;
+      },
 
         // ===============================
         // FACEBOOK: KPI RECALC
@@ -2156,6 +2675,60 @@
           DB.facebook.metrics.revenue.current = 0;
         },
 
+        recalculateGoogleKPIs: (headers, rows) => {
+        if (!headers.length || !rows.length) return;
+
+        const normalize = (s) =>
+          (s || "")
+            .toLowerCase()
+            .replace(/[^a-z0-9 ]/g, "")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        // ✅ Locate columns using "includes" not strict match
+        const costIdx = headers.findIndex((h) =>
+          normalize(h).includes("cost")
+        );
+
+        const resultIdx = headers.findIndex((h) =>
+          normalize(h).includes("results")
+        );
+
+        console.log("✅ Cost Index:", costIdx, headers[costIdx]);
+        console.log("✅ Results Index:", resultIdx, headers[resultIdx]);
+
+        // ✅ STOP if missing
+        if (costIdx === -1 || resultIdx === -1) {
+          console.warn("❌ Google KPI columns not found.");
+          return;
+        }
+
+        let totalCost = 0;
+        let totalResults = 0;
+
+        rows.forEach((r) => {
+
+        // 🚑 Skip broken rows
+        if (!Array.isArray(r)) return;
+        if (r.length <= costIdx || r.length <= resultIdx) return;
+
+        totalCost +=
+        parseFloat((r[costIdx] || "0").toString().replace(/[^0-9.]/g, "")) || 0;
+
+        totalResults +=
+        parseFloat((r[resultIdx] || "0").toString().replace(/[^0-9.]/g, "")) || 0;
+        });
+
+        // ✅ Save metrics
+        DB.google.metrics.spend.current = totalCost;
+        DB.google.metrics.conversions.current = totalResults;
+
+        DB.google.metrics.costPerConv.current =
+          totalResults > 0 ? totalCost / totalResults : 0;
+
+        console.log("✅ Google KPI Totals Updated:", DB.google.metrics);
+      },
+
         // ===============================
         // FACEBOOK CSV UPLOAD (WORKING)
         // ===============================
@@ -2169,6 +2742,7 @@
           input.click();
         },
 
+        
         extractReportRangeFromCSV: (headers, rows) => {
           const normalize = (s) =>
             (s || "").toLowerCase().replace(/\s+/g, " ").trim();
@@ -2218,14 +2792,15 @@
           const headers = rows[0].map((h) => h.trim());
           const rawData = rows.slice(1);
 
-          // ⬇️ NEW: enrich rows with normalized dates
+          const range = App.extractReportRangeFromCSV(headers, rawData);
+
+
+          // ✅ then build enrichedRows
           const enrichedRows = rawData
             .map((row) => {
               const reportDate = App.getRowDate(headers, row);
-              if (!reportDate) return null;
-
               return {
-                report_date: reportDate,
+                report_date: reportDate || (range?.start ?? null),
                 row: row,
               };
             })
@@ -2234,9 +2809,9 @@
           // Keep UI working as-is
           DB.facebook.csvHeaders = headers;
           DB.facebook.csvRows = rawData;
+          DB.facebook.currentRows = rawData; // ✅ ADD THIS
           DB.facebook._allRows = rawData.slice();
 
-          const range = App.extractReportRangeFromCSV(headers, rawData);
 
           const res = await fetch(api("/api/save-facebook-report.php"), {
             method: "POST",
@@ -2248,6 +2823,8 @@
               rows: enrichedRows,
             }),
           });
+
+
 
           const result = await res.json();
 
@@ -2283,49 +2860,97 @@
           App.router("facebook");
           return result; // ✅ REQUIRED
         },
+
+          processGoogleCSV: async (csvText, silent = false) => {
+          let rawLines = csvText
+            .split("\n")
+            .map((l) => l.trim())
+            .filter((l) => l.length);
+
+          if (!rawLines.length) {
+            alert("Google CSV file is empty.");
+            return;
+          }
+
+          // ✅ FIND REAL HEADER ROW (starts with Day,)
+          const headerIndex = rawLines.findIndex((line) =>
+            line.toLowerCase().startsWith("day,")
+          );
+
+          if (headerIndex === -1) {
+            alert("Google CSV format invalid. Could not find Day header.");
+            return;
+          }
+
+          // ✅ Remove Campaign report + date range rows
+          rawLines = rawLines.slice(headerIndex);
+
+          // ✅ Parse rows normally now
+          const parsedRows = rawLines.map(parseCSVRow);
+
+          const headers = parsedRows[0].map((h) => h.trim());
+          const rawData = parsedRows.slice(1);
+
+          // ✅ Convert into enriched row objects with report_date
+          const enrichedRows = rawData
+            .map((row) => {
+              const reportDate = App.getRowDate(headers, row);
+              if (!reportDate) return null;
+
+              return {
+                report_date: reportDate,
+                row: row,
+              };
+            })
+            .filter(Boolean);
+
+          // ✅ Store into Google DB object
+          DB.google.csvHeaders = headers;
+          DB.google.csvRows = rawData;
+          DB.google.currentRows = rawData;
+
+          // ✅ Save into backend
+          const res = await fetch(api("/api/save-google-report.php"), {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              headers: headers,
+              rows: enrichedRows,
+            }),
+          });
+
+          const result = await res.json();
+
+          if (!res.ok || !result.success) {
+            alert("Google upload failed.");
+            console.error(result);
+            return;
+          }
+          // ✅ KPI Calculation
+          App.recalculateGoogleKPIs(headers, rawData);
+          alert(
+            `✅ Google Upload Complete\n\nNew Days Added: ${result.inserted_days}\nDuplicates Skipped: ${result.skipped_days}`
+          );
+          // ✅ Reload latest DB after upload
+          await App.loadLatestGoogleRange();
+          await App.loadGoogleAvailableDates();
+
+          App.router("google");
+
+          console.log("✅ Google Headers:", headers);
+          console.log("✅ Google Days Imported:", enrichedRows.length);
+
+            setTimeout(() => {
+            App.renderGoogleCampaignChart();
+          }, 200);
+        },
       };
-
-      // ===============================
-      // FACEBOOK: LOAD SAVED REPORT BY ID
-      // ===============================
-      // App.loadFacebookReportById = async (id) => {
-      //   const res = await fetch(api(`/api/get-facebook-report.php?id=${id}`));
-      //   if (!res.ok) {
-      //     alert("Failed to load report (API error).");
-      //     return;
-      //   }
-
-      //   let json;
-      //   try {
-      //     json = await res.json();
-      //   } catch (e) {
-      //     alert("Invalid response from server.");
-      //     return;
-      //   }
-
-      //   if (!json || !json.rows) {
-      //     alert("Failed to load selected report.");
-      //     return;
-      //   }
-
-      //   // Overwrite Facebook state
-      //   DB.facebook.csvHeaders = json.headers;
-      //   DB.facebook.csvRows = json.rows;
-      //   DB.facebook._allRows = json.rows.slice();
-
-      //   App.state.facebookReportId = id;
-      //   App.state.facebookReportRangeLabel = "Saved Report";
-
-      //   App.recalculateFacebookKPIs(json.headers, json.rows);
-      //   App.state.facebookForceRender = true;
-      //   App.router("facebook");
-      // };
-      // ===============================
       // FILE INPUT EVENT
       // ===============================
       document.addEventListener("DOMContentLoaded", () => {
         const input = document.getElementById("fbUpload");
 
+        
         if (input) {
           input.addEventListener("change", async (e) => {
             const files = Array.from(e.target.files);
@@ -2353,11 +2978,27 @@
             App.router("facebook");
           });
         }
+        const googleInput = document.getElementById("googleUpload");
+
+        if (googleInput) {
+          googleInput.addEventListener("change", async (e) => {
+            const files = Array.from(e.target.files);
+            if (!files.length) return;
+
+            for (const file of files) {
+              const text = await file.text();
+              await App.processGoogleCSV(text);
+            }
+
+          });
+        }
 
         App.init();
+
       });
     </script>
 
     <input type="file" id="fbUpload" accept=".csv" multiple class="hidden" />
+    <input type="file" id="googleUpload" accept=".csv" multiple class="hidden" />
   </body>
 </html>
