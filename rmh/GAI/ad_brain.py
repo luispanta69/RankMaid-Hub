@@ -184,7 +184,7 @@ class AdPredictorEngine:
 
     def train_model(self, df):
         print("🧠 Training AI Model...")
-        # --- FIX: MOCK DATA MUST HAVE AT LEAST 2 ROWS (0 and 1) ---
+        # MOCK DATA MUST HAVE AT LEAST 2 ROWS (0 and 1)
         X_mock = pd.DataFrame({
             'spend': [100, 50],
             'cpa': [50, 20],
@@ -198,8 +198,7 @@ class AdPredictorEngine:
             'cvr': [0.1, 0.2],
             'click_lead_ratio': [10, 5]
         })
-        y_mock = [0, 1] # Ensure we have both Class 0 (Bad) and Class 1 (Good)
-        
+        y_mock = [0, 1] 
         self.model = RandomForestClassifier()
         self.model.fit(X_mock[self.features], y_mock)
 
@@ -226,11 +225,9 @@ class AdPredictorEngine:
         imputer = SimpleImputer(strategy='constant', fill_value=0)
         X = pd.DataFrame(imputer.fit_transform(df[self.features]), columns=self.features)
         
-        # --- SAFETY FIX FOR PREDICTION ---
         if hasattr(self.model, "classes_") and len(self.model.classes_) > 1:
             probs = self.model.predict_proba(X)[:, 1]
         else:
-            # Fallback if model behaves oddly
             probs = [0.5] * len(df)
 
         results = []
@@ -242,18 +239,35 @@ class AdPredictorEngine:
         print(f"📊 Analyzing {len(latest_status)} ads...")
 
         for idx, row in latest_status.iterrows():
-            # Get prob safely
             row_idx = df.index.get_loc(idx) if idx in df.index else 0
             if isinstance(row_idx, int): prob = probs[row_idx]
-            else: prob = probs[row_idx][0] # Handle duplicates if any
+            else: prob = probs[row_idx][0] 
 
             cpa = row['cpa']
             velocity = row['cpa_velocity']
+            spend = row['spend']
+            conversions = row['conversions']
             
             weakness, projection = self.diagnose_weakness(row, stats)
             action = "WATCH"; reason = ""; rewrites = ""; budget = 0.0
 
-            if velocity > 0.30:
+            # --- FINANCIAL RISK CALCULATIONS ---
+            is_zombie = False
+            projected_waste = 0
+            
+            if conversions == 0 and spend > (TARGET_CPA * 1.5):
+                is_zombie = True
+            
+            if cpa > TARGET_CPA or is_zombie:
+                projected_waste = spend * 0.25 # Estimated weekly bleed
+
+            # --- DECISION LOGIC ---
+            if is_zombie:
+                action = "KILL IMMEDIATE"
+                reason = "🧟 ZOMBIE AD: High spend, 0 conversions. Likely clickbait/bots."
+                rewrites = "Check your hook vs landing page alignment."
+                projected_waste = spend # Use total spend as waste metric
+            elif velocity > 0.30:
                 action = "KILL"; reason = f"CRASH: CPA spiked {int(velocity*100)}%."
                 reason += " " + self.generate_gemini_analysis(row, "CPA Spike")
             elif row['platform'] == 'google' and 0 < row['quality_score'] < 3:
@@ -269,6 +283,10 @@ class AdPredictorEngine:
                 action = "KILL"; reason = f"CPA ${cpa} too high."
             elif cpa < TARGET_CPA:
                 action = "SCALE"; reason = f"Winner ({row['audience_type']})."; budget = row['max_efficient_spend']
+
+            # Append Waste Warning
+            if projected_waste > 50 and "KILL" in action:
+                reason += f" 💸 WASTE RISK: ${int(projected_waste)}/week."
 
             results.append({
                 'campaign_id': row['campaign_name'],

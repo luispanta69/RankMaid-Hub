@@ -57,6 +57,7 @@
         .card.action-watch { border-left: 6px solid var(--warning); }
         .card.action-fix { border-left: 6px solid #db2777; }
         .card.action-rotate { border-left: 6px solid #f97316; } 
+        .card.action-zombie { border-left: 6px solid #18181b; } /* Black for Zombie */
 
         .card-header {
             padding: 24px;
@@ -132,6 +133,7 @@
         .bg-watch { background-color: #fbbf24; color: #78350f; }
         .bg-fix { background-color: #db2777; }
         .bg-rotate { background-color: #f97316; }
+        .bg-zombie { background-color: #18181b; }
 
         .rewrite-box {
             margin-top: 20px; background: #eff6ff; border: 1px solid #bfdbfe;
@@ -148,9 +150,6 @@
     </div>
 
     <?php
-    // ---------------------------------------------------------
-    // 1. DATABASE CONFIG
-    // ---------------------------------------------------------
     $host = "ep-restless-bird-ahug88k0-pooler.c-3.us-east-1.aws.neon.tech";
     $db   = "neondb";
     $user = "neondb_owner";
@@ -165,9 +164,6 @@
         die("<div class='crash-alert'>❌ <strong>Database Connection Failed:</strong> " . $e->getMessage() . "</div>");
     }
 
-    // ---------------------------------------------------------
-    // 2. MARKDOWN FORMATTER
-    // ---------------------------------------------------------
     function formatMarkdown($text) {
         if (empty($text)) return '';
         $text = htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
@@ -188,13 +184,11 @@
         return $final;
     }
 
-    // ---------------------------------------------------------
-    // 3. FETCH DATA
-    // ---------------------------------------------------------
     $sql = "SELECT * FROM ad_predictions 
             WHERE prediction_date > NOW() - INTERVAL '48 HOURS'
             ORDER BY 
-                CASE WHEN suggested_action LIKE '%KILL%' THEN 1 
+                CASE WHEN suggested_action LIKE '%ZOMBIE%' THEN 0
+                     WHEN suggested_action LIKE '%KILL%' THEN 1 
                      WHEN suggested_action LIKE 'FIX%' THEN 2
                      WHEN suggested_action LIKE '%SCALE%' THEN 3 
                      ELSE 4 END,
@@ -208,34 +202,28 @@
         die("Query Error: " . $e->getMessage());
     }
 
-    // ---------------------------------------------------------
-    // 4. DISPLAY LOOP
-    // ---------------------------------------------------------
     if (count($predictions) > 0) {
         foreach ($predictions as $row) {
             $action = $row['suggested_action'];
             $score  = round($row['confidence_score'] * 100);
             $platform = isset($row['platform']) ? strtolower($row['platform']) : 'facebook';
             
-            // Format Texts
             $analysis = formatMarkdown($row['ai_analysis']);
             $rewrites = formatMarkdown($row['ai_rewrites']);
             
-            // Determine Styles
             $cardClass = 'action-watch'; $badgeClass = 'bg-watch';
             if (strpos($action, 'KILL') !== false) { $cardClass = 'action-kill'; $badgeClass = 'bg-kill'; }
+            if (strpos($action, 'ZOMBIE') !== false) { $cardClass = 'action-zombie'; $badgeClass = 'bg-zombie'; }
             if (strpos($action, 'SCALE') !== false) { $cardClass = 'action-scale'; $badgeClass = 'bg-scale'; }
             if (strpos($action, 'FIX') === 0) { $cardClass = 'action-fix'; $badgeClass = 'bg-fix'; }
             if (strpos($action, 'PREPARE') !== false) { $cardClass = 'action-rotate'; $badgeClass = 'bg-rotate'; }
 
-            // Logic Variables
             $velocity = isset($row['cpa_velocity']) ? floatval($row['cpa_velocity']) : 0;
             $daysLeft = isset($row['days_remaining']) ? floatval($row['days_remaining']) : 99;
             $maxSpend = isset($row['max_efficient_spend']) ? floatval($row['max_efficient_spend']) : 0;
             $weakness = isset($row['weakest_link']) ? $row['weakest_link'] : 'None';
             $impact   = isset($row['impact_projection']) ? $row['impact_projection'] : '';
             
-            // Parse AI analysis for QS/Share if not explicitly in DB
             $extra_metric = "";
             if ($platform == 'google') {
                 if (preg_match('/Quality Score \((\d+)\)/', $row['ai_analysis'], $m)) {
@@ -245,7 +233,6 @@
 
             echo "<div class='card $cardClass'>";
             
-            // --- HEADER ---
             echo "<div class='card-header'>";
             echo "  <div class='ad-identity'>";
             echo "    <h3>" . htmlspecialchars($row['ad_id']) . "</h3>";
@@ -261,22 +248,35 @@
             echo "  </div>";
             echo "</div>";
 
-            // --- BODY ---
             echo "<div class='card-body'>";
 
+            // ZOMBIE ALERT
+            if (strpos($action, 'ZOMBIE') !== false) {
+                echo "<div class='crash-alert' style='background:#18181b; border-color:#3f3f46; color:#e4e4e7;'>";
+                echo "  <span style='font-size:24px'>🧟</span>";
+                echo "  <div><strong>ZOMBIE AD DETECTED:</strong> High spend with ZERO conversions. Kill immediately.</div>";
+                echo "</div>";
+            }
             // CRASH ALERT
-            if ($velocity > 0.30) {
+            else if ($velocity > 0.30) {
                 $spike = round($velocity * 100);
                 echo "<div class='crash-alert'>";
                 echo "  <span style='font-size:24px'>📉</span>";
                 echo "  <div><strong>CRASH DETECTED:</strong> CPA spiked {$spike}% recently. Immediate pause recommended.</div>";
                 echo "</div>";
             }
+            // WASTE ALERT
+            if (strpos($row['ai_analysis'], 'WASTE RISK') !== false) {
+                preg_match('/WASTE RISK: \$(.*?)\/week/', $row['ai_analysis'], $matches);
+                $waste = isset($matches[1]) ? $matches[1] : '???';
+                echo "<div class='crash-alert' style='background:#fff1f2; border-color:#fda4af; color:#be123c;'>";
+                echo "  <span style='font-size:24px'>💸</span>";
+                echo "  <div><strong>BUDGET BLEED:</strong> Projected waste: <strong>$$waste/week</strong>.</div>";
+                echo "</div>";
+            }
 
-            // METRICS GRID
             echo "<div class='metrics-grid'>";
 
-            // 1. Weakest Link (Red Alert)
             if ($weakness !== 'None' && strpos($action, 'SCALE') === false) {
                 echo "<div class='metric' style='border-color:#fecaca; background:#fef2f2;'>";
                 echo "<label style='color:#b91c1c;'>⚠️ Bottleneck</label>";
@@ -284,38 +284,32 @@
                 echo "</div>";
             }
 
-            // 2. Velocity
             if ($velocity != 0) {
                 $vColor = $velocity > 0 ? '#dc2626' : '#16a34a';
                 $vIcon  = $velocity > 0 ? '🔺' : '🔻';
                 echo "<div class='metric'><label>Cost Velocity</label><value style='color:$vColor'>$vIcon " . round(abs($velocity) * 100) . "%</value></div>";
             }
 
-            // 3. Max Spend
             if (strpos($action, 'SCALE') !== false && $maxSpend > 0) {
                 echo "<div class='metric'><label>Max Efficient Spend</label><value style='color:#16a34a'>$" . number_format($maxSpend, 2) . "</value></div>";
             }
             
-            // 4. Extra Metrics (QS / Fatigue)
             if ($platform == 'facebook' && isset($row['fatigue_score'])) {
                  echo "<div class='metric'><label>Frequency</label><value>" . round($row['fatigue_score'], 2) . "</value></div>";
             }
-            echo $extra_metric; // Quality Score (if parsed)
+            echo $extra_metric; 
 
-            // 5. Impact Simulator
             if (!empty($impact)) {
                 echo "<div class='impact-alert'>💡 <strong>Opportunity:</strong> " . htmlspecialchars($impact) . "</div>";
             }
 
-            echo "</div>"; // End Metrics
+            echo "</div>"; 
 
-            // AI ANALYSIS
             echo "<div class='ai-section'>";
             echo "  <span class='ai-title'>🤖 Analysis & Reasoning</span>";
             echo "  <div class='ai-content'>$analysis</div>";
             echo "</div>";
 
-            // REWRITES
             if (!empty($rewrites)) {
                 echo "<div class='rewrite-box'>";
                 echo "  <span class='ai-title' style='color:#2563eb'>✨ Recommended Actions</span>";
@@ -323,8 +317,8 @@
                 echo "</div>";
             }
 
-            echo "</div>"; // End Body
-            echo "</div>"; // End Card
+            echo "</div>"; 
+            echo "</div>"; 
         }
     } else {
         echo "<div style='text-align:center; padding:60px; color:#6b7280;'>";
