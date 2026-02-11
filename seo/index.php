@@ -378,6 +378,18 @@
             }
         };
 
+        const GSC_ANALYTICS_API = 'api/gsc-searchanalytics.php';
+        const fetchGscPropertyData = async (client) => {
+            if (!client || !client.url) return null;
+            try {
+                const r = await fetch(GSC_ANALYTICS_API + '?siteUrl=' + encodeURIComponent(client.url));
+                const data = await r.json();
+                return data.error ? null : data;
+            } catch (e) {
+                return null;
+            }
+        };
+
         const loadMockData = () => {
             const names = ["Sky Mount Buys Houses", "Ana Home Buyers", "Byron Buys Homes", "Charm City Builders", "Crof Maryland", "HK Buy Houses", "Vegas Cash Offers", "Miami Quick Sale"];
             const specialists = ["Gene", "Dylan", "Jaeson", "Zaldy"];
@@ -726,45 +738,71 @@
             getTabContent: (tab, client) => {
                 // 1. PERFORMANCE TAB
                 if(tab === 'performance') {
-                    const kw = client.keywords[0];
-                    const potentialTraffic = Math.round(kw.volume * 0.32);
+                    if (client.gscDataLoading) {
+                        return `
+                        <div class="flex flex-col items-center justify-center py-20">
+                            <i class="fa-solid fa-spinner fa-spin text-4xl text-sky-500 mb-4"></i>
+                            <p class="text-slate-600 font-medium">Loading Search Console data for this property…</p>
+                        </div>`;
+                    }
+                    const gsc = client.gscData;
+                    const summary = gsc && gsc.summary ? gsc.summary : null;
+                    const impressions = summary ? summary.impressions : (client.kpi && client.kpi.impressions !== undefined ? client.kpi.impressions : 0);
+                    const clicks = summary ? summary.clicks : (client.kpi && client.kpi.leads !== undefined ? client.kpi.leads : 0);
+                    const ctrVal = summary ? (summary.ctr * 100).toFixed(2) : (client.kpi && client.kpi.ctr !== undefined ? client.kpi.ctr : '0');
+                    const position = summary ? summary.position.toFixed(1) : (client.keywords && client.keywords[0] ? client.keywords[0].pos : '—');
+                    const dateRange = gsc && gsc.startDate && gsc.endDate ? `${gsc.startDate} – ${gsc.endDate}` : 'Last 90 days';
+                    const topQueries = (gsc && gsc.topQueries && gsc.topQueries.length) ? gsc.topQueries : [];
+                    const hasGsc = !!gsc;
+                    const queriesTableRows = hasGsc && topQueries.length
+                        ? topQueries.map(q => `<tr><td class="p-4 font-mono text-slate-700">${q.query}</td><td class="p-4 text-right">${q.impressions.toLocaleString()}</td><td class="p-4 text-right font-bold text-indigo-600">${q.clicks.toLocaleString()}</td><td class="p-4 text-right">#${q.position.toFixed(1)}</td><td class="p-4 text-right">${(q.ctr * 100).toFixed(2)}%</td></tr>`).join('')
+                        : (client.keywords && client.keywords[0] && client.keywords[0].query !== '—' ? `<tr><td class="p-4 font-mono font-bold text-slate-700">${client.keywords[0].query}</td><td class="p-4 text-right">${(client.keywords[0].volume || 0).toLocaleString()}</td><td class="p-4 text-right font-bold text-indigo-600">${(client.kpi && client.kpi.leads) || 0}</td><td class="p-4 text-right">#${(client.keywords[0].pos || 0)}</td><td class="p-4 text-right">${(client.keywords[0].ctr || 0)}%</td></tr>` : '<tr><td class="p-4 text-slate-400" colspan="5">No query data</td></tr>');
                     return `
                     <div class="space-y-8">
+                        ${hasGsc ? `<p class="text-xs text-slate-500">Data from Google Search Console · ${dateRange}</p>` : ''}
                         <div class="grid grid-cols-4 gap-4">
                             <div class="p-5 border border-slate-200 rounded-xl bg-slate-50">
                                 <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-2">Impressions</p>
-                                <h3 class="text-3xl font-black text-slate-800">${client.kpi.impressions.toLocaleString()}</h3>
-                                <p class="text-xs text-emerald-600 font-bold mt-2"><i class="fa-solid fa-arrow-up"></i> 12% vs last mo</p>
+                                <h3 class="text-3xl font-black text-slate-800">${Number(impressions).toLocaleString()}</h3>
+                                ${!hasGsc ? '<p class="text-xs text-slate-400 mt-2">—</p>' : ''}
                             </div>
                             <div class="p-5 border border-slate-200 rounded-xl bg-slate-50">
-                                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-2">SEO Leads</p>
-                                <h3 class="text-3xl font-black text-indigo-600">${client.kpi.leads}</h3>
-                                <p class="text-xs text-emerald-600 font-bold mt-2"><i class="fa-solid fa-fire"></i> High Intent</p>
+                                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-2">Clicks</p>
+                                <h3 class="text-3xl font-black text-indigo-600">${Number(clicks).toLocaleString()}</h3>
+                                ${!hasGsc ? '<p class="text-xs text-slate-400 mt-2">—</p>' : ''}
                             </div>
                             <div class="p-5 border border-slate-200 rounded-xl bg-slate-50">
                                 <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-2">Avg CTR</p>
-                                <h3 class="text-3xl font-black text-slate-800">${client.kpi.ctr}%</h3>
+                                <h3 class="text-3xl font-black text-slate-800">${ctrVal}%</h3>
                             </div>
                             <div class="p-5 border border-slate-200 rounded-xl bg-slate-50">
-                                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-2">Health Score</p>
-                                <h3 class="text-3xl font-black text-emerald-600">98%</h3>
+                                <p class="text-[10px] text-slate-500 uppercase font-bold tracking-wider mb-2">Avg Position</p>
+                                <h3 class="text-3xl font-black text-slate-800">${position}</h3>
                             </div>
                         </div>
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <div class="p-6 border border-slate-200 rounded-xl shadow-sm"><h3 class="font-bold text-slate-700 mb-6 text-sm">Traffic Trend (90 Days)</h3><div class="h-64 w-full"><canvas id="chartImpressions"></canvas></div></div>
-                            <div class="p-6 border border-slate-200 rounded-xl shadow-sm"><h3 class="font-bold text-slate-700 mb-6 text-sm">Conversion Trend</h3><div class="h-64 w-full"><canvas id="chartLeads"></canvas></div></div>
+                            <div class="p-6 border border-slate-200 rounded-xl shadow-sm"><h3 class="font-bold text-slate-700 mb-6 text-sm">Impressions (90 Days)</h3><div class="h-64 w-full"><canvas id="chartImpressions"></canvas></div></div>
+                            <div class="p-6 border border-slate-200 rounded-xl shadow-sm"><h3 class="font-bold text-slate-700 mb-6 text-sm">Clicks (90 Days)</h3><div class="h-64 w-full"><canvas id="chartLeads"></canvas></div></div>
                         </div>
                         <div>
-                            <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-lightbulb text-yellow-500"></i> High-Impact Opportunities</h3>
+                            <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-magnifying-glass text-sky-500"></i> Top Queries</h3>
                             <div class="overflow-hidden border border-slate-200 rounded-lg shadow-sm">
                                 <table class="w-full text-left text-xs">
-                                    <thead class="bg-gray-50 font-bold text-gray-500 uppercase"><tr><th class="p-4">Query</th><th class="p-4 text-right">Vol</th><th class="p-4 text-right">Pos</th><th class="p-4 text-right">CTR</th><th class="p-4">Strategy</th></tr></thead>
-                                    <tbody class="divide-y divide-gray-100 bg-white">
-                                        <tr><td class="p-4 font-mono font-bold text-slate-700">${kw.query}</td><td class="p-4 text-right">${kw.volume}</td><td class="p-4 text-right font-bold text-indigo-600">#${kw.pos}</td><td class="p-4 text-right text-red-500 font-bold">${kw.ctr}%</td><td class="p-4"><button class="text-sky-600 font-bold hover:underline" onclick="App.switchTab('content', ${client.id})">Optimize Content (+${potentialTraffic} Visits)</button></td></tr>
-                                    </tbody>
+                                    <thead class="bg-gray-50 font-bold text-gray-500 uppercase"><tr><th class="p-4">Query</th><th class="p-4 text-right">Impressions</th><th class="p-4 text-right">Clicks</th><th class="p-4 text-right">Position</th><th class="p-4 text-right">CTR</th></tr></thead>
+                                    <tbody class="divide-y divide-gray-100 bg-white">${queriesTableRows}</tbody>
                                 </table>
                             </div>
                         </div>
+                        ${(gsc && gsc.topPages && gsc.topPages.length) ? `
+                        <div>
+                            <h3 class="font-bold text-gray-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-file-lines text-slate-500"></i> Top Pages</h3>
+                            <div class="overflow-hidden border border-slate-200 rounded-lg shadow-sm">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-gray-50 font-bold text-gray-500 uppercase"><tr><th class="p-4">Page</th><th class="p-4 text-right">Impressions</th><th class="p-4 text-right">Clicks</th><th class="p-4 text-right">Position</th><th class="p-4 text-right">CTR</th></tr></thead>
+                                    <tbody class="divide-y divide-gray-100 bg-white">${gsc.topPages.map(p => `<tr><td class="p-4 font-mono text-slate-700 truncate max-w-xs" title="${p.page}">${p.page}</td><td class="p-4 text-right">${p.impressions.toLocaleString()}</td><td class="p-4 text-right font-bold text-indigo-600">${p.clicks.toLocaleString()}</td><td class="p-4 text-right">#${p.position.toFixed(1)}</td><td class="p-4 text-right">${(p.ctr * 100).toFixed(2)}%</td></tr>`).join('')}</tbody>
+                                </table>
+                            </div>
+                        </div>` : ''}
                     </div>`;
                 }
 
@@ -974,10 +1012,16 @@
                 App.router('dashboard');
             },
 
-            openClient: (id) => {
+            openClient: async (id) => {
                 const client = DB.clients.find(c => c.id === id);
                 document.getElementById('page-title').innerHTML = `<button onclick="App.router('dashboard')" class="text-slate-400 mr-2 hover:text-slate-800"><i class="fa-solid fa-arrow-left"></i></button> ${client.name}`;
                 document.getElementById('content-area').innerHTML = UI.renderCockpit(client);
+                client.gscData = null;
+                client.gscDataLoading = true;
+                App.switchTab('performance', id);
+                const data = await fetchGscPropertyData(client);
+                client.gscData = data || null;
+                client.gscDataLoading = false;
                 App.switchTab('performance', id);
             },
 
@@ -1070,26 +1114,30 @@
             // --- CHARTS ---
             renderCharts: (client) => {
                 setTimeout(() => {
+                    const ts = client.gscData && client.gscData.timeSeries && client.gscData.timeSeries.length;
+                    const labels = ts ? client.gscData.timeSeries.map(r => r.date) : (client.kpi && client.kpi.history ? client.kpi.history.map(h => h.day) : []);
+                    const impData = ts ? client.gscData.timeSeries.map(r => r.impressions) : (client.kpi && client.kpi.history ? client.kpi.history.map(h => h.imp) : []);
+                    const clickData = ts ? client.gscData.timeSeries.map(r => r.clicks) : (client.kpi && client.kpi.history ? client.kpi.history.map(h => h.leads) : []);
                     const ctxImp = document.getElementById('chartImpressions');
-                    if(ctxImp) {
+                    if(ctxImp && labels.length) {
                         new Chart(ctxImp, {
                             type: 'line',
                             data: {
-                                labels: client.kpi.history.map(h => h.day),
-                                datasets: [{ label: 'Traffic', data: client.kpi.history.map(h => h.imp), borderColor: '#0ea5e9', tension: 0.4, fill: true, backgroundColor: '#e0f2fe', borderWidth: 2, pointRadius: 0 }]
+                                labels,
+                                datasets: [{ label: 'Impressions', data: impData, borderColor: '#0ea5e9', tension: 0.4, fill: true, backgroundColor: '#e0f2fe', borderWidth: 2, pointRadius: 0 }]
                             },
-                            options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } }, responsive: true, maintainAspectRatio: false }
+                            options: { plugins: { legend: { display: false } }, scales: { x: { display: labels.length <= 31, ticks: { maxTicksLimit: 10 } }, y: { display: true, beginAtZero: true } }, responsive: true, maintainAspectRatio: false }
                         });
                     }
                     const ctxLeads = document.getElementById('chartLeads');
-                    if(ctxLeads) {
+                    if(ctxLeads && labels.length) {
                         new Chart(ctxLeads, {
                             type: 'bar',
                             data: {
-                                labels: client.kpi.history.map(h => h.day),
-                                datasets: [{ label: 'Leads', data: client.kpi.history.map(h => h.leads), backgroundColor: '#4f46e5', borderRadius: 2 }]
+                                labels,
+                                datasets: [{ label: 'Clicks', data: clickData, backgroundColor: '#4f46e5', borderRadius: 2 }]
                             },
-                            options: { plugins: { legend: { display: false } }, scales: { x: { display: false }, y: { display: false } }, responsive: true, maintainAspectRatio: false }
+                            options: { plugins: { legend: { display: false } }, scales: { x: { display: labels.length <= 31, ticks: { maxTicksLimit: 10 } }, y: { display: true, beginAtZero: true } }, responsive: true, maintainAspectRatio: false }
                         });
                     }
                 }, 50);
