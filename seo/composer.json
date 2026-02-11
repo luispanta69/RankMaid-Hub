@@ -1,0 +1,11 @@
+{
+    "name": "rankmaid/seo-dashboard",
+    "description": "SEO dashboard with Google Search Console integration",
+    "require": {
+        "php": ">=7.4",
+        "google/apiclient": "^2.15"
+    },
+    "config": {
+        "vendor-dir": "vendor"
+    }
+}
