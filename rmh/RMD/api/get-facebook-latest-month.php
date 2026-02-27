@@ -35,12 +35,12 @@ $headers = [];
 
 while ($r = $stmt->fetch(PDO::FETCH_ASSOC)) {
 
-    // Pull headers from DB (first row only)
+    // ✅ Pull headers from DB (first row only)
     if (empty($headers) && !empty($r["headers"])) {
         $headers = json_decode($r["headers"], true);
     }
 
-    // Decode rows
+    // ✅ Decode rows
     $dayRows = json_decode($r["raw_row"], true);
 
     if (is_array($dayRows)) {

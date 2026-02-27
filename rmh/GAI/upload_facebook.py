@@ -19,6 +19,26 @@ DB_URL = (
     f"?sslmode=require&options=endpoint%3D{ENDPOINT_ID}"
 )
 
+def find_header_row_facebook(filepath):
+    """
+    Scans the file line-by-line to find the row number containing headers for Facebook CSVs.
+    Returns: (row_number, encoding)
+    """
+    encodings = ['utf-8', 'utf-16', 'latin-1', 'cp1252', 'utf-8-sig'] # Common encodings
+    
+    for enc in encodings:
+        try:
+            with open(filepath, 'r', encoding=enc) as f:
+                for i, line in enumerate(f):
+                    line_lower = line.lower()
+                    if ('campaign name' in line_lower or 'campaign' in line_lower) and \
+                       ('amount spent (usd)' in line_lower or 'amount spent' in line_lower or 'spend' in line_lower):
+                        return i, enc
+        except UnicodeError:
+            continue # Wrong encoding, try next
+            
+    return None, None
+
 def upload_facebook_ads():
     engine = create_engine(DB_URL)
     
@@ -37,8 +57,19 @@ def upload_facebook_ads():
     all_data = []
     for filename in csv_files:
         print(f"   Processing {filename}...")
+        
+        # 1. FIND THE HEADER ROW SAFELY
+        skip_count, detected_encoding = find_header_row_facebook(filename)
+        
+        if skip_count is None:
+            print(f"      ⚠️ Skipping {filename}: Could not find header row (must contain 'Campaign name' and 'Amount spent (USD)').")
+            continue
+            
+        print(f"      ✅ Header found at row {skip_count} (Encoding: {detected_encoding})")
+
         try:
-            df = pd.read_csv(filename)
+            # 2. LOAD DATA
+            df = pd.read_csv(filename, skiprows=skip_count, encoding=detected_encoding)
             
             # Map to Universal Schema
             universal_df = pd.DataFrame()

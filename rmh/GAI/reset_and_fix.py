@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, text
 # CONFIGURATION
 # ==========================================
 DB_USER = "neondb_owner" 
-DB_PASS = "npg_kvbAhwHVu15g" # <--- PASTE PASSWORD
+DB_PASS = "npg_kvbAhwHVu15g"
 DB_HOST = "ep-restless-bird-ahug88k0-pooler.c-3.us-east-1.aws.neon.tech"
 DB_NAME = "neondb"
 ENDPOINT_ID = "ep-restless-bird-ahug88k0-pooler"

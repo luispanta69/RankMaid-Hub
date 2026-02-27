@@ -145,7 +145,7 @@
 
 <div class="container">
     <div class="header">
-        <h1>🧠 Universal Ad Command Center</h1>
+        <h1>Universal Ad Command Center</h1>
         <p>Analyzing Facebook & Google Ads • Velocity • Saturation • Quality Score</p>
     </div>
 

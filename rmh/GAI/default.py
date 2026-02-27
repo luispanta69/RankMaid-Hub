@@ -39,7 +39,7 @@ def analyze_creative_with_gemini(ad_image_url, ad_headline, ad_body):
     
     # In a real scenario, you would download the image bytes first or use the file API
     # For this example, we assume we are passing text description or using the Vision capabilities
-    response = model.generate_content([prompt]) # If using image bytes, pass them here
+    response = model.generate_content([prompt]) 
     
     # 3. Parse JSON
     try:

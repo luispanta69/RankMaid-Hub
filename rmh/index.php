@@ -1967,14 +1967,20 @@
                         badgeColor = "bg-green-100 text-green-800 border-green-200";
                         badgeText = "High Performer";
                         icon = "fa-arrow-trend-up";
-                        instruction = `
-                            <ol class="list-decimal list-inside space-y-2">
-                                <li>Navigate to campaign: <strong>${campaignName}</strong>.</li>
-                                <li>Find ad set: <strong>${adSetName}</strong>.</li>
-                                <li><strong>Action:</strong> Increase daily budget by 20-30%.</li>
-                                <li><strong>Reason:</strong> High ROAS of ${roas}.</li>
-                            </ol>
-                        `;
+                      // Compute a dollar-based suggestion. Prefer an explicit daily budget if provided,
+                      // otherwise estimate daily spend using a 30-day fallback.
+                      const days = op.days ? parseInt(op.days) : 30;
+                      const currentDaily = op.daily_budget ? parseFloat(op.daily_budget) : (op.spend / Math.max(1, days));
+                      const lowNew = currentDaily * 1.20;
+                      const highNew = currentDaily * 1.30;
+                      instruction = `
+                        <ol class="list-decimal list-inside space-y-2">
+                          <li>Navigate to campaign: <strong>${campaignName}</strong>.</li>
+                          <li>Find ad set: <strong>${adSetName}</strong>.</li>
+                          <li><strong>Action:</strong> Increase daily budget from <strong>$${currentDaily.toFixed(0)}</strong> to <strong>$${lowNew.toFixed(0)}–$${highNew.toFixed(0)}</strong>.</li>
+                          <li><strong>Reason:</strong> High ROAS of ${roas}.</li>
+                        </ol>
+                      `;
                     } else if (op.type === "fatigue") {
                         // FATIGUE
                         const ctr = op.ctr.toFixed(2) + "%";

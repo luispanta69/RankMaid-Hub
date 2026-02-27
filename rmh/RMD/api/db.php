@@ -1,13 +1,13 @@
 <?php
 
-// Neon PostgreSQL Remote Connection
+// ✅ Neon PostgreSQL Remote Connection
 $host = "ep-restless-bird-ahug88k0-pooler.c-3.us-east-1.aws.neon.tech";
 $db = "neondb";
 $user = "neondb_owner";
 $pass = "npg_kvbAhwHVu15g";
 $port = "5432";
 
-// required SSL + Neon endpoint option
+// ✅ Required SSL + Neon endpoint option
 $dsn = "pgsql:host=$host;port=$port;dbname=$db;sslmode=require;options=endpoint=ep-restless-bird-ahug88k0";
 
 $options = [

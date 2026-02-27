@@ -4,7 +4,7 @@
  * Handles: Summary stats, ROAS analysis, and Creative Fatigue/CPA Alerts
  */
 
-header('Content-Type: application/json'); 
+header('Content-Type: application/json');
 
 require_once 'db.php'; // Use centralized PDO connection
 

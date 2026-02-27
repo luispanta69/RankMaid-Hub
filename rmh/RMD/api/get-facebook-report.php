@@ -36,8 +36,8 @@ foreach ($dates as $i => $curr) {
     $expected = date("Y-m-d", strtotime("$prev +1 day"));
 
     if ($curr === $expected) {
-                $prev = $curr;
-            } else {
+        $prev = $curr;
+    } else {
         $ranges[md5($start . $prev)] = [$start, $prev];
         $start = $curr;
         $prev = $curr;

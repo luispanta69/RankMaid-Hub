@@ -51,9 +51,9 @@ try {
                 }
             }
             fclose($handle);
-            $results[] = "$csv_file - Processed";
+            $results[] = "✓ $csv_file - Processed";
         } else {
-            $results[] = "$csv_file - Could not open file";
+            $results[] = "❌ $csv_file - Could not open file";
         }
     }
 

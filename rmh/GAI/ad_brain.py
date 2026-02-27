@@ -20,7 +20,7 @@ DB_NAME = "neondb"
 ENDPOINT_ID = "ep-restless-bird-ahug88k0-pooler"
 
 # API & THRESHOLDS
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyCxdmqcA7WYOOHoaeqT_Lpg13Fpwc9ucvY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyDzWDD0Yf1rRcue-hT01cwf-RqMnPQhviE")
 TARGET_CPA = 50.00   
 KILL_CPA = 80.00     
 FATIGUE_LIMIT_FB = 2.5 

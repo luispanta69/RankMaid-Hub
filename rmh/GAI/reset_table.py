@@ -46,7 +46,7 @@ def reset_database():
             );
         """))
         
-    print("✅ Table Reset! Now run your upload scripts.")
+    print("Table Reset! Now run your upload scripts.")
 
 if __name__ == "__main__":
     reset_database()

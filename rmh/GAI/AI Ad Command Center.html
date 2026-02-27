@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<!-- saved from url=(0047)http://localhost/RankMaid-Hub/rmh/GAI/index.php -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Ad Command Center</title>
+    <link href="./AI Ad Command Center_files/css2" rel="stylesheet">
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-secondary: #6b7280;
+            --accent-blue: #2563eb;
+            --danger: #ef4444;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --purple: #8b5cf6;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --radius: 16px;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 40px 20px;
+            line-height: 1.5;
+        }
+
+        .container { max-width: 1100px; margin: 0 auto; }
+
+        .header {
+            margin-bottom: 40px;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 24px;
+        }
+        .header h1 { margin: 0; font-size: 30px; font-weight: 800; color: #111827; letter-spacing: -0.025em; }
+        .header p { margin: 8px 0 0; color: var(--text-secondary); font-size: 16px; }
+
+        /* CARD STYLES */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            margin-bottom: 30px;
+            overflow: hidden;
+            transition: transform 0.2s ease;
+            border: 1px solid #e5e7eb;
+        }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.15); }
+
+        /* Status Borders */
+        .card.action-kill { border-left: 6px solid var(--danger); }
+        .card.action-scale { border-left: 6px solid var(--success); }
+        .card.action-watch { border-left: 6px solid var(--warning); }
+        .card.action-fix { border-left: 6px solid #db2777; }
+        .card.action-rotate { border-left: 6px solid #f97316; } 
+        .card.action-zombie { border-left: 6px solid #18181b; } /* Black for Zombie */
+
+        .card-header {
+            padding: 24px;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            background: #ffffff;
+        }
+
+        .ad-identity h3 { margin: 0 0 8px; font-size: 18px; font-weight: 700; line-height: 1.4; color: #111; }
+        
+        /* Tags */
+        .tag { 
+            font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+            padding: 4px 10px; border-radius: 6px; display: inline-block; margin-right: 6px;
+        }
+        .tag-fb { background: #e7f5ff; color: #1877f2; }
+        .tag-google { background: #fce8e6; color: #ea4335; }
+        .tag-fatigue { background: #fee2e2; color: #991b1b; }
+
+        .card-body { padding: 24px; }
+
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .metric { 
+            padding: 12px; border-radius: 8px; border: 1px solid #f3f4f6; background: #f9fafb;
+            display: flex; flex-direction: column; justify-content: center;
+        }
+        .metric label { font-size: 11px; color: var(--text-secondary); text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+        .metric value { font-size: 15px; font-weight: 700; color: #111; }
+
+        /* ALERTS */
+        .crash-alert { 
+            background-color: #fef2f2; border: 1px solid #fca5a5; 
+            padding: 16px; border-radius: 12px; color: #991b1b; 
+            margin-bottom: 24px; display: flex; align-items: center; gap: 12px;
+        }
+        .impact-alert {
+            background-color: #f0fdf4; border: 1px solid #86efac;
+            padding: 12px; border-radius: 8px; color: #166534;
+            font-size: 14px; font-weight: 500; grid-column: span 2;
+        }
+
+        /* AI CONTENT */
+        .ai-section { margin-top: 24px; padding-top: 20px; border-top: 1px solid #f3f4f6; }
+        .ai-title { 
+            font-size: 12px; font-weight: 800; color: #9ca3af; 
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; display: block; 
+        }
+        
+        /* Markdown Styling */
+        .ai-content { font-size: 15px; color: #374151; line-height: 1.7; }
+        .ai-content strong { color: #111; font-weight: 700; }
+        .md-list-item { 
+            margin-left: 0; padding-left: 20px; margin-bottom: 8px; position: relative; 
+        }
+        .md-list-item::before { 
+            content: "•"; color: var(--accent-blue); font-weight: bold; font-size: 20px;
+            position: absolute; left: 0; top: -6px;
+        }
+        .md-paragraph { margin-bottom: 16px; }
+        
+        .badge { padding: 6px 14px; border-radius: 50px; color: white; font-weight: 700; font-size: 12px; letter-spacing: 0.5px; }
+        .bg-kill { background-color: var(--danger); }
+        .bg-scale { background-color: var(--success); }
+        .bg-watch { background-color: #fbbf24; color: #78350f; }
+        .bg-fix { background-color: #db2777; }
+        .bg-rotate { background-color: #f97316; }
+        .bg-zombie { background-color: #18181b; }
+
+        .rewrite-box {
+            margin-top: 20px; background: #eff6ff; border: 1px solid #bfdbfe;
+            padding: 20px; border-radius: 12px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <h1>Universal Ad Command Center</h1>
+        <p>Analyzing Facebook &amp; Google Ads • Velocity • Saturation • Quality Score</p>
+    </div>
+
+    <div class="card action-kill"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN420 | I Hear It All The Time | 3 minutes BPCON2021, Alex Review Video |  Lookalike(US,3%-4%)-340-ROWS  – 09/30 –</h3><span class="tag tag-fb">Facebook</span>  </div>  <div style="text-align:right">    <span class="badge bg-kill">KILL</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 71%</div>  </div></div><div class="card-body"><div class="crash-alert">  <span style="font-size:24px">📉</span>  <div><strong>CRASH DETECTED:</strong> CPA spiked 463750% recently. Immediate pause recommended.</div></div><div class="metrics-grid"><div class="metric" style="border-color:#fecaca; background:#fef2f2;"><label style="color:#b91c1c;">⚠️ Bottleneck</label><value style="color:#b91c1c; font-size:13px;">Creative (CTR)</value></div><div class="metric"><label>Cost Velocity</label><value style="color:#dc2626">🔺 463750%</value></div><div class="metric"><label>Frequency</label><value>0</value></div><div class="impact-alert">💡 <strong>Opportunity:</strong> Fixing CTR to 1.23% would lower CPA to $19.11.</div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"><div class="md-paragraph">CRASH: CPA spiked 463750%. AI Error: 403 Your API key was</div></div></div></div></div><div class="card action-scale"><div class="card-header">  <div class="ad-identity">    <h3>Unknown Keyword</h3><span class="tag tag-google">Google Ads</span>  </div>  <div style="text-align:right">    <span class="badge bg-scale">SCALE AGGRESSIVELY</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 48%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric"><label>Max Efficient Spend</label><value style="color:#16a34a">$43,880.00</value></div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"><div class="md-paragraph">Market Share Opportunity.</div></div></div></div></div><div class="card action-scale"><div class="card-header">  <div class="ad-identity">    <h3>Unknown Keyword</h3><span class="tag tag-google">Google Ads</span>  </div>  <div style="text-align:right">    <span class="badge bg-scale">SCALE AGGRESSIVELY</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 47%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric"><label>Max Efficient Spend</label><value style="color:#16a34a">$43,880.00</value></div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"><div class="md-paragraph">Market Share Opportunity.</div></div></div></div></div><div class="card action-scale"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN420 | I Hear It All The Time | 3 minutes BPCON2021, Alex Review Video |  Lookalike(US,3%-4%)-340-ROWS  – 09/30 –</h3><span class="tag tag-fb">Facebook</span>  </div>  <div style="text-align:right">    <span class="badge bg-scale">SCALE</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 41%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric"><label>Max Efficient Spend</label><value style="color:#16a34a">$79.98</value></div><div class="metric"><label>Frequency</label><value>1.26</value></div><div class="impact-alert">💡 <strong>Opportunity:</strong> Fixing CTR to 1.2% -&gt; CPA $19.11.</div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"><div class="md-paragraph">Winner (Lookalike).</div></div></div></div></div><div class="card action-scale"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN420 | I Hear It All The Time | 3 minutes BPCON2021, Alex Review Video |  Lookalike(US,3%-4%)-340-ROWS  – 09/30 –</h3><span class="tag tag-fb">Facebook</span>  </div>  <div style="text-align:right">    <span class="badge bg-scale">SCALE</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 36%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric"><label>Max Efficient Spend</label><value style="color:#16a34a">$79.98</value></div><div class="metric"><label>Frequency</label><value>1.26</value></div><div class="impact-alert">💡 <strong>Opportunity:</strong> Fixing CTR to 1.2% -&gt; CPA $19.11.</div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"><div class="md-paragraph">Winner (Lookalike).</div></div></div></div></div><div class="card action-watch"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN436 - Simply Put: new lines  | J Pointing at screen &amp; J in KITCHEN   |1 - Property investing + Real estate Narrow Landlord (M) 24/10 –</h3><span class="tag tag-fb">Facebook</span><span class="tag tag-fatigue">⏳ Ends in 0 days</span>  </div>  <div style="text-align:right">    <span class="badge bg-watch">WATCH</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 71%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric"><label>Frequency</label><value>0</value></div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"></div></div></div></div><div class="card action-watch"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN437 - Stop Chasing Motivated Seller Leads! | N1-RANKING-WEBSITE, RIDE | 5 - Property investing + Real estate investment association + Real propert Narrow Household income: top 10% (M) 07/09</h3><span class="tag tag-fb">Facebook</span>  </div>  <div style="text-align:right">    <span class="badge bg-watch">WATCH</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 71%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric" style="border-color:#fecaca; background:#fef2f2;"><label style="color:#b91c1c;">⚠️ Bottleneck</label><value style="color:#b91c1c; font-size:13px;">Creative (CTR)</value></div><div class="metric"><label>Frequency</label><value>0</value></div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"></div></div></div></div><div class="card action-watch"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN423 | PPL Original, new lines | 3 minutes BPCON2021 - N1-RANKING-WEBSITE |  Property-investing+Real estate investment association+Real-property-Narrow-Household-income:top10%-(M)  – 09/30 –</h3><span class="tag tag-fb">Facebook</span><span class="tag tag-fatigue">⏳ Ends in 0 days</span>  </div>  <div style="text-align:right">    <span class="badge bg-watch">WATCH</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 71%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric" style="border-color:#fecaca; background:#fef2f2;"><label style="color:#b91c1c;">⚠️ Bottleneck</label><value style="color:#b91c1c; font-size:13px;">Creative (CTR)</value></div><div class="metric"><label>Frequency</label><value>0</value></div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"></div></div></div></div><div class="card action-watch"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN423 | PPL Original, new lines | 3 minutes BPCON2021 - N1-RANKING-WEBSITE |  Property-investing+Real estate investment association+Real-property-Narrow-Household-income:top10%-(M)  – 09/30 –</h3><span class="tag tag-fb">Facebook</span>  </div>  <div style="text-align:right">    <span class="badge bg-watch">WATCH</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 45%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric" style="border-color:#fecaca; background:#fef2f2;"><label style="color:#b91c1c;">⚠️ Bottleneck</label><value style="color:#b91c1c; font-size:13px;">Creative (CTR)</value></div><div class="metric"><label>Frequency</label><value>1.06</value></div><div class="impact-alert">💡 <strong>Opportunity:</strong> Fixing CTR to 1.2% -&gt; CPA $nan.</div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"></div></div></div></div><div class="card action-watch"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN435 - Simply Put: new lines  | J&amp;J- BROKEN KITCHEN | Property finder (property) (M) 24/10</h3><span class="tag tag-fb">Facebook</span>  </div>  <div style="text-align:right">    <span class="badge bg-watch">WATCH</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 45%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric"><label>Frequency</label><value>1.15</value></div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"></div></div></div></div><div class="card action-watch"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN436 - Simply Put: new lines  | J Pointing at screen &amp; J in KITCHEN   |1 - Property investing + Real estate Narrow Landlord (M) 24/10 –</h3><span class="tag tag-fb">Facebook</span>  </div>  <div style="text-align:right">    <span class="badge bg-watch">WATCH</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 45%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric"><label>Frequency</label><value>1.21</value></div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"></div></div></div></div><div class="card action-watch"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN437 - Stop Chasing Motivated Seller Leads! | N1-RANKING-WEBSITE, RIDE | 5 - Property investing + Real estate investment association + Real propert Narrow Household income: top 10% (M) 07/09</h3><span class="tag tag-fb">Facebook</span>  </div>  <div style="text-align:right">    <span class="badge bg-watch">WATCH</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 45%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric"><label>Frequency</label><value>1.05</value></div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"></div></div></div></div><div class="card action-watch"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN435 - Simply Put: new lines  | J&amp;J- BROKEN KITCHEN | Property finder (property) (M) 24/10</h3><span class="tag tag-fb">Facebook</span>  </div>  <div style="text-align:right">    <span class="badge bg-watch">WATCH</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 42%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric"><label>Frequency</label><value>1.15</value></div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"></div></div></div></div><div class="card action-watch"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN437 - Stop Chasing Motivated Seller Leads! | N1-RANKING-WEBSITE, RIDE | 5 - Property investing + Real estate investment association + Real propert Narrow Household income: top 10% (M) 07/09</h3><span class="tag tag-fb">Facebook</span>  </div>  <div style="text-align:right">    <span class="badge bg-watch">WATCH</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 42%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric"><label>Frequency</label><value>1.05</value></div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"></div></div></div></div><div class="card action-watch"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN423 | PPL Original, new lines | 3 minutes BPCON2021 - N1-RANKING-WEBSITE |  Property-investing+Real estate investment association+Real-property-Narrow-Household-income:top10%-(M)  – 09/30 –</h3><span class="tag tag-fb">Facebook</span>  </div>  <div style="text-align:right">    <span class="badge bg-watch">WATCH</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 42%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric" style="border-color:#fecaca; background:#fef2f2;"><label style="color:#b91c1c;">⚠️ Bottleneck</label><value style="color:#b91c1c; font-size:13px;">Creative (CTR)</value></div><div class="metric"><label>Frequency</label><value>1.06</value></div><div class="impact-alert">💡 <strong>Opportunity:</strong> Fixing CTR to 1.2% -&gt; CPA $nan.</div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"></div></div></div></div><div class="card action-watch"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN436 - Simply Put: new lines  | J Pointing at screen &amp; J in KITCHEN   |1 - Property investing + Real estate Narrow Landlord (M) 24/10 –</h3><span class="tag tag-fb">Facebook</span>  </div>  <div style="text-align:right">    <span class="badge bg-watch">WATCH</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 42%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric"><label>Frequency</label><value>1.21</value></div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"></div></div></div></div><div class="card action-watch"><div class="card-header">  <div class="ad-identity">    <h3>DFY-BKN435 - Simply Put: new lines  | J&amp;J- BROKEN KITCHEN | Property finder (property) (M) 24/10</h3><span class="tag tag-fb">Facebook</span><span class="tag tag-fatigue">⏳ Ends in 0 days</span>  </div>  <div style="text-align:right">    <span class="badge bg-watch">WATCH</span>    <div style="font-size:11px; color:#9ca3af; margin-top:6px;">AI Confidence: 71%</div>  </div></div><div class="card-body"><div class="metrics-grid"><div class="metric"><label>Cost Velocity</label><value style="color:#16a34a">🔻 100%</value></div><div class="metric"><label>Frequency</label><value>0</value></div></div><div class="ai-section">  <span class="ai-title">🤖 Analysis &amp; Reasoning</span>  <div class="ai-content"></div></div></div></div></div>
+
+
+</body></html>
